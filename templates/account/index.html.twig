@@ -1,0 +1,203 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mi cuenta
+{% endblock %}
+
+{% block content %}
+	<div class="container py-4">
+
+		<div class="d-flex justify-content-between align-items-center mb-4">
+			<div>
+				<h1 class="h3 mb-1">Mi cuenta</h1>
+				<p class="text-muted mb-0">Gestiona tus datos, seguridad y correo electrónico.</p>
+			</div>
+		</div>
+
+		{# Estado de cuenta / avisos #}
+		{% if account.hasPendingEmail %}
+			<div class="alert alert-info d-flex justify-content-between align-items-center" role="alert">
+				<div>
+					<strong>Cambio de email en curso.</strong>
+					{% if emailChangeStep == 1 %}
+						<div class="small text-muted">Revisa tu bandeja de <strong>{{ account.email }}</strong> y autoriza el cambio.</div>
+					{% else %}
+						<div class="small text-muted">Autorizado. Revisa la bandeja de <strong>{{ account.pendingEmail }}</strong> y confirma el cambio.</div>
+					{% endif %}
+				</div>
+			</div>
+		{% endif %}
+
+		<div
+			class="row g-3">
+
+			{# 1) Perfil #}
+			<div class="col-12 col-lg-6">
+				<div class="card shadow-sm h-100 bg-body-tertiary">
+					<div class="card-body">
+						<h2 class="h4 mb-3">Perfil</h2>
+						
+						<div class="row gx-0">
+							<div class="col-md-3 d-grid mb-3" style="place-items: center;">
+								<img src="{{ asset(account.profilePhoto) }}" alt="Foto de perfil" class="rounded-circle border border-3 border-primary" style="width: 120px; height: 120px; object-fit: cover;">
+							</div>
+							<dl class="col-md-9 row mb-0">
+								<dt class="col-sm-4 text-muted">Apodo</dt>
+								<dd class="col-sm-8 mb-2">
+									{% if account.nickname %}
+										{{ account.nickname }}
+									{% else %}
+										<span class="text-muted">No definido</span>
+									{% endif %}
+								</dd>
+								<dt class="col-sm-4 text-muted">Nombre</dt>
+								<dd class="col-sm-8 mb-2">
+									{% if account.name %}
+										{{ account.name }}
+									{% else %}
+										<span class="text-muted">No definido</span>
+									{% endif %}
+								</dd>
+								<dt class="col-sm-4 text-muted">Descripción</dt>
+								<dd class="col-sm-8 mb-2">
+									{% if account.description %}
+										{{ account.description }}
+									{% else %}
+										<span class="text-muted">No definido</span>
+									{% endif %}
+								</dd>
+								
+								<dt>&nbsp;</dt>
+								<dt class="col-sm-4 small text-muted">Creado el</dt>
+								<dd class="col-sm-8 mb-2 small text-secondary">
+									{% if account.createdAt %}
+										{{ account.createdAt|date('d/m/Y H:i') }}
+									{% else %}
+										<span class="text-muted">—</span>
+									{% endif %}
+								</dd>
+								<dt class="col-sm-4 small text-muted">Ult. modificación</dt>
+								<dd class="col-sm-8 mb-0 small text-secondary">
+									{% if account.modifiedAt %}
+										{{ account.modifiedAt|date('d/m/Y H:i') }}
+									{% else %}
+										<span class="text-muted">—</span>
+									{% endif %}
+								</dd>
+							</dl>
+						</div>
+					</div>
+
+					<div class="card-footer bg-transparent d-flex justify-content-end">
+						<a class="btn btn-primary" href="{{ path('app_account_edit') }}">
+							Editar perfil
+						</a>
+					</div>
+				</div>
+			</div>
+
+			{# 2) Seguridad #}
+			<div class="col-12 col-lg-6">
+				<div class="card shadow-sm h-100 bg-body-tertiary">
+					<div class="card-body">
+						<h2 class="h4 mb-3">Seguridad</h2>
+						<p class="text-muted mb-0">
+							Cambia tu contraseña. Te pediremos la contraseña actual para confirmar.
+							<br>
+							Todas las sesiones activas se cerrarán al cambiar la contraseña.
+						</p>
+					</div>
+
+					<div class="card-footer bg-transparent d-flex justify-content-end">
+						<a class="btn btn-outline-primary" href="{{ path('app_account_password') }}">
+							Cambiar contraseña
+						</a>
+					</div>
+				</div>
+			</div>
+
+			{# 3) Email #}
+			<div class="col-12">
+				<div class="card shadow-sm bg-body-tertiary">
+					<div class="card-body">
+						<div class="d-flex justify-content-between align-items-start">
+							<div>
+								<h2 class="h4 mb-3">
+									Correo electrónico
+								</h2>
+								<p class="mt-2">
+									{% if account.email %}
+										{{ account.email }}
+									{% else %}
+										<span class="text-muted">No definido</span>
+									{% endif %}
+
+									{% if account.emailVerified is same as(true) %}
+										<span class="badge text-bg-success">Verificado</span>
+									{% elseif account.emailVerified is same as(false) %}
+										<span class="badge text-bg-warning">No verificado</span>
+									{% else %}
+										<span class="badge text-bg-secondary">Estado desconocido</span>
+									{% endif %}
+								</p>
+								{% if account.hasPendingEmail %}
+									<div class="alert alert-info" role="alert">
+										<p class="mt-2"><strong><i class="fa-solid fa-circle-info text-info"></i> Cambio de email en curso.</strong></p>
+										<p class="mt-2">{{ account.email }} → {{ account.pendingEmail }}</p>
+										{{ include('account/partials/_pending_email_timeline.html.twig', { emailChangeStep: emailChangeStep }) }}
+									</div>
+								{% endif %}
+							</div>
+						</div>
+					</div>
+					<div class="card-footer bg-transparent d-flex justify-content-end">
+						{% if account.hasPendingEmail %}
+							<a class="btn btn-outline-primary me-2" href="{{ path('app_account_email') }}">
+								Gestionar
+							</a>
+
+							{# <form method="post" action="{{ path('app_account_email_resend') }}" class="me-2">
+								<input type="hidden" name="_token" value="{{ csrf_token('account_email_resend') }}">
+								<button class="btn btn-outline-primary" type="submit">Reenviar verificación</button>
+							</form>
+
+							<form method="post" action="{{ path('app_account_email_cancel') }}">
+								<input type="hidden" name="_token" value="{{ csrf_token('account_email_cancel') }}">
+								<button class="btn btn-outline-danger" type="submit">Cancelar cambio</button>
+							</form> #}
+						{% else %}
+							<a class="btn btn-outline-primary" href="{{ path('app_account_email') }}">
+								Cambiar y verificar email
+							</a>
+						{% endif %}
+					</div>
+				</div>
+			</div>
+
+		{# 4) Privacidad #}
+		{% set settings = app.user.settings %}
+		<div class="col-12">
+			<div class="card shadow-sm h-100 bg-body-tertiary">
+				<div class="card-body">
+					<h2 class="h4 mb-3">Privacidad</h2>
+					<ul class="list-unstyled mb-0 small">
+						<li class="mb-2">
+							<span class="text-muted">Visible en búsquedas:</span>
+							<strong>{{ (settings and settings.isSearchable) ? 'Sí' : 'No' }}</strong>
+						</li>
+						<li>
+							<span class="text-muted">Acepta solicitudes de amistad:</span>
+							<strong>{{ (settings and settings.allowFriendRequests) ? 'Sí' : 'No' }}</strong>
+						</li>
+					</ul>
+				</div>
+				<div class="card-footer bg-transparent d-flex justify-content-end">
+					<a class="btn btn-outline-primary" href="{{ path('app_account_privacy') }}">
+						Gestionar privacidad
+					</a>
+				</div>
+			</div>
+		</div>
+
+		</div>
+	</div>
+{% endblock %}
