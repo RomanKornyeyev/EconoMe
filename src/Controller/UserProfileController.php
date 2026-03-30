@@ -27,7 +27,7 @@ class UserProfileController extends AbstractController
 
         // Auto-perfil → redirigir a la cuenta propia
         if ($targetUser->getId() === $currentUser->getId()) {
-            return $this->redirectToRoute('app_account_index');
+            return $this->redirectToRoute('app_profile_index');
         }
 
         $friendship = $friendshipRepository->findBetween($currentUser, $targetUser);

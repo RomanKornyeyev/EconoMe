@@ -2,205 +2,142 @@
 
 namespace App\Service;
 
+use App\Entity\Account;
+use App\Entity\AccountMember;
 use App\Entity\User;
-use App\Entity\UserToken;
-use App\Repository\UserTokenRepository;
+use App\Repository\FriendshipRepository;
+use App\Repository\TransactionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 class AccountService
 {
     public function __construct(
         private EntityManagerInterface $em,
-        private UserTokenRepository $tokenRepo,
-        private MailService $mailService,
+        private FriendshipRepository $friendshipRepository,
+        private TransactionRepository $transactionRepository,
     ) {}
 
-    public function requestEmailChange(User $user, string $newEmail): void
+    /**
+     * Crea una cuenta y asigna al creador como owner.
+     */
+    public function createAccount(User $owner, string $name, ?string $description = null, string $currency = 'EUR'): Account
     {
-        $newEmail = mb_strtolower(trim($newEmail));
-        $currentEmail = mb_strtolower((string) $user->getEmail());
+        $account = new Account();
+        $account->setName($name);
+        $account->setDescription($description);
+        $account->setCurrency($currency);
 
-        if ($user->hasPendingEmailChange()) {
-            throw new \DomainException('Ya tienes un cambio de email pendiente. Puedes reenviar la confirmación o cancelarlo.');
-        }
+        $member = new AccountMember($account, $owner, AccountMember::ROLE_OWNER);
 
-        if ($newEmail === $currentEmail) {
-            throw new \DomainException('El nuevo email no puede ser igual al actual.');
-        }
-
-        $this->assertEmailAvailable($newEmail);
-
-        $this->tokenRepo->invalidateActiveEmailChangeTokensForUser($user);
-
-        $user->setPendingEmail($newEmail);
-
-        $token = new UserToken($user, UserToken::TYPE_EMAIL_CHANGE_AUTHORIZE);
-        $this->em->persist($token);
+        $this->em->persist($account);
+        $this->em->persist($member);
         $this->em->flush();
 
-        $this->mailService->sendEmailChangeAuthorizeToCurrentEmail(
-            (string) $user->getEmail(),
-            $token->getToken(),
-            (string) $user->getName(),
-            $newEmail
-        );
+        return $account;
     }
 
     /**
-     * Paso 1: el usuario hace clic en el link del email actual.
-     * Se crea el token de confirmación y se envía al nuevo email.
+     * Añade un miembro a la cuenta. Requiere amistad aceptada con el owner.
      */
-    public function authorizeEmailChange(string $tokenValue): void
+    public function addMember(Account $account, User $owner, User $newUser, string $role = AccountMember::ROLE_EDITOR): AccountMember
     {
-        $userToken = $this->tokenRepo->findValidToken($tokenValue, UserToken::TYPE_EMAIL_CHANGE_AUTHORIZE);
-        if (!$userToken) {
-            throw new \DomainException('El enlace de autorización no es válido o ha caducado.');
+        // Validar que quien invita es owner
+        $ownerMember = $this->findActiveMember($account, $owner);
+        if (!$ownerMember || !$ownerMember->isOwner()) {
+            throw new \LogicException('Solo el propietario puede añadir miembros.');
         }
 
-        $user = $userToken->getUser();
-
-        if (!$user->hasPendingEmailChange()) {
-            $userToken->markAsUsed();
-            $this->em->flush();
-            throw new \DomainException('No hay ningún cambio de email pendiente.');
+        // Validar amistad
+        $friendship = $this->friendshipRepository->findBetween($owner, $newUser);
+        if (!$friendship || !$friendship->isAccepted()) {
+            throw new \LogicException('Debes ser amigo de esta persona para invitarla.');
         }
 
-        $newEmail = (string) $user->getPendingEmail();
-
-        $this->assertEmailAvailable($newEmail, $user);
-
-        $userToken->markAsUsed();
-
-        $confirmToken = new UserToken($user, UserToken::TYPE_EMAIL_CHANGE_CONFIRM);
-        $this->em->persist($confirmToken);
-        $this->em->flush();
-
-        $this->mailService->sendEmailChangeConfirmToNewEmail(
-            $newEmail,
-            $confirmToken->getToken(),
-            (string) $user->getName()
-        );
-    }
-
-    /**
-     * Paso 2: el usuario hace clic en el link del nuevo email.
-     * Se actualiza el email definitivamente.
-     */
-    public function confirmEmailChange(string $tokenValue): User
-    {
-        $userToken = $this->tokenRepo->findValidToken($tokenValue, UserToken::TYPE_EMAIL_CHANGE_CONFIRM);
-        if (!$userToken) {
-            throw new \DomainException('El enlace de confirmación no es válido o ha caducado.');
-        }
-
-        $user = $userToken->getUser();
-
-        if (!$user->hasPendingEmailChange()) {
-            $userToken->markAsUsed();
-            $this->em->flush();
-            throw new \DomainException('No hay ningún cambio de email pendiente.');
-        }
-
-        $oldEmail = (string) $user->getEmail();
-        $newEmail = (string) $user->getPendingEmail();
-
-        $this->assertEmailAvailable($newEmail, $user);
-
-        $user->setEmail($newEmail);
-        $user->setPendingEmail(null);
-
-        $userToken->markAsUsed();
-        $this->em->flush();
-
-        $this->mailService->sendEmailChangeCompleted($oldEmail, $newEmail, (string) $user->getName());
-
-        $this->em->refresh($user);
-        return $user;
-    }
-
-    public function resendEmailChange(User $user): void
-    {
-        if (!$user->hasPendingEmailChange()) {
-            throw new \DomainException('No hay ningún cambio de email pendiente.');
-        }
-
-        $isStep1 = $this->tokenRepo->findActiveAuthorizeTokenForUser($user) !== null;
-
-        $this->tokenRepo->invalidateActiveEmailChangeTokensForUser($user);
-
-        $newEmail = (string) $user->getPendingEmail();
-
-        if ($isStep1) {
-            $token = new UserToken($user, UserToken::TYPE_EMAIL_CHANGE_AUTHORIZE);
-            $this->em->persist($token);
-            $this->em->flush();
-            $this->mailService->sendEmailChangeAuthorizeToCurrentEmail(
-                (string) $user->getEmail(),
-                $token->getToken(),
-                (string) $user->getName(),
-                $newEmail
-            );
-        } else {
-            $token = new UserToken($user, UserToken::TYPE_EMAIL_CHANGE_CONFIRM);
-            $this->em->persist($token);
-            $this->em->flush();
-            $this->mailService->sendEmailChangeConfirmToNewEmail(
-                $newEmail,
-                $token->getToken(),
-                (string) $user->getName()
-            );
-        }
-    }
-
-    public function cancelEmailChange(User $user): void
-    {
-        if (!$user->hasPendingEmailChange()) {
-            throw new \DomainException('No hay ningún cambio de email pendiente.');
-        }
-
-        $pending = (string) $user->getPendingEmail();
-
-        $this->tokenRepo->invalidateActiveEmailChangeTokensForUser($user);
-        $user->setPendingEmail(null);
-        $this->em->flush();
-
-        $this->mailService->sendEmailChangeCancelled(
-            (string) $user->getEmail(),
-            (string) $user->getName(),
-            $pending
-        );
-    }
-
-    /**
-     * Devuelve el paso actual del flujo de cambio de email:
-     * 1 = esperando autorización (link en email actual)
-     * 2 = esperando confirmación (link en nuevo email)
-     * 0 = sin cambio pendiente
-     */
-    public function getEmailChangeStep(User $user): int
-    {
-        if (!$user->hasPendingEmailChange()) {
-            return 0;
-        }
-
-        return $this->tokenRepo->findActiveAuthorizeTokenForUser($user) !== null ? 1 : 2;
-    }
-
-    private function assertEmailAvailable(string $email, ?User $excludeUser = null): void
-    {
-        $existing = $this->em->getRepository(User::class)->findOneBy(['email' => $email]);
-        if ($existing !== null) {
-            if ($excludeUser === null || $existing->getId() !== $excludeUser->getId()) {
-                throw new \DomainException('Este email ya está registrado.');
+        // Comprobar si ya fue miembro (soft delete → rejoin)
+        $existingMember = $this->findMemberIncludingLeft($account, $newUser);
+        if ($existingMember) {
+            if (!$existingMember->hasLeft()) {
+                throw new \LogicException('Este usuario ya es miembro de la cuenta.');
             }
+            $existingMember->rejoin($role);
+            $this->em->flush();
+            return $existingMember;
         }
 
-        $pendingOwner = $this->em->getRepository(User::class)->findOneBy(['pendingEmail' => $email]);
-        if ($pendingOwner !== null) {
-            if ($excludeUser === null || $pendingOwner->getId() !== $excludeUser->getId()) {
-                throw new \DomainException('Este email ya está siendo usado en un cambio pendiente.');
-            }
-        }
+        $member = new AccountMember($account, $newUser, $role);
+        $this->em->persist($member);
+        $this->em->flush();
+
+        return $member;
     }
 
+    /**
+     * Un miembro abandona la cuenta (soft delete).
+     * El owner no puede abandonar su propia cuenta.
+     */
+    public function leaveAccount(Account $account, User $user): void
+    {
+        $member = $this->findActiveMember($account, $user);
+        if (!$member) {
+            throw new \LogicException('No eres miembro de esta cuenta.');
+        }
+
+        if ($member->isOwner()) {
+            throw new \LogicException('El propietario no puede abandonar la cuenta. Transfiere la propiedad primero.');
+        }
+
+        $member->leave();
+        $this->em->flush();
+    }
+
+    /**
+     * Transfiere la propiedad a otro miembro activo.
+     */
+    public function transferOwnership(Account $account, User $currentOwner, User $newOwner): void
+    {
+        $ownerMember = $this->findActiveMember($account, $currentOwner);
+        if (!$ownerMember || !$ownerMember->isOwner()) {
+            throw new \LogicException('No eres el propietario de esta cuenta.');
+        }
+
+        $newOwnerMember = $this->findActiveMember($account, $newOwner);
+        if (!$newOwnerMember) {
+            throw new \LogicException('El nuevo propietario debe ser miembro activo de la cuenta.');
+        }
+
+        $ownerMember->setRole(AccountMember::ROLE_EDITOR);
+        $newOwnerMember->setRole(AccountMember::ROLE_OWNER);
+        $this->em->flush();
+    }
+
+    /**
+     * Calcula el balance de la cuenta.
+     */
+    public function getBalance(Account $account): string
+    {
+        return $this->transactionRepository->calculateBalance($account);
+    }
+
+    /**
+     * Busca un miembro activo (sin leftAt) de una cuenta.
+     */
+    public function findActiveMember(Account $account, User $user): ?AccountMember
+    {
+        return $this->em->getRepository(AccountMember::class)->findOneBy([
+            'account' => $account,
+            'user' => $user,
+            'leftAt' => null,
+        ]);
+    }
+
+    /**
+     * Busca un miembro incluyendo los que han salido.
+     */
+    private function findMemberIncludingLeft(Account $account, User $user): ?AccountMember
+    {
+        return $this->em->getRepository(AccountMember::class)->findOneBy([
+            'account' => $account,
+            'user' => $user,
+        ]);
+    }
 }

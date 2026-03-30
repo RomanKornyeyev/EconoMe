@@ -49,6 +49,7 @@ class ProfileType extends AbstractType
                 ],
             ])
             ->add('description', TextareaType::class, [
+                'required' => false,
                 'label' => 'Descripción',
                 'attr' => ['style' => 'min-height: 50px !important;'],
             ])

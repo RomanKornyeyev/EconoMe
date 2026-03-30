@@ -73,7 +73,7 @@ class MailService
     string $name = '',
     string $pendingEmail = ''
   ): void {
-    $url = $this->router->generate('app_account_email_authorize', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
+    $url = $this->router->generate('app_profile_email_authorize', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
     $resetPasswordUrl = $this->router->generate('app_forgot_password', [], UrlGeneratorInterface::ABSOLUTE_URL);
 
     $email = (new TemplatedEmail())
@@ -96,7 +96,7 @@ class MailService
     string $token,
     string $name = ''
   ): void {
-    $url = $this->router->generate('app_account_email_confirm', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
+    $url = $this->router->generate('app_profile_email_confirm', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
 
     $email = (new TemplatedEmail())
       ->from('no.reply.financeflow.team@gmail.com')

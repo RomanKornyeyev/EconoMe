@@ -4,6 +4,7 @@ namespace App\Service;
 use App\Entity\User;
 use App\Entity\UserSettings;
 use App\Entity\UserToken;
+use App\Service\CategorySeeder;
 use App\Service\MailService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -13,12 +14,14 @@ class UserService
   private EntityManagerInterface $em;
   private MailService $mailService;
   private UserPasswordHasherInterface $passwordHasher;
+  private CategorySeeder $categorySeeder;
 
-  public function __construct(EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher, MailService $mailService)
+  public function __construct(EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher, MailService $mailService, CategorySeeder $categorySeeder)
   {
     $this->em = $em;
     $this->mailService = $mailService;
     $this->passwordHasher = $passwordHasher;
+    $this->categorySeeder = $categorySeeder;
   }
 
   public function registerUser(User $user): void
@@ -33,6 +36,9 @@ class UserService
     // Crear configuración de privacidad por defecto
     $settings = new UserSettings($user);
     $user->setSettings($settings);
+
+    // Crear categorías por defecto
+    $this->categorySeeder->seedForUser($user);
 
     // Generar un token único
     do {

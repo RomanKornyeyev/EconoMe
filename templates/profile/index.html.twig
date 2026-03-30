@@ -14,14 +14,14 @@
 		</div>
 
 		{# Estado de cuenta / avisos #}
-		{% if account.hasPendingEmail %}
+		{% if profile.hasPendingEmail %}
 			<div class="alert alert-info d-flex justify-content-between align-items-center" role="alert">
 				<div>
 					<strong>Cambio de email en curso.</strong>
 					{% if emailChangeStep == 1 %}
-						<div class="small text-muted">Revisa tu bandeja de <strong>{{ account.email }}</strong> y autoriza el cambio.</div>
+						<div class="small text-muted">Revisa tu bandeja de <strong>{{ profile.email }}</strong> y autoriza el cambio.</div>
 					{% else %}
-						<div class="small text-muted">Autorizado. Revisa la bandeja de <strong>{{ account.pendingEmail }}</strong> y confirma el cambio.</div>
+						<div class="small text-muted">Autorizado. Revisa la bandeja de <strong>{{ profile.pendingEmail }}</strong> y confirma el cambio.</div>
 					{% endif %}
 				</div>
 			</div>
@@ -38,29 +38,29 @@
 						
 						<div class="row gx-0">
 							<div class="col-md-3 d-grid mb-3" style="place-items: center;">
-								<img src="{{ asset(account.profilePhoto) }}" alt="Foto de perfil" class="rounded-circle border border-3 border-primary" style="width: 120px; height: 120px; object-fit: cover;">
+								<img src="{{ asset(profile.profilePhoto) }}" alt="Foto de perfil" class="rounded-circle border border-3 border-primary" style="width: 120px; height: 120px; object-fit: cover;">
 							</div>
 							<dl class="col-md-9 row mb-0">
 								<dt class="col-sm-4 text-muted">Apodo</dt>
 								<dd class="col-sm-8 mb-2">
-									{% if account.nickname %}
-										{{ account.nickname }}
+									{% if profile.nickname %}
+										{{ profile.nickname }}
 									{% else %}
 										<span class="text-muted">No definido</span>
 									{% endif %}
 								</dd>
 								<dt class="col-sm-4 text-muted">Nombre</dt>
 								<dd class="col-sm-8 mb-2">
-									{% if account.name %}
-										{{ account.name }}
+									{% if profile.name %}
+										{{ profile.name }}
 									{% else %}
 										<span class="text-muted">No definido</span>
 									{% endif %}
 								</dd>
 								<dt class="col-sm-4 text-muted">Descripción</dt>
 								<dd class="col-sm-8 mb-2">
-									{% if account.description %}
-										{{ account.description }}
+									{% if profile.description %}
+										{{ profile.description }}
 									{% else %}
 										<span class="text-muted">No definido</span>
 									{% endif %}
@@ -69,16 +69,16 @@
 								<dt>&nbsp;</dt>
 								<dt class="col-sm-4 small text-muted">Creado el</dt>
 								<dd class="col-sm-8 mb-2 small text-secondary">
-									{% if account.createdAt %}
-										{{ account.createdAt|date('d/m/Y H:i') }}
+									{% if profile.createdAt %}
+										{{ profile.createdAt|date('d/m/Y H:i') }}
 									{% else %}
 										<span class="text-muted">—</span>
 									{% endif %}
 								</dd>
 								<dt class="col-sm-4 small text-muted">Ult. modificación</dt>
 								<dd class="col-sm-8 mb-0 small text-secondary">
-									{% if account.modifiedAt %}
-										{{ account.modifiedAt|date('d/m/Y H:i') }}
+									{% if profile.modifiedAt %}
+										{{ profile.modifiedAt|date('d/m/Y H:i') }}
 									{% else %}
 										<span class="text-muted">—</span>
 									{% endif %}
@@ -88,7 +88,7 @@
 					</div>
 
 					<div class="card-footer bg-transparent d-flex justify-content-end">
-						<a class="btn btn-primary" href="{{ path('app_account_edit') }}">
+						<a class="btn btn-primary" href="{{ path('app_profile_edit') }}">
 							Editar perfil
 						</a>
 					</div>
@@ -108,7 +108,7 @@
 					</div>
 
 					<div class="card-footer bg-transparent d-flex justify-content-end">
-						<a class="btn btn-outline-primary" href="{{ path('app_account_password') }}">
+						<a class="btn btn-outline-primary" href="{{ path('app_profile_password') }}">
 							Cambiar contraseña
 						</a>
 					</div>
@@ -125,47 +125,47 @@
 									Correo electrónico
 								</h2>
 								<p class="mt-2">
-									{% if account.email %}
-										{{ account.email }}
+									{% if profile.email %}
+										{{ profile.email }}
 									{% else %}
 										<span class="text-muted">No definido</span>
 									{% endif %}
 
-									{% if account.emailVerified is same as(true) %}
+									{% if profile.emailVerified is same as(true) %}
 										<span class="badge text-bg-success">Verificado</span>
-									{% elseif account.emailVerified is same as(false) %}
+									{% elseif profile.emailVerified is same as(false) %}
 										<span class="badge text-bg-warning">No verificado</span>
 									{% else %}
 										<span class="badge text-bg-secondary">Estado desconocido</span>
 									{% endif %}
 								</p>
-								{% if account.hasPendingEmail %}
+								{% if profile.hasPendingEmail %}
 									<div class="alert alert-info" role="alert">
 										<p class="mt-2"><strong><i class="fa-solid fa-circle-info text-info"></i> Cambio de email en curso.</strong></p>
-										<p class="mt-2">{{ account.email }} → {{ account.pendingEmail }}</p>
-										{{ include('account/partials/_pending_email_timeline.html.twig', { emailChangeStep: emailChangeStep }) }}
+										<p class="mt-2">{{ profile.email }} → {{ profile.pendingEmail }}</p>
+										{{ include('profile/partials/_pending_email_timeline.html.twig', { emailChangeStep: emailChangeStep }) }}
 									</div>
 								{% endif %}
 							</div>
 						</div>
 					</div>
 					<div class="card-footer bg-transparent d-flex justify-content-end">
-						{% if account.hasPendingEmail %}
-							<a class="btn btn-outline-primary me-2" href="{{ path('app_account_email') }}">
+						{% if profile.hasPendingEmail %}
+							<a class="btn btn-outline-primary me-2" href="{{ path('app_profile_email') }}">
 								Gestionar
 							</a>
 
-							{# <form method="post" action="{{ path('app_account_email_resend') }}" class="me-2">
+							{# <form method="post" action="{{ path('app_profile_email_resend') }}" class="me-2">
 								<input type="hidden" name="_token" value="{{ csrf_token('account_email_resend') }}">
 								<button class="btn btn-outline-primary" type="submit">Reenviar verificación</button>
 							</form>
 
-							<form method="post" action="{{ path('app_account_email_cancel') }}">
+							<form method="post" action="{{ path('app_profile_email_cancel') }}">
 								<input type="hidden" name="_token" value="{{ csrf_token('account_email_cancel') }}">
 								<button class="btn btn-outline-danger" type="submit">Cancelar cambio</button>
 							</form> #}
 						{% else %}
-							<a class="btn btn-outline-primary" href="{{ path('app_account_email') }}">
+							<a class="btn btn-outline-primary" href="{{ path('app_profile_email') }}">
 								Cambiar y verificar email
 							</a>
 						{% endif %}
@@ -191,7 +191,7 @@
 					</ul>
 				</div>
 				<div class="card-footer bg-transparent d-flex justify-content-end">
-					<a class="btn btn-outline-primary" href="{{ path('app_account_privacy') }}">
+					<a class="btn btn-outline-primary" href="{{ path('app_profile_privacy') }}">
 						Gestionar privacidad
 					</a>
 				</div>
