@@ -1,0 +1,30 @@
+{# Parámetros esperados: paginationData (array con currentPage, totalPages, totalItems, firstItemIndex, lastItemIndex) #}
+
+{% if paginationData.totalPages > 1 %}
+<nav class="d-flex justify-content-between align-items-center px-3 py-2">
+    <small class="text-muted">
+        {{ paginationData.firstItemIndex }}-{{ paginationData.lastItemIndex }} de {{ paginationData.totalItems }}
+    </small>
+    <ul class="pagination pagination-sm mb-0">
+        <li class="page-item {{ paginationData.currentPage == 1 ? 'disabled' : '' }}">
+            <a class="page-link" href="{{ path(app.request.attributes.get('_route'), app.request.query.all|merge({page: paginationData.currentPage - 1})) }}">
+                &laquo;
+            </a>
+        </li>
+        {% for p in 1..paginationData.totalPages %}
+            {% if p <= 3 or p > paginationData.totalPages - 2 or (p >= paginationData.currentPage - 1 and p <= paginationData.currentPage + 1) %}
+                <li class="page-item {{ p == paginationData.currentPage ? 'active' : '' }}">
+                    <a class="page-link" href="{{ path(app.request.attributes.get('_route'), app.request.query.all|merge({page: p})) }}">{{ p }}</a>
+                </li>
+            {% elseif p == 4 or p == paginationData.totalPages - 2 %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+        {% endfor %}
+        <li class="page-item {{ paginationData.currentPage == paginationData.totalPages ? 'disabled' : '' }}">
+            <a class="page-link" href="{{ path(app.request.attributes.get('_route'), app.request.query.all|merge({page: paginationData.currentPage + 1})) }}">
+                &raquo;
+            </a>
+        </li>
+    </ul>
+</nav>
+{% endif %}

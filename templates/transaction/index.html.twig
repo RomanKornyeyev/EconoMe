@@ -1,0 +1,148 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Movimientos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h4 class="mb-0"><i class="fa-solid fa-arrow-right-arrow-left me-2"></i>Movimientos</h4>
+    <a href="{{ path('transaction_create', {account: currentAccount.id}) }}" class="btn btn-primary btn-sm">
+        <i class="fa-solid fa-plus me-1"></i>Nuevo movimiento
+    </a>
+</div>
+
+{# Account selector #}
+{% if accounts|length > 1 %}
+    <div class="mb-3">
+        <select class="form-select form-select-sm w-auto" onchange="window.location.href='?account='+this.value">
+            {% for acc in accounts %}
+                <option value="{{ acc.id }}" {{ acc.id == currentAccount.id ? 'selected' : '' }}>{{ acc.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+{% endif %}
+
+{# Filters #}
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+        <form method="get" class="d-flex flex-wrap gap-2 align-items-end">
+            <input type="hidden" name="account" value="{{ currentAccount.id }}">
+            <div>
+                <label class="form-label small mb-1">Año</label>
+                <select name="year" class="form-select form-select-sm">
+                    {% for y in (year - 2)..(year + 1) %}
+                        <option value="{{ y }}" {{ y == year ? 'selected' : '' }}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label small mb-1">Mes</label>
+                <select name="month" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    {% for m in 1..12 %}
+                        <option value="{{ m }}" {{ m == month ? 'selected' : '' }}>
+                            {{ ('2000-' ~ m ~ '-01')|date('F') }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label small mb-1">Tipo</label>
+                <select name="type" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    <option value="expense" {{ currentType == 'expense' ? 'selected' : '' }}>Gastos</option>
+                    <option value="income" {{ currentType == 'income' ? 'selected' : '' }}>Ingresos</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label small mb-1">Categoría</label>
+                <select name="category" class="form-select form-select-sm">
+                    <option value="">Todas</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.id }}" {{ cat.id == currentCategory ? 'selected' : '' }}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-sm btn-outline-primary">Filtrar</button>
+            <a href="{{ path('transaction_index', {account: currentAccount.id}) }}" class="btn btn-sm btn-outline-secondary">Limpiar</a>
+        </form>
+    </div>
+</div>
+
+{# Transactions table #}
+<div class="card border-0 shadow-sm">
+    <div class="d-none d-md-block">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Descripción</th>
+                    <th>Categoría</th>
+                    <th class="text-end">Importe</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaction in pagination %}
+                    <tr>
+                        <td class="text-muted small align-middle">{{ transaction.date|date('d/m/Y') }}</td>
+                        <td class="align-middle">{{ transaction.description }}</td>
+                        <td class="align-middle">
+                            {% if transaction.category %}
+                                <span class="badge bg-body-secondary text-body-secondary">{{ transaction.category.name }}</span>
+                            {% else %}
+                                <span class="text-muted small">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="align-middle text-end fw-semibold {{ transaction.type == 'expense' ? 'text-danger' : 'text-success' }}">
+                            {{ transaction.type == 'expense' ? '-' : '+' }}{{ transaction.amount|number_format(2, ',', '.') }} {{ currentAccount.currency }}
+                        </td>
+                        <td class="align-middle text-end">
+                            <a href="{{ path('transaction_edit', {id: transaction.id}) }}" class="btn btn-xs btn-outline-secondary btn-sm py-0 px-1">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                            <form method="post" action="{{ path('transaction_delete', {id: transaction.id}) }}" class="d-inline"
+                                  onsubmit="return confirm('¿Eliminar este movimiento?')">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ transaction.id) }}">
+                                <button type="submit" class="btn btn-xs btn-outline-danger btn-sm py-0 px-1">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">No hay movimientos con estos filtros.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {# Mobile cards #}
+    <div class="d-md-none p-3">
+        {% for transaction in pagination %}
+            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                <div>
+                    <div class="fw-semibold">{{ transaction.description }}</div>
+                    <small class="text-muted">{{ transaction.date|date('d/m/Y') }}</small>
+                    {% if transaction.category %}
+                        <span class="badge bg-body-secondary text-body-secondary ms-1">{{ transaction.category.name }}</span>
+                    {% endif %}
+                </div>
+                <div class="text-end">
+                    <div class="fw-semibold {{ transaction.type == 'expense' ? 'text-danger' : 'text-success' }}">
+                        {{ transaction.type == 'expense' ? '-' : '+' }}{{ transaction.amount|number_format(2, ',', '.') }}
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <p class="text-center text-muted py-3">No hay movimientos.</p>
+        {% endfor %}
+    </div>
+</div>
+
+{# Pagination #}
+<div class="mt-3 d-flex justify-content-center">
+    {{ knp_pagination_render(pagination) }}
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Configuración{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <h4 class="mb-4"><i class="fa-solid fa-sliders me-2"></i>Configuración</h4>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent">
+                <h6 class="mb-0">Privacidad</h6>
+            </div>
+            <div class="card-body p-4">
+                {{ form_start(form) }}
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form_widget(form.isSearchable, {'attr': {'class': 'form-check-input'}}) }}
+                            <label class="form-check-label" for="{{ form.isSearchable.vars.id }}">
+                                {{ form_label(form.isSearchable) }}
+                            </label>
+                        </div>
+                        <small class="text-muted">Permite que otros usuarios te encuentren por nombre, nickname o email.</small>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form_widget(form.allowFriendRequests, {'attr': {'class': 'form-check-input'}}) }}
+                            <label class="form-check-label" for="{{ form.allowFriendRequests.vars.id }}">
+                                {{ form_label(form.allowFriendRequests) }}
+                            </label>
+                        </div>
+                        <small class="text-muted">Si está desactivado, nadie podrá enviarte solicitudes de amistad.</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-check me-1"></i>Guardar configuración
+                    </button>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

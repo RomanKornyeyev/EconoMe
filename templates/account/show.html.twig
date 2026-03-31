@@ -1,0 +1,142 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ account.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+    <div class="d-flex align-items-center gap-3">
+        <a href="{{ path('account_index') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left"></i>
+        </a>
+        <div>
+            <h4 class="mb-0">{{ account.name }}</h4>
+            {% if account.description %}
+                <small class="text-muted">{{ account.description }}</small>
+            {% endif %}
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        {% if currentMember and currentMember.canManageAccount() %}
+            <a href="{{ path('account_edit', {id: account.id}) }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fa-solid fa-pen me-1"></i>Editar
+            </a>
+        {% endif %}
+        <a href="{{ path('transaction_index', {account: account.id}) }}" class="btn btn-sm btn-primary">
+            <i class="fa-solid fa-arrow-right-arrow-left me-1"></i>Movimientos
+        </a>
+    </div>
+</div>
+
+{# Balance #}
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <div class="text-muted small mb-1">Saldo actual</div>
+                <div class="fs-4 fw-bold {{ balance >= 0 ? 'text-success' : 'text-danger' }}">
+                    {{ balance|number_format(2, ',', '.') }} {{ account.currency }}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <div class="text-muted small mb-1">Moneda</div>
+                <div class="fs-5 fw-semibold">{{ account.currency }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <div class="text-muted small mb-1">Miembros activos</div>
+                <div class="fs-5 fw-semibold">{{ members|length }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Members #}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="fa-solid fa-users me-2"></i>Miembros</h6>
+    </div>
+    <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+            {% for member in members %}
+                <li class="list-group-item d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <img src="{{ asset(member.user.profilePhoto) }}" class="rounded-circle" width="32" height="32" style="object-fit:cover" alt="">
+                        <div>
+                            <div class="fw-semibold">{{ member.user.nickname }}</div>
+                            <small class="text-muted">{{ member.user.email }}</small>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge {% if member.role == 'owner' %}bg-warning text-dark{% elseif member.role == 'editor' %}bg-info text-dark{% else %}bg-secondary{% endif %}">
+                            {{ member.role }}
+                        </span>
+                        {% if currentMember and currentMember.canManageAccount() and member.user != app.user %}
+                            <form method="post" action="{{ path('account_remove_member', {id: account.id, userId: member.user.id}) }}"
+                                  onsubmit="return confirm('¿Eliminar a {{ member.user.nickname }} de la cuenta?')">
+                                <input type="hidden" name="_token" value="{{ csrf_token('remove' ~ member.user.id) }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+{# Invite member (owner only) #}
+{% if currentMember and currentMember.canManageAccount() %}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-transparent">
+            <h6 class="mb-0"><i class="fa-solid fa-user-plus me-2"></i>Invitar miembro</h6>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{{ path('account_invite', {id: account.id}) }}" class="d-flex gap-2 flex-wrap">
+                <input type="hidden" name="_token" value="{{ csrf_token('invite' ~ account.id) }}">
+                <input type="number" name="user_id" class="form-control form-control-sm" placeholder="ID del usuario" style="width:160px" required>
+                <select name="role" class="form-select form-select-sm" style="width:auto">
+                    <option value="editor">Editor</option>
+                    <option value="viewer">Viewer</option>
+                </select>
+                <button type="submit" class="btn btn-sm btn-primary">Invitar</button>
+            </form>
+        </div>
+    </div>
+{% endif %}
+
+{# Danger zone #}
+<div class="card border-danger border-opacity-25 mb-4">
+    <div class="card-header text-danger bg-transparent">
+        <h6 class="mb-0"><i class="fa-solid fa-triangle-exclamation me-2"></i>Zona de peligro</h6>
+    </div>
+    <div class="card-body d-flex flex-wrap gap-2">
+        {% if currentMember and not currentMember.isOwner() %}
+            <form method="post" action="{{ path('account_leave', {id: account.id}) }}"
+                  onsubmit="return confirm('¿Seguro que quieres abandonar esta cuenta?')">
+                <input type="hidden" name="_token" value="{{ csrf_token('leave' ~ account.id) }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                    <i class="fa-solid fa-right-from-bracket me-1"></i>Abandonar cuenta
+                </button>
+            </form>
+        {% endif %}
+        {% if currentMember and currentMember.isOwner() %}
+            <form method="post" action="{{ path('account_delete', {id: account.id}) }}"
+                  onsubmit="return confirm('¿Eliminar esta cuenta y todos sus datos? Esta acción no se puede deshacer.')">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ account.id) }}">
+                <button type="submit" class="btn btn-sm btn-danger">
+                    <i class="fa-solid fa-trash me-1"></i>Eliminar cuenta
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

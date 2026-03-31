@@ -40,7 +40,7 @@ class Transaction
     private ?RecurringTransaction $recurringSource = null;
 
     #[ORM\Column(type: "string", length: 10)]
-    #[Assert\Choice([self::TYPE_EXPENSE, self::TYPE_INCOME])]
+    #[Assert\Choice(choices: [self::TYPE_EXPENSE, self::TYPE_INCOME])]
     private string $type = self::TYPE_EXPENSE;
 
     #[ORM\Column(type: "decimal", precision: 10, scale: 2)]

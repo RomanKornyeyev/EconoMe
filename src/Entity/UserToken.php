@@ -32,7 +32,7 @@ class UserToken
     private string $token;
 
     #[ORM\Column(type: "string")]
-    #[Assert\Choice([self::TYPE_REGISTRATION, self::TYPE_PASSWORD_RESET, self::TYPE_EMAIL_CHANGE, self::TYPE_EMAIL_CHANGE_AUTHORIZE, self::TYPE_EMAIL_CHANGE_CONFIRM])]
+    #[Assert\Choice(choices: [self::TYPE_REGISTRATION, self::TYPE_PASSWORD_RESET, self::TYPE_EMAIL_CHANGE, self::TYPE_EMAIL_CHANGE_AUTHORIZE, self::TYPE_EMAIL_CHANGE_CONFIRM])]
     private string $type;
 
     #[ORM\Column(type: "datetime")]

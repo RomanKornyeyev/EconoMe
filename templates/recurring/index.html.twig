@@ -1,0 +1,101 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Transacciones recurrentes{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h4 class="mb-0"><i class="fa-solid fa-rotate me-2"></i>Recurrentes</h4>
+    <a href="{{ path('recurring_create', {account: currentAccount.id}) }}" class="btn btn-primary btn-sm">
+        <i class="fa-solid fa-plus me-1"></i>Nueva recurrente
+    </a>
+</div>
+
+{% if accounts|length > 1 %}
+    <div class="mb-3">
+        <select class="form-select form-select-sm w-auto" onchange="window.location.href='?account='+this.value">
+            {% for acc in accounts %}
+                <option value="{{ acc.id }}" {{ acc.id == currentAccount.id ? 'selected' : '' }}>{{ acc.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+{% endif %}
+
+{% if recurrings is empty %}
+    <div class="text-center py-5">
+        <i class="fa-solid fa-rotate fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">No hay transacciones recurrentes</h5>
+        <a href="{{ path('recurring_create', {account: currentAccount.id}) }}" class="btn btn-primary mt-2">
+            <i class="fa-solid fa-plus me-1"></i>Crear primera recurrente
+        </a>
+    </div>
+{% else %}
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Tipo</th>
+                        <th class="text-end">Importe</th>
+                        <th>Frecuencia</th>
+                        <th>Día</th>
+                        <th>Categoría</th>
+                        <th>Estado</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for recurring in recurrings %}
+                        <tr class="{{ not recurring.isActive ? 'text-muted' : '' }}">
+                            <td class="align-middle fw-semibold">{{ recurring.name }}</td>
+                            <td class="align-middle">
+                                <span class="badge {{ recurring.type == 'expense' ? 'bg-danger' : 'bg-success' }}">
+                                    {{ recurring.type == 'expense' ? 'Gasto' : 'Ingreso' }}
+                                </span>
+                            </td>
+                            <td class="align-middle text-end {{ recurring.type == 'expense' ? 'text-danger' : 'text-success' }}">
+                                {{ recurring.type == 'expense' ? '-' : '+' }}{{ recurring.amount|number_format(2, ',', '.') }} {{ currentAccount.currency }}
+                            </td>
+                            <td class="align-middle">
+                                {% set freqMap = {daily: 'Diario', weekly: 'Semanal', monthly: 'Mensual', yearly: 'Anual'} %}
+                                {{ freqMap[recurring.frequency] ?? recurring.frequency }}
+                            </td>
+                            <td class="align-middle">{{ recurring.dayOfExecution }}</td>
+                            <td class="align-middle">
+                                {% if recurring.category %}
+                                    <span class="badge bg-body-secondary text-body-secondary">{{ recurring.category.name }}</span>
+                                {% else %}
+                                    <span class="text-muted small">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="align-middle">
+                                <span class="badge {{ recurring.isActive ? 'bg-success' : 'bg-secondary' }}">
+                                    {{ recurring.isActive ? 'Activa' : 'Inactiva' }}
+                                </span>
+                            </td>
+                            <td class="align-middle text-end">
+                                <a href="{{ path('recurring_edit', {id: recurring.id}) }}" class="btn btn-sm btn-outline-secondary py-0 px-1">
+                                    <i class="fa-solid fa-pen"></i>
+                                </a>
+                                <form method="post" action="{{ path('recurring_toggle', {id: recurring.id}) }}" class="d-inline">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('toggle' ~ recurring.id) }}">
+                                    <button type="submit" class="btn btn-sm {{ recurring.isActive ? 'btn-outline-warning' : 'btn-outline-success' }} py-0 px-1">
+                                        <i class="fa-solid {{ recurring.isActive ? 'fa-pause' : 'fa-play' }}"></i>
+                                    </button>
+                                </form>
+                                <form method="post" action="{{ path('recurring_delete', {id: recurring.id}) }}" class="d-inline"
+                                      onsubmit="return confirm('¿Eliminar esta recurrente?')">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ recurring.id) }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

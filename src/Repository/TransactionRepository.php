@@ -83,6 +83,43 @@ class TransactionRepository extends ServiceEntityRepository
     }
 
     /**
+     * Query filtrada para paginación con KnpPaginator.
+     */
+    public function findByFiltersQuery(
+        Account $account,
+        ?int $year = null,
+        ?int $month = null,
+        ?string $type = null,
+        ?int $categoryId = null
+    ): \Doctrine\ORM\QueryBuilder {
+        $qb = $this->createQueryBuilder('t')
+            ->where('t.account = :account')
+            ->setParameter('account', $account)
+            ->orderBy('t.date', 'DESC')
+            ->addOrderBy('t.createdAt', 'DESC');
+
+        if ($year && $month) {
+            $from = new \DateTime("$year-$month-01");
+            $to = (clone $from)->modify('last day of this month');
+            $qb->andWhere('t.date >= :from AND t.date <= :to')
+               ->setParameter('from', $from)
+               ->setParameter('to', $to);
+        }
+
+        if ($type) {
+            $qb->andWhere('t.type = :type')
+               ->setParameter('type', $type);
+        }
+
+        if ($categoryId) {
+            $qb->andWhere('t.category = :cat')
+               ->setParameter('cat', $categoryId);
+        }
+
+        return $qb;
+    }
+
+    /**
      * Totales mensuales (income y expense) para un año dado.
      * Para el gráfico de barras del dashboard.
      */

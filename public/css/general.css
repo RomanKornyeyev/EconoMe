@@ -74,3 +74,31 @@ html{
     opacity: 0;
   }
 }
+
+
+/*====== INDEX DASHBOARD =======*/
+/* Tarjeta de transacción mobile - hover sutil */
+.bg-body-secondary.rounded-3.p-3:hover {
+    background-color: rgba(0,0,0,0.04) !important;
+}
+
+/* Badge auto-generado */
+.badge.bg-body-secondary {
+    border: 1px solid rgba(0,0,0,0.08);
+}
+
+/* Dot de categoría alineado */
+.rounded-circle.me-1 {
+    vertical-align: middle;
+}
+
+/* Stats cards en mobile más compactas */
+@media (max-width: 767.98px) {
+    .fs-5 {
+        font-size: 1.1rem !important;
+    }
+}
+
+/* Tabla sin bordes laterales */
+.table th:first-child, .table td:first-child { padding-left: 1rem; }
+.table th:last-child,  .table td:last-child  { padding-right: 1rem; }

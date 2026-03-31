@@ -1,0 +1,63 @@
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead>
+            <tr>
+                <th class="text-muted small text-uppercase fw-normal">Fecha</th>
+                <th class="text-muted small text-uppercase fw-normal">Descripción</th>
+                <th class="text-muted small text-uppercase fw-normal">Categoría</th>
+                <th class="text-muted small text-uppercase fw-normal">Tipo</th>
+                <th class="text-muted small text-uppercase fw-normal text-end">Importe</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tx in transactions %}
+            <tr>
+                <td class="small">{{ tx.date|date('d/m/Y') }}</td>
+                <td>
+                    {{ tx.description }}
+                    {% if tx.wasGeneratedAutomatically() %}
+                        <span class="badge bg-body-secondary text-muted ms-1" style="font-size:10px">Auto</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if tx.category %}
+                        <span class="d-inline-block rounded-circle me-1" style="width:8px;height:8px;background:{{ tx.category.color }}"></span>
+                        <span class="small">{{ tx.category.name }}</span>
+                    {% else %}
+                        <span class="small text-muted">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if tx.isExpense() %}
+                        <span class="badge bg-danger-subtle text-danger">Gasto</span>
+                    {% else %}
+                        <span class="badge bg-success-subtle text-success">Ingreso</span>
+                    {% endif %}
+                </td>
+                <td class="text-end fw-semibold {{ tx.isExpense() ? 'text-danger' : 'text-success' }}">
+                    {{ tx.isExpense() ? '-' : '+' }}{{ tx.amount|number_format(2, ',', '.') }}
+                </td>
+                <td>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-link text-muted p-0" data-bs-toggle="dropdown">
+                            &#8942;
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ path('transaction_edit', {id: tx.id}) }}">Editar</a></li>
+                            <li>
+                                <form method="post" action="{{ path('transaction_delete', {id: tx.id}) }}" onsubmit="return confirm('¿Eliminar este movimiento?')">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tx.id) }}">
+                                    <button class="dropdown-item text-danger">Eliminar</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No hay movimientos para este periodo.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

@@ -111,11 +111,88 @@ class AccountService
     }
 
     /**
+     * Devuelve las cuentas donde el usuario es miembro activo.
+     */
+    public function getActiveAccountsForUser(User $user): array
+    {
+        $members = $this->em->getRepository(AccountMember::class)->findBy([
+            'user'   => $user,
+            'leftAt' => null,
+        ]);
+
+        return array_map(fn(AccountMember $m) => $m->getAccount(), $members);
+    }
+
+    /**
      * Calcula el balance de la cuenta.
      */
     public function getBalance(Account $account): string
     {
         return $this->transactionRepository->calculateBalance($account);
+    }
+
+    /**
+     * Devuelve el AccountMember del usuario en una cuenta, o null.
+     */
+    public function getMemberRole(Account $account, User $user): ?AccountMember
+    {
+        return $this->findActiveMember($account, $user);
+    }
+
+    /**
+     * Elimina un miembro de la cuenta (el owner lo expulsa).
+     */
+    public function removeMember(Account $account, User $owner, User $target): void
+    {
+        $ownerMember = $this->findActiveMember($account, $owner);
+        if (!$ownerMember || !$ownerMember->isOwner()) {
+            throw new \LogicException('Solo el propietario puede eliminar miembros.');
+        }
+
+        if ($owner === $target) {
+            throw new \LogicException('No puedes eliminarte a ti mismo.');
+        }
+
+        $targetMember = $this->findActiveMember($account, $target);
+        if (!$targetMember) {
+            throw new \LogicException('El usuario no es miembro de esta cuenta.');
+        }
+
+        $targetMember->leave();
+        $this->em->flush();
+    }
+
+    /**
+     * Actualiza el rol de un miembro.
+     */
+    public function changeMemberRole(Account $account, User $owner, User $target, string $newRole): void
+    {
+        $ownerMember = $this->findActiveMember($account, $owner);
+        if (!$ownerMember || !$ownerMember->isOwner()) {
+            throw new \LogicException('Solo el propietario puede cambiar roles.');
+        }
+
+        $targetMember = $this->findActiveMember($account, $target);
+        if (!$targetMember) {
+            throw new \LogicException('El usuario no es miembro de esta cuenta.');
+        }
+
+        $targetMember->setRole($newRole);
+        $this->em->flush();
+    }
+
+    /**
+     * Elimina una cuenta completa (solo el owner).
+     */
+    public function deleteAccount(Account $account, User $owner): void
+    {
+        $ownerMember = $this->findActiveMember($account, $owner);
+        if (!$ownerMember || !$ownerMember->isOwner()) {
+            throw new \LogicException('Solo el propietario puede eliminar la cuenta.');
+        }
+
+        $this->em->remove($account);
+        $this->em->flush();
     }
 
     /**

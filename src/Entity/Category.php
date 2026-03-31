@@ -46,7 +46,7 @@ class Category
     private ?string $color = null;
 
     #[ORM\Column(type: "string", length: 10)]
-    #[Assert\Choice([self::TYPE_EXPENSE, self::TYPE_INCOME])]
+    #[Assert\Choice(choices: [self::TYPE_EXPENSE, self::TYPE_INCOME])]
     private string $type = self::TYPE_EXPENSE;
 
     public function __construct(User $user)

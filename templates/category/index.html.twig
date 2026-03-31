@@ -1,0 +1,97 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Categorías{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="fa-solid fa-tags me-2"></i>Categorías</h4>
+    <a href="{{ path('category_create') }}" class="btn btn-primary btn-sm">
+        <i class="fa-solid fa-plus me-1"></i>Nueva categoría
+    </a>
+</div>
+
+{% set expenses = categories|filter(c => c.type == 'expense') %}
+{% set incomes  = categories|filter(c => c.type == 'income') %}
+
+{% if categories is empty %}
+    <div class="text-center py-5">
+        <i class="fa-solid fa-tags fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">No tienes categorías personalizadas</h5>
+        <a href="{{ path('category_create') }}" class="btn btn-primary mt-2">
+            <i class="fa-solid fa-plus me-1"></i>Crear categoría
+        </a>
+    </div>
+{% else %}
+    <div class="row g-3">
+        {% if expenses is not empty %}
+            <div class="col-12 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent">
+                        <h6 class="mb-0 text-danger"><i class="fa-solid fa-arrow-trend-down me-2"></i>Gastos</h6>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        {% for cat in expenses %}
+                            <li class="list-group-item d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if cat.color %}
+                                        <span class="rounded-circle d-inline-block" style="width:12px;height:12px;background:{{ cat.color }}"></span>
+                                    {% endif %}
+                                    {% if cat.icon %}<i class="fa-solid fa-{{ cat.icon }}"></i>{% endif %}
+                                    <span>{{ cat.name }}</span>
+                                </div>
+                                <div class="d-flex gap-1">
+                                    <a href="{{ path('category_edit', {id: cat.id}) }}" class="btn btn-sm btn-outline-secondary py-0 px-1">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </a>
+                                    <form method="post" action="{{ path('category_delete', {id: cat.id}) }}" class="d-inline"
+                                          onsubmit="return confirm('¿Eliminar categoría {{ cat.name }}?')">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cat.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if incomes is not empty %}
+            <div class="col-12 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent">
+                        <h6 class="mb-0 text-success"><i class="fa-solid fa-arrow-trend-up me-2"></i>Ingresos</h6>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        {% for cat in incomes %}
+                            <li class="list-group-item d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if cat.color %}
+                                        <span class="rounded-circle d-inline-block" style="width:12px;height:12px;background:{{ cat.color }}"></span>
+                                    {% endif %}
+                                    {% if cat.icon %}<i class="fa-solid fa-{{ cat.icon }}"></i>{% endif %}
+                                    <span>{{ cat.name }}</span>
+                                </div>
+                                <div class="d-flex gap-1">
+                                    <a href="{{ path('category_edit', {id: cat.id}) }}" class="btn btn-sm btn-outline-secondary py-0 px-1">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </a>
+                                    <form method="post" action="{{ path('category_delete', {id: cat.id}) }}" class="d-inline"
+                                          onsubmit="return confirm('¿Eliminar categoría {{ cat.name }}?')">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cat.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}

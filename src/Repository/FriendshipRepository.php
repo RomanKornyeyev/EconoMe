@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Friendship;
 use App\Entity\User;
+use App\Entity\UserSettings;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -83,6 +84,26 @@ class FriendshipRepository extends ServiceEntityRepository
             ->setParameter('user', $user)
             ->setParameter('status', Friendship::STATUS_BLOCKED)
             ->orderBy('f.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Busca usuarios por nombre, nickname o email respetando isSearchable.
+     */
+    public function searchUsers(User $currentUser, string $query): array
+    {
+        return $this->getEntityManager()->createQueryBuilder()
+            ->select('u')
+            ->from(User::class, 'u')
+            ->join('u.settings', 's')
+            ->where('s.isSearchable = true')
+            ->andWhere('u != :current')
+            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.name LIKE :q OR u.nickname LIKE :q OR u.email LIKE :q')
+            ->setParameter('current', $currentUser)
+            ->setParameter('q', '%' . $query . '%')
+            ->setMaxResults(20)
             ->getQuery()
             ->getResult();
     }

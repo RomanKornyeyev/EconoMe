@@ -1,0 +1,38 @@
+<div class="modal fade" id="newTransactionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nuevo movimiento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            {{ form_start(transactionForm, {action: path('transaction_create', {account: currentAccount.id}), attr: {class: 'needs-validation', novalidate: 'novalidate'}}) }}
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-6">
+                        {{ form_row(transactionForm.type, {label: 'Tipo', attr: {class: 'form-select'}}) }}
+                    </div>
+                    <div class="col-6">
+                        {{ form_row(transactionForm.amount, {label: 'Importe', attr: {class: 'form-control', placeholder: '0,00', step: '0.01'}}) }}
+                    </div>
+                    <div class="col-12">
+                        {{ form_row(transactionForm.description, {label: 'Descripción', attr: {class: 'form-control'}}) }}
+                    </div>
+                    <div class="col-6">
+                        {{ form_row(transactionForm.category, {label: 'Categoría', attr: {class: 'form-select'}, required: false}) }}
+                    </div>
+                    <div class="col-6">
+                        {{ form_row(transactionForm.date, {label: 'Fecha', attr: {class: 'form-control'}}) }}
+                    </div>
+                    <div class="col-12">
+                        {{ form_row(transactionForm.notes, {label: 'Notas', attr: {class: 'form-control', rows: 2}, required: false}) }}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+            {{ form_end(transactionForm) }}
+        </div>
+    </div>
+</div>

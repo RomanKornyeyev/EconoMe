@@ -1,0 +1,39 @@
+<div class="card border-0 shadow-sm h-100">
+    <div class="card-body">
+        <h6 class="card-title mb-3">Gastos por categoría</h6>
+        {% if expensesByCategory is empty %}
+            <p class="text-muted small">No hay gastos este mes.</p>
+        {% else %}
+            <canvas id="doughnutChart"></canvas>
+        {% endif %}
+    </div>
+</div>
+
+{% if expensesByCategory is not empty %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('doughnutChart').getContext('2d');
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: [{% for row in expensesByCategory %}'{{ row.categoryName ?? "Sin categoría" }}',{% endfor %}],
+            datasets: [{
+                data: [{% for row in expensesByCategory %}{{ row.total }},{% endfor %}],
+                backgroundColor: [{% for row in expensesByCategory %}'{{ row.categoryColor ?? "#607D8B" }}',{% endfor %}],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 1.2,
+            cutout: '65%',
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 8, padding: 10, font: { size: 11 } } }
+            }
+        }
+    });
+});
+</script>
+{% endif %}
