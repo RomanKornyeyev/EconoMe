@@ -11,6 +11,7 @@ use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\MoneyType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -30,6 +31,11 @@ class RecurringTransactionType extends AbstractType
             ->add('name', TextType::class, [
                 'label' => 'Nombre',
                 'attr' => ['placeholder' => 'Ej: Netflix, Alquiler, Nómina...'],
+            ])
+            ->add('description', TextareaType::class, [
+                'label' => 'Descripción',
+                'required' => false,
+                'attr' => ['rows' => 2, 'placeholder' => 'Descripción o notas adicionales...'],
             ])
             ->add('type', ChoiceType::class, [
                 'label' => 'Tipo',

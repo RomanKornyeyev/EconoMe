@@ -54,10 +54,10 @@ class Transaction
     #[ORM\Column(type: "string", length: 255)]
     #[Assert\NotBlank]
     #[Assert\Length(min: 1, max: 255)]
-    private ?string $description = null;
+    private ?string $name = null;
 
     #[ORM\Column(type: "text", nullable: true)]
-    private ?string $notes = null;
+    private ?string $description = null;
 
     public function __construct(Account $account, User $createdBy)
     {
@@ -136,25 +136,25 @@ class Transaction
         return $this;
     }
 
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+        return $this;
+    }
+
     public function getDescription(): ?string
     {
         return $this->description;
     }
 
-    public function setDescription(string $description): self
+    public function setDescription(?string $description): self
     {
         $this->description = $description;
-        return $this;
-    }
-
-    public function getNotes(): ?string
-    {
-        return $this->notes;
-    }
-
-    public function setNotes(?string $notes): self
-    {
-        $this->notes = $notes;
         return $this;
     }
 

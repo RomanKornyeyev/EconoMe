@@ -39,8 +39,8 @@ class TransactionType extends AbstractType
                 'currency' => $options['currency'] ?? 'EUR',
                 'attr' => ['placeholder' => '0,00'],
             ])
-            ->add('description', TextType::class, [
-                'label' => 'Descripción',
+            ->add('name', TextType::class, [
+                'label' => 'Nombre',
                 'attr' => ['placeholder' => 'Ej: Supermercado, Nómina...'],
             ])
             ->add('category', EntityType::class, [
@@ -65,10 +65,10 @@ class TransactionType extends AbstractType
                 'widget' => 'single_text',
                 'data' => new \DateTime(),
             ])
-            ->add('notes', TextareaType::class, [
-                'label' => 'Notas',
+            ->add('description', TextareaType::class, [
+                'label' => 'Descripción',
                 'required' => false,
-                'attr' => ['rows' => 2, 'placeholder' => 'Notas adicionales...'],
+                'attr' => ['rows' => 2, 'placeholder' => 'Descripción o notas adicionales...'],
             ])
         ;
     }

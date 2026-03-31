@@ -3,6 +3,7 @@
         <thead>
             <tr>
                 <th class="text-muted small text-uppercase fw-normal">Fecha</th>
+                <th class="text-muted small text-uppercase fw-normal">Nombre</th>
                 <th class="text-muted small text-uppercase fw-normal">Descripción</th>
                 <th class="text-muted small text-uppercase fw-normal">Categoría</th>
                 <th class="text-muted small text-uppercase fw-normal">Tipo</th>
@@ -14,11 +15,14 @@
             {% for tx in transactions %}
             <tr>
                 <td class="small">{{ tx.date|date('d/m/Y') }}</td>
-                <td>
-                    {{ tx.description }}
+                <td class="fw-semibold">
+                    {{ tx.name }}
                     {% if tx.wasGeneratedAutomatically() %}
                         <span class="badge bg-body-secondary text-muted ms-1" style="font-size:10px">Auto</span>
                     {% endif %}
+                </td>
+                <td class="text-muted">
+                    {% if tx.description %}{{ tx.description|slice(0,8) }}{% if tx.description|length > 8 %}…{% endif %}{% else %}—{% endif %}
                 </td>
                 <td>
                     {% if tx.category %}
@@ -56,7 +60,7 @@
                 </td>
             </tr>
             {% else %}
-                <tr><td colspan="6" class="text-center text-muted py-4">No hay movimientos para este periodo.</td></tr>
+                <tr><td colspan="7" class="text-center text-muted py-4">No hay movimientos para este periodo.</td></tr>
             {% endfor %}
         </tbody>
     </table>

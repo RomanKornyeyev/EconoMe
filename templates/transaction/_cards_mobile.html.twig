@@ -2,7 +2,7 @@
     {% for tx in transactions %}
     <div class="bg-body-secondary rounded-3 p-3">
         <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="fw-semibold small">{{ tx.description }}</span>
+            <span class="fw-semibold small">{{ tx.name }}</span>
             <span class="fw-semibold {{ tx.isExpense() ? 'text-danger' : 'text-success' }}">
                 {{ tx.isExpense() ? '-' : '+' }}{{ tx.amount|number_format(2, ',', '.') }}
             </span>

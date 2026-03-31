@@ -43,6 +43,9 @@ class RecurringTransaction
     #[Assert\Length(min: 1, max: 255)]
     private ?string $name = null;
 
+    #[ORM\Column(type: "text", nullable: true)]
+    private ?string $description = null;
+
     #[ORM\Column(type: "decimal", precision: 10, scale: 2)]
     #[Assert\Positive]
     private ?string $amount = null;
@@ -113,6 +116,17 @@ class RecurringTransaction
     public function setName(string $name): self
     {
         $this->name = $name;
+        return $this;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): self
+    {
+        $this->description = $description;
         return $this;
     }
 

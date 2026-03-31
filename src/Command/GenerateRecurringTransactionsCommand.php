@@ -46,7 +46,8 @@ class GenerateRecurringTransactionsCommand extends Command
             $transaction->setType($recurring->getType());
             $transaction->setAmount($recurring->getAmount());
             $transaction->setDate(new \DateTime());
-            $transaction->setDescription($recurring->getName());
+            $transaction->setName($recurring->getName());
+            $transaction->setDescription($recurring->getDescription());
             $transaction->setCategory($recurring->getCategory());
             $transaction->setRecurringSource($recurring);
 

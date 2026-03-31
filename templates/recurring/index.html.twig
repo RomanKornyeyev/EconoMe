@@ -35,6 +35,7 @@
                 <thead class="table-light">
                     <tr>
                         <th>Nombre</th>
+                        <th>Descripción</th>
                         <th>Tipo</th>
                         <th class="text-end">Importe</th>
                         <th>Frecuencia</th>
@@ -48,6 +49,9 @@
                     {% for recurring in recurrings %}
                         <tr class="{{ not recurring.isActive ? 'text-muted' : '' }}">
                             <td class="align-middle fw-semibold">{{ recurring.name }}</td>
+                            <td class="align-middle text-muted">
+                                {% if recurring.description %}{{ recurring.description|slice(0,8) }}{% if recurring.description|length > 8 %}…{% endif %}{% else %}—{% endif %}
+                            </td>
                             <td class="align-middle">
                                 <span class="badge {{ recurring.type == 'expense' ? 'bg-danger' : 'bg-success' }}">
                                     {{ recurring.type == 'expense' ? 'Gasto' : 'Ingreso' }}

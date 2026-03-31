@@ -75,6 +75,7 @@
             <thead class="table-light">
                 <tr>
                     <th>Fecha</th>
+                    <th>Nombre</th>
                     <th>Descripción</th>
                     <th>Categoría</th>
                     <th class="text-end">Importe</th>
@@ -85,7 +86,10 @@
                 {% for transaction in pagination %}
                     <tr>
                         <td class="text-muted small align-middle">{{ transaction.date|date('d/m/Y') }}</td>
-                        <td class="align-middle">{{ transaction.description }}</td>
+                        <td class="align-middle fw-semibold">{{ transaction.name }}</td>
+                        <td class="align-middle text-muted">
+                            {% if transaction.description %}{{ transaction.description|slice(0,8) }}{% if transaction.description|length > 8 %}…{% endif %}{% else %}—{% endif %}
+                        </td>
                         <td class="align-middle">
                             {% if transaction.category %}
                                 <span class="badge bg-body-secondary text-body-secondary">{{ transaction.category.name }}</span>
@@ -111,7 +115,7 @@
                     </tr>
                 {% else %}
                     <tr>
-                        <td colspan="5" class="text-center text-muted py-4">No hay movimientos con estos filtros.</td>
+                        <td colspan="6" class="text-center text-muted py-4">No hay movimientos con estos filtros.</td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -123,7 +127,7 @@
         {% for transaction in pagination %}
             <div class="d-flex justify-content-between align-items-center border-bottom py-2">
                 <div>
-                    <div class="fw-semibold">{{ transaction.description }}</div>
+                    <div class="fw-semibold">{{ transaction.name }}</div>
                     <small class="text-muted">{{ transaction.date|date('d/m/Y') }}</small>
                     {% if transaction.category %}
                         <span class="badge bg-body-secondary text-body-secondary ms-1">{{ transaction.category.name }}</span>
