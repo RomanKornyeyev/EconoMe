@@ -50,7 +50,7 @@ class DashboardController extends AbstractController
         $monthlyData         = $transactionRepo->findByAccountAndDateRange($account, $from, $to);
         $expensesByCategory  = $transactionRepo->sumExpensesByCategory($account, $from, $to);
         $yearlyTotals        = $transactionRepo->monthlyTotals($account, $year);
-        $activeRecurrings    = count($recurringRepo->findByAccount($account));
+        $activeRecurrings    = $recurringRepo->countActiveByAccount($account);
 
         $monthIncome  = '0';
         $monthExpense = '0';

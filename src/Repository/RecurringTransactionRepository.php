@@ -28,6 +28,20 @@ class RecurringTransactionRepository extends ServiceEntityRepository
     }
 
     /**
+     * Número de recurrentes activas de una cuenta concreta.
+     */
+    public function countActiveByAccount($account): int
+    {
+        return (int) $this->createQueryBuilder('r')
+            ->select('COUNT(r.id)')
+            ->where('r.account = :account')
+            ->andWhere('r.isActive = true')
+            ->setParameter('account', $account)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
      * Recurrentes de una cuenta concreta.
      */
     public function findByAccount($account): array
