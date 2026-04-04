@@ -98,9 +98,14 @@ class TransactionRepository extends ServiceEntityRepository
             ->orderBy('t.date', 'DESC')
             ->addOrderBy('t.createdAt', 'DESC');
 
-        if ($year && $month) {
-            $from = new \DateTime("$year-$month-01");
-            $to = (clone $from)->modify('last day of this month');
+        if ($year) {
+            if ($month !== null) {
+                $from = new \DateTime("$year-$month-01");
+                $to = (clone $from)->modify('last day of this month');
+            } else {
+                $from = new \DateTime("$year-01-01");
+                $to = new \DateTime("$year-12-31");
+            }
             $qb->andWhere('t.date >= :from AND t.date <= :to')
                ->setParameter('from', $from)
                ->setParameter('to', $to);
@@ -117,6 +122,42 @@ class TransactionRepository extends ServiceEntityRepository
         }
 
         return $qb;
+    }
+
+    /**
+     * Meses distintos (1-12) en los que hay transacciones para una cuenta y año dados.
+     */
+    public function findMonthsWithTransactions(Account $account, int $year): array
+    {
+        $result = $this->createQueryBuilder('t')
+            ->select('SUBSTRING(t.date, 6, 2) as mo')
+            ->where('t.account = :account')
+            ->andWhere('SUBSTRING(t.date, 1, 4) = :year')
+            ->setParameter('account', $account)
+            ->setParameter('year', (string)$year)
+            ->groupBy('mo')
+            ->orderBy('mo', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return array_map(fn($r) => (int)$r['mo'], $result);
+    }
+
+    /**
+     * Años distintos en los que hay transacciones para una cuenta.
+     */
+    public function findYearsWithTransactions(Account $account): array
+    {
+        $result = $this->createQueryBuilder('t')
+            ->select('SUBSTRING(t.date, 1, 4) as yr')
+            ->where('t.account = :account')
+            ->setParameter('account', $account)
+            ->groupBy('yr')
+            ->orderBy('yr', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        return array_map(fn($r) => (int)$r['yr'], $result);
     }
 
     /**

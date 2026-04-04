@@ -1,7 +1,7 @@
 <div class="row g-3 mb-3">
     <div class="col-6 col-lg-3">
         <div class="bg-body-secondary rounded-3 p-3">
-            <div class="text-muted small text-uppercase mb-1">Balance</div>
+            <div class="text-muted small text-uppercase mb-1">Balance <span class="fw-normal">(total)</span></div>
             <div class="fs-5 fw-semibold {{ balance >= 0 ? 'text-success' : 'text-danger' }}">
                 {{ balance|number_format(2, ',', '.') }} {{ currentAccount.currency }}
             </div>
@@ -9,17 +9,17 @@
     </div>
     <div class="col-6 col-lg-3">
         <div class="bg-body-secondary rounded-3 p-3">
-            <div class="text-muted small text-uppercase mb-1">Ingresos del mes</div>
+            <div class="text-muted small text-uppercase mb-1">Ingresos de {{ periodLabel }}</div>
             <div class="fs-5 fw-semibold text-success">
-                +{{ monthIncome|number_format(2, ',', '.') }}
+                +{{ periodIncome|number_format(2, ',', '.') }}
             </div>
         </div>
     </div>
     <div class="col-6 col-lg-3">
         <div class="bg-body-secondary rounded-3 p-3">
-            <div class="text-muted small text-uppercase mb-1">Gastos del mes</div>
+            <div class="text-muted small text-uppercase mb-1">Gastos de {{ periodLabel }}</div>
             <div class="fs-5 fw-semibold text-danger">
-                -{{ monthExpense|number_format(2, ',', '.') }}
+                -{{ periodExpense|number_format(2, ',', '.') }}
             </div>
         </div>
     </div>

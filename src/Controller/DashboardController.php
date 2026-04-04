@@ -43,8 +43,26 @@ class DashboardController extends AbstractController
         $year  = $request->query->getInt('year', (int)date('Y'));
         $month = $request->query->getInt('month', (int)date('m'));
 
-        $from = new \DateTime("$year-$month-01");
-        $to   = (clone $from)->modify('last day of this month');
+        // month=0 → modo año completo
+        $yearOnly = ($month === 0);
+        if ($yearOnly) {
+            $from = new \DateTime("$year-01-01");
+            $to   = new \DateTime("$year-12-31");
+        } else {
+            $from = new \DateTime("$year-$month-01");
+            $to   = (clone $from)->modify('last day of this month');
+        }
+
+        $monthNames = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+        $periodLabel = $yearOnly ? (string)$year : $monthNames[$month - 1] . ' ' . $year;
+
+        $availableYears = $transactionRepo->findYearsWithTransactions($account);
+        if (!in_array($year, $availableYears)) {
+            $availableYears[] = $year;
+            rsort($availableYears);
+        }
+
+        $availableMonths = $transactionRepo->findMonthsWithTransactions($account, $year);
 
         $balance             = $transactionRepo->calculateBalance($account);
         $monthlyData         = $transactionRepo->findByAccountAndDateRange($account, $from, $to);
@@ -52,18 +70,18 @@ class DashboardController extends AbstractController
         $yearlyTotals        = $transactionRepo->monthlyTotals($account, $year);
         $activeRecurrings    = $recurringRepo->countActiveByAccount($account);
 
-        $monthIncome  = '0';
-        $monthExpense = '0';
+        $periodIncome  = '0';
+        $periodExpense = '0';
         foreach ($monthlyData as $tx) {
             if ($tx->isIncome()) {
-                $monthIncome  = bcadd($monthIncome, $tx->getAmount(), 2);
+                $periodIncome  = bcadd($periodIncome, $tx->getAmount(), 2);
             } else {
-                $monthExpense = bcadd($monthExpense, $tx->getAmount(), 2);
+                $periodExpense = bcadd($periodExpense, $tx->getAmount(), 2);
             }
         }
 
         $pagination = $paginator->paginate(
-            $transactionRepo->findByFiltersQuery($account, $year, $month),
+            $transactionRepo->findByFiltersQuery($account, $year, $yearOnly ? null : $month),
             $request->query->getInt('page', 1),
             10
         );
@@ -79,14 +97,17 @@ class DashboardController extends AbstractController
             'accounts'           => $accounts,
             'currentAccount'     => $account,
             'balance'            => $balance,
-            'monthIncome'        => $monthIncome,
-            'monthExpense'       => $monthExpense,
+            'periodIncome'       => $periodIncome,
+            'periodExpense'      => $periodExpense,
             'activeRecurrings'   => $activeRecurrings,
             'transactions'       => $pagination,
             'expensesByCategory' => $expensesByCategory,
             'yearlyTotals'       => $yearlyTotals,
             'year'               => $year,
             'month'              => $month,
+            'periodLabel'        => $periodLabel,
+            'availableYears'     => $availableYears,
+            'availableMonths'    => $availableMonths,
             'transactionForm'    => $transactionForm,
         ]);
     }

@@ -11,32 +11,81 @@
     </div>
 {% else %}
 
-{# Header con selector de cuenta y mes #}
+{# Zona 1: Cabecera — título + selector de cuenta #}
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
     <h4 class="mb-0">Dashboard</h4>
-    <div class="d-flex gap-2 flex-wrap">
-        <select class="form-select form-select-sm" style="width:auto" onchange="window.location.href='?account='+this.value+'&year={{ year }}&month={{ month }}'">
-            {% for acc in accounts %}
-                <option value="{{ acc.id }}" {{ acc.id == currentAccount.id ? 'selected' : '' }}>{{ acc.name }}</option>
-            {% endfor %}
-        </select>
-        <select class="form-select form-select-sm" style="width:auto" onchange="let v=this.value.split('-'); window.location.href='?account={{ currentAccount.id }}&year='+v[0]+'&month='+v[1]">
-            {% for m in 1..12 %}
-                <option value="{{ year }}-{{ m }}" {{ m == month ? 'selected' : '' }}>
-                    {{ (year ~ '-' ~ m|format_number({fraction_digit: 0}) ~ '-01')|date('F Y') }}
-                </option>
-            {% endfor %}
-        </select>
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newTransactionModal">
-            <i class="fa-solid fa-plus me-1"></i>Nuevo movimiento
-        </button>
-    </div>
+    <select class="form-select form-select-sm" style="width:auto" onchange="window.location.href='?account='+this.value+'&year={{ year }}&month={{ month }}'">
+        {% for acc in accounts %}
+            <option value="{{ acc.id }}" {{ acc.id == currentAccount.id ? 'selected' : '' }}>{{ acc.name }}</option>
+        {% endfor %}
+    </select>
 </div>
 
-{# Stats cards #}
+{# Zona 2: Filtros globales #}
+{% if month == 0 %}
+    {% set prevUrl = '?account=' ~ currentAccount.id ~ '&year=' ~ (year - 1) ~ '&month=0' %}
+    {% set nextUrl = '?account=' ~ currentAccount.id ~ '&year=' ~ (year + 1) ~ '&month=0' %}
+{% else %}
+    {% if month == 1 %}{% set prevYear = year - 1 %}{% set prevMonth = 12 %}
+    {% else %}{% set prevYear = year %}{% set prevMonth = month - 1 %}{% endif %}
+    {% if month == 12 %}{% set nextYear = year + 1 %}{% set nextMonth = 1 %}
+    {% else %}{% set nextYear = year %}{% set nextMonth = month + 1 %}{% endif %}
+    {% set prevUrl = '?account=' ~ currentAccount.id ~ '&year=' ~ prevYear ~ '&month=' ~ prevMonth %}
+    {% set nextUrl = '?account=' ~ currentAccount.id ~ '&year=' ~ nextYear ~ '&month=' ~ nextMonth %}
+{% endif %}
+{% set monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'] %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2 bg-body">
+    <div class="btn-group" role="group">
+        <a href="{{ prevUrl }}" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-chevron-left fa-sm"></i></a>
+
+        {# Desplegable de mes #}
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                {% if month == 0 %}Año completo{% else %}{{ monthNames[month - 1] }}{% endif %}
+            </button>
+            <ul class="dropdown-menu">
+                {% for m in 1..12 %}
+                    {% set hasData = m in availableMonths %}
+                    <li>
+                        <a class="dropdown-item {{ m == month ? 'active' : '' }}" href="?account={{ currentAccount.id }}&year={{ year }}&month={{ m }}">
+                            {% if not hasData %}
+                                <span class="text-muted">{{ monthNames[m - 1] }}</span>
+                            {% else %}
+                                {{ monthNames[m - 1] }}
+                            {% endif %}
+                            {% if not hasData %}<span class="ms-1" style="font-size:.72em; opacity:.4">(sin datos)</span>{% endif %}
+                        </a>
+                    </li>
+                {% endfor %}
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item {{ month == 0 ? 'active' : '' }}" href="?account={{ currentAccount.id }}&year={{ year }}&month=0">Año completo</a></li>
+            </ul>
+        </div>
+
+        {# Desplegable de año #}
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                {{ year }}
+            </button>
+            <ul class="dropdown-menu">
+                {% for y in availableYears %}
+                    <li><a class="dropdown-item {{ y == year ? 'active' : '' }}" href="?account={{ currentAccount.id }}&year={{ y }}&month={{ month }}">{{ y }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <a href="{{ nextUrl }}" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-chevron-right fa-sm"></i></a>
+    </div>
+    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newTransactionModal">
+        <i class="fa-solid fa-plus me-1"></i>Nuevo movimiento
+    </button>
+</div>
+
+{# Zona 3: KPIs #}
 {% include 'components/_stats_cards.html.twig' %}
 
-{# Charts #}
+{# Zona 4: Gráficos #}
 <div class="row g-3 mb-3">
     <div class="col-12 col-lg-8">
         {% include 'components/_chart_bar.html.twig' %}
@@ -46,11 +95,10 @@
     </div>
 </div>
 
-{# Últimos movimientos #}
+{# Zona 5: Movimientos #}
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
-        <h6 class="mb-0">Últimos movimientos</h6>
-        <a href="{{ path('transaction_index', {account: currentAccount.id}) }}" class="btn btn-sm btn-outline-secondary">Ver todos</a>
+        <h6 class="mb-0">Movimientos <span class="text-muted fw-normal small">{{ periodLabel }}</span></h6>
     </div>
 
     {# Tabla desktop: visible en md+ #}

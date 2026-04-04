@@ -78,9 +78,10 @@ html{
 
 /*====== INDEX DASHBOARD =======*/
 /* Tarjeta de transacción mobile - hover sutil */
-.bg-body-secondary.rounded-3.p-3:hover {
-    background-color: rgba(0,0,0,0.04) !important;
-}
+/* .bg-body-secondary.rounded-3.p-3:hover {
+    background-color: rgba(0, 0, 0, 0.15) !important;
+    transition: background-color 0.15s ease;
+} */
 
 /* Badge auto-generado */
 .badge.bg-body-secondary {
