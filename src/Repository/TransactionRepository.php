@@ -60,10 +60,11 @@ class TransactionRepository extends ServiceEntityRepository
      * Gastos agrupados por categoría en un rango de fechas.
      * Para el gráfico donut del dashboard.
      */
-    public function sumExpensesByCategory(
+    public function sumByCategory(
         Account $account,
         \DateTimeInterface $from,
-        \DateTimeInterface $to
+        \DateTimeInterface $to,
+        string $type = Transaction::TYPE_EXPENSE
     ): array {
         return $this->createQueryBuilder('t')
             ->select('c.name as categoryName', 'c.color as categoryColor', 'SUM(t.amount) as total')
@@ -73,7 +74,7 @@ class TransactionRepository extends ServiceEntityRepository
             ->andWhere('t.date >= :from')
             ->andWhere('t.date <= :to')
             ->setParameter('account', $account)
-            ->setParameter('type', Transaction::TYPE_EXPENSE)
+            ->setParameter('type', $type)
             ->setParameter('from', $from)
             ->setParameter('to', $to)
             ->groupBy('c.id', 'c.name', 'c.color')

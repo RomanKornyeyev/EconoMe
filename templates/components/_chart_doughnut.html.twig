@@ -1,8 +1,19 @@
+{% set queryParams = app.request.query.all|merge({'categoryType': 'expense'}) %}
+{% set urlExpense = '?' ~ queryParams|url_encode %}
+{% set queryParams = app.request.query.all|merge({'categoryType': 'income'}) %}
+{% set urlIncome  = '?' ~ queryParams|url_encode %}
+
 <div class="card border-0 shadow-sm h-100">
+    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">Por categoría</h6>
+        <div class="btn-group btn-group-sm" role="group">
+            <a href="{{ urlExpense }}" class="btn {{ categoryType == 'expense' ? 'btn-secondary' : 'btn-outline-secondary' }}">Gastos</a>
+            <a href="{{ urlIncome }}"  class="btn {{ categoryType == 'income'  ? 'btn-secondary' : 'btn-outline-secondary' }}">Ingresos</a>
+        </div>
+    </div>
     <div class="card-body">
-        <h6 class="card-title mb-3">Gastos por categoría</h6>
         {% if expensesByCategory is empty %}
-            <p class="text-muted small">No hay gastos este mes.</p>
+            <p class="text-muted small">No hay {{ categoryType == 'income' ? 'ingresos' : 'gastos' }} este período.</p>
         {% else %}
             <canvas id="doughnutChart"></canvas>
         {% endif %}

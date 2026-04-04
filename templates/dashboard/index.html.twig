@@ -14,7 +14,7 @@
 {# Zona 1: Cabecera — título + selector de cuenta #}
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
     <h4 class="mb-0">Dashboard</h4>
-    <select class="form-select form-select-sm" style="width:auto" onchange="window.location.href='?account='+this.value+'&year={{ year }}&month={{ month }}'">
+    <select class="form-select form-select-sm" style="width:auto" onchange="const p=new URLSearchParams(location.search); p.set('account',this.value); window.location.href='?'+p.toString()">
         {% for acc in accounts %}
             <option value="{{ acc.id }}" {{ acc.id == currentAccount.id ? 'selected' : '' }}>{{ acc.name }}</option>
         {% endfor %}
@@ -22,16 +22,17 @@
 </div>
 
 {# Zona 2: Filtros globales #}
+{% set q = app.request.query.all %}
 {% if month == 0 %}
-    {% set prevUrl = '?account=' ~ currentAccount.id ~ '&year=' ~ (year - 1) ~ '&month=0' %}
-    {% set nextUrl = '?account=' ~ currentAccount.id ~ '&year=' ~ (year + 1) ~ '&month=0' %}
+    {% set prevUrl = '?' ~ q|merge({'year': year - 1, 'month': 0})|url_encode %}
+    {% set nextUrl = '?' ~ q|merge({'year': year + 1, 'month': 0})|url_encode %}
 {% else %}
     {% if month == 1 %}{% set prevYear = year - 1 %}{% set prevMonth = 12 %}
     {% else %}{% set prevYear = year %}{% set prevMonth = month - 1 %}{% endif %}
     {% if month == 12 %}{% set nextYear = year + 1 %}{% set nextMonth = 1 %}
     {% else %}{% set nextYear = year %}{% set nextMonth = month + 1 %}{% endif %}
-    {% set prevUrl = '?account=' ~ currentAccount.id ~ '&year=' ~ prevYear ~ '&month=' ~ prevMonth %}
-    {% set nextUrl = '?account=' ~ currentAccount.id ~ '&year=' ~ nextYear ~ '&month=' ~ nextMonth %}
+    {% set prevUrl = '?' ~ q|merge({'year': prevYear, 'month': prevMonth})|url_encode %}
+    {% set nextUrl = '?' ~ q|merge({'year': nextYear, 'month': nextMonth})|url_encode %}
 {% endif %}
 {% set monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'] %}
 
@@ -48,7 +49,7 @@
                 {% for m in 1..12 %}
                     {% set hasData = m in availableMonths %}
                     <li>
-                        <a class="dropdown-item {{ m == month ? 'active' : '' }}" href="?account={{ currentAccount.id }}&year={{ year }}&month={{ m }}">
+                        <a class="dropdown-item {{ m == month ? 'active' : '' }}" href="?{{ q|merge({'month': m})|url_encode }}">
                             {% if not hasData %}
                                 <span class="text-muted">{{ monthNames[m - 1] }}</span>
                             {% else %}
@@ -59,7 +60,7 @@
                     </li>
                 {% endfor %}
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item {{ month == 0 ? 'active' : '' }}" href="?account={{ currentAccount.id }}&year={{ year }}&month=0">Año completo</a></li>
+                <li><a class="dropdown-item {{ month == 0 ? 'active' : '' }}" href="?{{ q|merge({'month': 0})|url_encode }}">Año completo</a></li>
             </ul>
         </div>
 
@@ -70,7 +71,7 @@
             </button>
             <ul class="dropdown-menu">
                 {% for y in availableYears %}
-                    <li><a class="dropdown-item {{ y == year ? 'active' : '' }}" href="?account={{ currentAccount.id }}&year={{ y }}&month={{ month }}">{{ y }}</a></li>
+                    <li><a class="dropdown-item {{ y == year ? 'active' : '' }}" href="?{{ q|merge({'year': y})|url_encode }}">{{ y }}</a></li>
                 {% endfor %}
             </ul>
         </div>

@@ -64,9 +64,14 @@ class DashboardController extends AbstractController
 
         $availableMonths = $transactionRepo->findMonthsWithTransactions($account, $year);
 
-        $balance             = $transactionRepo->calculateBalance($account);
-        $monthlyData         = $transactionRepo->findByAccountAndDateRange($account, $from, $to);
-        $expensesByCategory  = $transactionRepo->sumExpensesByCategory($account, $from, $to);
+        $categoryType = $request->query->getString('categoryType', Transaction::TYPE_EXPENSE);
+        if (!in_array($categoryType, [Transaction::TYPE_EXPENSE, Transaction::TYPE_INCOME])) {
+            $categoryType = Transaction::TYPE_EXPENSE;
+        }
+
+        $balance            = $transactionRepo->calculateBalance($account);
+        $monthlyData        = $transactionRepo->findByAccountAndDateRange($account, $from, $to);
+        $expensesByCategory = $transactionRepo->sumByCategory($account, $from, $to, $categoryType);
         $yearlyTotals        = $transactionRepo->monthlyTotals($account, $year);
         $activeRecurrings    = $recurringRepo->countActiveByAccount($account);
 
@@ -108,6 +113,7 @@ class DashboardController extends AbstractController
             'periodLabel'        => $periodLabel,
             'availableYears'     => $availableYears,
             'availableMonths'    => $availableMonths,
+            'categoryType'       => $categoryType,
             'transactionForm'    => $transactionForm,
         ]);
     }
