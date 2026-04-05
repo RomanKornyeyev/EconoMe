@@ -1,13 +1,18 @@
 <div class="row g-3 mb-3">
-    <div class="col-6 col-lg-3">
+    <div class="col-12 col-md-6 col-lg-3">
         <div class="bg-body-secondary rounded-3 p-3">
-            <div class="text-muted small text-uppercase mb-1">Balance <span class="fw-normal">(total)</span></div>
+            <div class="text-muted small text-uppercase mb-1">
+                Balance <span class="fw-normal">(total)</span>
+                <i class="fa-solid fa-circle-info ms-1"
+                   data-bs-toggle="tooltip"
+                   title="Balance total de la cuenta seleccionada, independiente del período filtrado"></i>
+            </div>
             <div class="fs-5 fw-semibold {{ balance >= 0 ? 'text-success' : 'text-danger' }}">
                 {{ balance|number_format(2, ',', '.') }} {{ currentAccount.currency }}
             </div>
         </div>
     </div>
-    <div class="col-6 col-lg-3">
+    <div class="col-12 col-md-6 col-lg-3">
         <div class="bg-body-secondary rounded-3 p-3">
             <div class="text-muted small text-uppercase mb-1">Ingresos de {{ periodLabel }}</div>
             <div class="fs-5 fw-semibold text-success">
@@ -15,7 +20,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-lg-3">
+    <div class="col-12 col-md-6 col-lg-3">
         <div class="bg-body-secondary rounded-3 p-3">
             <div class="text-muted small text-uppercase mb-1">Gastos de {{ periodLabel }}</div>
             <div class="fs-5 fw-semibold text-danger">
@@ -23,7 +28,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-lg-3">
+    <div class="col-12 col-md-6 col-lg-3">
         <div class="bg-body-secondary rounded-3 p-3">
             <div class="text-muted small text-uppercase mb-1">Recurrentes activos</div>
             <div class="fs-5 fw-semibold">{{ activeRecurrings }}</div>
