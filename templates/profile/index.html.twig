@@ -124,9 +124,12 @@
 								<h2 class="h4 mb-3">
 									Correo electrónico
 								</h2>
-								<p class="mt-2">
+								<p class="mt-2 d-flex align-items-center gap-2 flex-wrap">
 									{% if profile.email %}
-										{{ profile.email }}
+										<button type="button" id="email-toggle" class="btn btn-outline-secondary btn-sm" title="Mostrar/ocultar email" aria-label="Mostrar email completo">
+											<i class="fa-solid fa-eye" id="email-toggle-icon"></i>
+										</button>
+										<span id="email-display" data-email="{{ profile.email }}"></span>
 									{% else %}
 										<span class="text-muted">No definido</span>
 									{% endif %}
@@ -200,4 +203,33 @@
 
 		</div>
 	</div>
+
+	<script>
+		(function () {
+			const display = document.getElementById('email-display');
+			const toggle  = document.getElementById('email-toggle');
+			const icon    = document.getElementById('email-toggle-icon');
+			if (!display || !toggle) return;
+
+			const full = display.dataset.email;
+			let visible = false;
+
+			function maskEmail(email) {
+				const [local, domain] = email.split('@');
+				const visible = Math.min(2, local.length - 1);
+				const maskedLocal = local.slice(0, visible) + '*'.repeat(local.length - visible);
+				return maskedLocal + '@' + domain;
+			}
+
+			display.textContent = maskEmail(full);
+
+			toggle.addEventListener('click', function () {
+				visible = !visible;
+				display.textContent = visible ? full : maskEmail(full);
+				icon.classList.toggle('fa-eye', !visible);
+				icon.classList.toggle('fa-eye-slash', visible);
+				toggle.title = visible ? 'Ocultar email' : 'Mostrar email completo';
+			});
+		})();
+	</script>
 {% endblock %}
