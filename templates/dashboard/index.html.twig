@@ -106,6 +106,7 @@
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Movimientos <span class="text-muted fw-normal small">{{ periodLabel }}</span></h5>
+        <a href="{{ path('transaction_index', {account: currentAccount.id}) }}" class="btn btn-sm btn-outline-secondary">Ver todos</a>
     </div>
 
     {# Tabla desktop: visible en md+ #}

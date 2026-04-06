@@ -2,10 +2,35 @@
     {% for tx in transactions %}
     <div class="bg-body-secondary rounded-3 p-3">
         <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="fw-semibold small">{{ tx.name }}</span>
-            <span class="fw-semibold {{ tx.isExpense() ? 'text-danger' : 'text-success' }}">
-                {{ tx.isExpense() ? '-' : '+' }}{{ tx.amount|number_format(2, ',', '.') }}
+            <span class="fw-semibold small">
+                {{ tx.name }}
+                {% if tx.wasGeneratedAutomatically() %}
+                    <span class="badge bg-body text-muted ms-1" style="font-size:10px">Auto</span>
+                {% endif %}
             </span>
+            <div class="d-flex align-items-center gap-2">
+                <span class="fw-semibold {{ tx.isExpense() ? 'text-danger' : 'text-success' }}">
+                    {{ tx.isExpense() ? '-' : '+' }}{{ tx.amount|number_format(2, ',', '.') }}
+                </span>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary text-muted text-decoration-none lh-1" data-bs-toggle="dropdown" aria-expanded="false">&#8942;</button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="{{ path('transaction_edit', {id: tx.id}) }}">
+                                <i class="fa-solid fa-pen fa-sm me-2 text-muted"></i>Editar
+                            </a>
+                        </li>
+                        <li>
+                            <form method="post" action="{{ path('transaction_delete', {id: tx.id}) }}" onsubmit="return confirm('¿Eliminar este movimiento?')">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tx.id) }}">
+                                <button class="dropdown-item text-danger">
+                                    <i class="fa-solid fa-trash fa-sm me-2"></i>Eliminar
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
         <div class="d-flex justify-content-between align-items-center">
             <span class="text-muted" style="font-size:12px">{{ tx.date|date('d/m/Y') }}</span>
