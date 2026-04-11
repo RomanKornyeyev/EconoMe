@@ -105,8 +105,16 @@
 {# Zona 5: Movimientos #}
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Movimientos <span class="text-muted fw-normal small">{{ periodLabel }}</span></h5>
-        <a href="{{ path('transaction_index', {account: currentAccount.id}) }}" class="btn btn-sm btn-outline-secondary">Ver todos</a>
+        <h5 class="mb-0">Movimientos <span class="text-muted fw-normal small" id="cardPeriodLabel">{{ periodLabel }}</span></h5>
+        <div class="d-flex align-items-center gap-2">
+            <div id="cardBulkActions" class="d-none d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#bulkConfirmModal">
+                    <i class="fa-solid fa-trash fa-xs me-1"></i>Eliminar seleccionados
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="bulkClear">Cancelar</button>
+            </div>
+            <a id="cardVerTodos" href="{{ path('transaction_index', {account: currentAccount.id}) }}" class="btn btn-sm btn-outline-secondary">Ver todos</a>
+        </div>
     </div>
 
     {# Tabla desktop: visible en md+ #}

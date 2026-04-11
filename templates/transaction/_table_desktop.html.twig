@@ -10,9 +10,18 @@
 	</th>
 {% endmacro %}
 
+{# Form bulk: fuera de la tabla para evitar anidamiento. Los checkboxes se asocian via form="bulkForm". #}
+<form id="bulkForm" method="post" action="{{ path('transaction_bulk_delete') }}">
+	<input type="hidden" name="_token" value="{{ csrf_token('bulk_delete') }}">
+	<input type="hidden" name="_redirect_url" value="{{ app.request.requestUri }}">
+</form>
+
 <table class="table table-hover align-middle mb-0">
 	<thead>
 		<tr>
+			<th style="width:2.5rem">
+				<input type="checkbox" id="selectAll" class="form-check-input" title="Seleccionar todo">
+			</th>
 			{{ _self.sortHeader(q, 'date',     'Fecha',     sf, sd, '') }}
 			{{ _self.sortHeader(q, 'name',     'Nombre',    sf, sd, '') }}
 			<th class="text-muted small text-uppercase fw-normal">Descripción</th>
@@ -25,6 +34,10 @@
 	<tbody>
 		{% for tx in transactions %}
 			<tr>
+				<td>
+					{# form="bulkForm" asocia el checkbox al form externo sin anidamiento #}
+					<input type="checkbox" name="ids[]" value="{{ tx.id }}" class="form-check-input tx-check" form="bulkForm">
+				</td>
 				<td class="small">{{ tx.date|date('d/m/Y') }}</td>
 				<td class="fw-semibold">
 					{{ tx.name }}
@@ -37,7 +50,7 @@
 						{{ tx.description|slice(0,8) }}
 						{% if tx.description|length > 8 %}…
 						{% endif %}
-						{% else %}—
+					{% else %}—
 					{% endif %}
 				</td>
 				<td>
@@ -79,8 +92,82 @@
 			</tr>
 		{% else %}
 			<tr>
-				<td colspan="7" class="text-center text-muted py-4">No hay movimientos para este periodo.</td>
+				<td colspan="8" class="text-center text-muted py-4">No hay movimientos para este periodo.</td>
 			</tr>
 		{% endfor %}
 	</tbody>
 </table>
+
+{# Modal de confirmación bulk delete #}
+<div class="modal fade" id="bulkConfirmModal" tabindex="-1" aria-labelledby="bulkConfirmModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header border-0 pb-0">
+				<h5 class="modal-title" id="bulkConfirmModalLabel">Eliminar movimientos</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+			</div>
+			<div class="modal-body">
+				¿Eliminar <strong id="bulkConfirmCount"></strong>? Esta acción no se puede deshacer.
+			</div>
+			<div class="modal-footer border-0 pt-0">
+				<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+				<button type="button" class="btn btn-danger" id="bulkConfirmOk">
+					<i class="fa-solid fa-trash fa-xs me-1"></i>Eliminar
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+(function () {
+	const selectAll        = document.getElementById('selectAll');
+	const cardPeriodLabel  = document.getElementById('cardPeriodLabel');
+	const cardBulkActions  = document.getElementById('cardBulkActions');
+	const cardVerTodos     = document.getElementById('cardVerTodos');
+	const bulkClear        = document.getElementById('bulkClear');
+	const bulkConfirmCount = document.getElementById('bulkConfirmCount');
+	const bulkConfirmOk    = document.getElementById('bulkConfirmOk');
+	const periodText       = cardPeriodLabel.textContent;
+
+	function getChecked() { return document.querySelectorAll('.tx-check:checked'); }
+	function getAll()     { return document.querySelectorAll('.tx-check'); }
+	function label(n)     { return n === 1 ? '1 movimiento' : n + ' movimientos'; }
+
+	function update() {
+		const n      = getChecked().length;
+		const total  = getAll().length;
+		const active = n > 0;
+
+		cardBulkActions.classList.toggle('d-none', !active);
+		cardBulkActions.classList.toggle('d-flex', active);
+		cardVerTodos.classList.toggle('d-none', active);
+		cardPeriodLabel.textContent = active ? (n === 1 ? '· 1 seleccionado' : '· ' + n + ' seleccionados') : periodText;
+
+		selectAll.checked       = active && n === total;
+		selectAll.indeterminate = active && n < total;
+	}
+
+	selectAll.addEventListener('change', function () {
+		getAll().forEach(cb => cb.checked = this.checked);
+		update();
+	});
+
+	document.querySelectorAll('.tx-check').forEach(cb => cb.addEventListener('change', update));
+
+	bulkClear.addEventListener('click', function () {
+		getAll().forEach(cb => cb.checked = false);
+		selectAll.checked       = false;
+		selectAll.indeterminate = false;
+		update();
+	});
+
+	document.getElementById('bulkConfirmModal').addEventListener('show.bs.modal', function () {
+		bulkConfirmCount.textContent = label(getChecked().length);
+	});
+
+	bulkConfirmOk.addEventListener('click', function () {
+		document.getElementById('bulkForm').submit();
+	});
+})();
+</script>

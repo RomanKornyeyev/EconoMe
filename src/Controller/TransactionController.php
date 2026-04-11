@@ -134,4 +134,35 @@ class TransactionController extends AbstractController
 
         return $this->redirectToRoute('transaction_index', ['account' => $accountId]);
     }
+
+    #[Route('/bulk-delete', name: 'bulk_delete', methods: ['POST'])]
+    public function bulkDelete(Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('bulk_delete', $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $ids = $request->request->all('ids');
+        $deleted = 0;
+
+        foreach ($ids as $id) {
+            $transaction = $this->transactionRepo->find((int) $id);
+            if ($transaction && $this->isGranted('ACCOUNT_EDIT', $transaction->getAccount())) {
+                $this->em->remove($transaction);
+                $deleted++;
+            }
+        }
+
+        if ($deleted > 0) {
+            $this->em->flush();
+            $this->addFlash('success', $deleted === 1 ? '1 movimiento eliminado.' : "$deleted movimientos eliminados.");
+        }
+
+        $redirectUrl = $request->request->get('_redirect_url');
+        if ($redirectUrl && str_starts_with($redirectUrl, '/')) {
+            return $this->redirect($redirectUrl);
+        }
+
+        return $this->redirectToRoute('transaction_index');
+    }
 }
