@@ -85,8 +85,15 @@ class DashboardController extends AbstractController
             }
         }
 
+        $allowedSorts = ['date', 'name', 'amount', 'type', 'category'];
+        $sortField = $request->query->getString('sortBy', 'date');
+        $sortDir   = $request->query->getString('sortDir', 'desc');
+        if (!in_array($sortField, $allowedSorts, true)) {
+            $sortField = 'date';
+        }
+
         $pagination = $paginator->paginate(
-            $transactionRepo->findByFiltersQuery($account, $year, $yearOnly ? null : $month),
+            $transactionRepo->findByFiltersQuery($account, $year, $yearOnly ? null : $month, null, null, $sortField, $sortDir),
             $request->query->getInt('page', 1),
             10
         );
@@ -107,6 +114,8 @@ class DashboardController extends AbstractController
             'periodExpense'      => $periodExpense,
             'activeRecurrings'   => $activeRecurrings,
             'transactions'       => $pagination,
+            'sortField'          => $sortField,
+            'sortDir'            => $sortDir,
             'expensesByCategory' => $expensesByCategory,
             'yearlyTotals'       => $yearlyTotals,
             'year'               => $year,

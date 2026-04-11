@@ -1,12 +1,24 @@
+{% set q = app.request.query.all %}
+{% set sf = sortField ?? app.request.query.get('sortBy', 'date') %}
+{% set sd = sortDir ?? app.request.query.get('sortDir', 'desc') %}
+{% macro sortHeader(q, field, label, sf, sd, extraClass) %}
+	{% set active = (sf == field) %}
+	{% set newDir = (active and sd == 'asc') ? 'desc' : 'asc' %}
+	{% set icon = active ? (sd == 'asc' ? '<i class="fa-solid fa-sort-up fa-xs ms-1"></i>' : '<i class="fa-solid fa-sort-down fa-xs ms-1"></i>') : '<i class="fa-solid fa-sort fa-xs ms-1 opacity-25"></i>' %}
+	<th class="text-muted small text-uppercase fw-normal {{ extraClass }}">
+		<a href="?{{ q|merge({'sortBy': field, 'sortDir': newDir, 'page': 1})|url_encode }}" class="text-reset text-decoration-none text-nowrap">{{ label }}{{ icon|raw }}</a>
+	</th>
+{% endmacro %}
+
 <table class="table table-hover align-middle mb-0">
 	<thead>
 		<tr>
-			<th class="text-muted small text-uppercase fw-normal">Fecha</th>
-			<th class="text-muted small text-uppercase fw-normal">Nombre</th>
+			{{ _self.sortHeader(q, 'date',     'Fecha',     sf, sd, '') }}
+			{{ _self.sortHeader(q, 'name',     'Nombre',    sf, sd, '') }}
 			<th class="text-muted small text-uppercase fw-normal">Descripción</th>
-			<th class="text-muted small text-uppercase fw-normal">Categoría</th>
-			<th class="text-muted small text-uppercase fw-normal">Tipo</th>
-			<th class="text-muted small text-uppercase fw-normal text-end">Importe</th>
+			{{ _self.sortHeader(q, 'category', 'Categoría', sf, sd, '') }}
+			{{ _self.sortHeader(q, 'type',     'Tipo',      sf, sd, '') }}
+			{{ _self.sortHeader(q, 'amount',   'Importe',   sf, sd, 'text-end') }}
 			<th></th>
 		</tr>
 	</thead>

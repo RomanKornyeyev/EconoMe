@@ -86,17 +86,33 @@ class TransactionRepository extends ServiceEntityRepository
     /**
      * Query filtrada para paginación con KnpPaginator.
      */
+    private const SORT_FIELDS = [
+        'date'     => 't.date',
+        'name'     => 't.name',
+        'amount'   => 'signedAmount',
+        'type'     => 't.type',
+        'category' => 'cat.name',
+    ];
+
     public function findByFiltersQuery(
         Account $account,
         ?int $year = null,
         ?int $month = null,
         ?string $type = null,
-        ?int $categoryId = null
+        ?int $categoryId = null,
+        string $sortField = 'date',
+        string $sortDir = 'desc'
     ): \Doctrine\ORM\QueryBuilder {
+        $sortDir = strtoupper($sortDir) === 'ASC' ? 'ASC' : 'DESC';
+        $sortCol = self::SORT_FIELDS[$sortField] ?? 't.date';
+
         $qb = $this->createQueryBuilder('t')
+            ->addSelect("CASE WHEN t.type = 'expense' THEN (-1 * t.amount) ELSE t.amount END AS HIDDEN signedAmount")
+            ->leftJoin('t.category', 'cat')
             ->where('t.account = :account')
             ->setParameter('account', $account)
-            ->orderBy('t.date', 'DESC')
+            ->orderBy($sortCol, $sortDir)
+            ->addOrderBy('t.date', 'DESC')
             ->addOrderBy('t.createdAt', 'DESC');
 
         if ($year) {
