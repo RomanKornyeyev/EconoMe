@@ -98,6 +98,7 @@ class DashboardController extends AbstractController
         ]);
 
         return $this->render('dashboard/index.html.twig', [
+            'redirectUrl'        => $request->getRequestUri(),
             'hasAccounts'        => true,
             'accounts'           => $accounts,
             'currentAccount'     => $account,

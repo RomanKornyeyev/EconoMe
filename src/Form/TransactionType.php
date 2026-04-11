@@ -37,11 +37,15 @@ class TransactionType extends AbstractType
             ->add('amount', MoneyType::class, [
                 'label' => 'Importe',
                 'currency' => $options['currency'] ?? 'EUR',
-                'attr' => ['placeholder' => '0,00'],
+                'attr' => [
+                    'placeholder' => '0,00',
+                    'pattern' => '[0-9]+([.,][0-9]{1,2})?',
+                    'inputmode' => 'decimal',
+                ],
             ])
             ->add('name', TextType::class, [
                 'label' => 'Nombre',
-                'attr' => ['placeholder' => 'Ej: Supermercado, Nómina...'],
+                'attr' => ['class' => 'form-control'],
             ])
             ->add('category', EntityType::class, [
                 'label' => 'Categoría',

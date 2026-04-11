@@ -71,62 +71,52 @@ class TransactionController extends AbstractController
     }
 
     #[Route('/create', name: 'create')]
-    public function create(Request $request): Response
+    #[Route('/{id}/edit', name: 'edit', requirements: ['id' => '\d+'])]
+    public function edit(Request $request, ?Transaction $transaction = null): Response
     {
-        $accountId = $request->query->getInt('account');
-        $account = $this->em->getRepository(Account::class)->find($accountId);
+        if ($transaction === null) {
+            $accountId = $request->query->getInt('account');
+            $account = $this->em->getRepository(Account::class)->find($accountId);
 
-        if (!$account) {
-            $this->addFlash('error', 'Cuenta no encontrada.');
-            return $this->redirectToRoute('transaction_index');
+            if (!$account) {
+                $this->addFlash('error', 'Cuenta no encontrada.');
+                return $this->redirectToRoute('transaction_index');
+            }
+
+            $this->denyAccessUnlessGranted('ACCOUNT_EDIT', $account);
+            $transaction = new Transaction($account, $this->getUser());
+            $isNew = true;
+        } else {
+            $this->denyAccessUnlessGranted('ACCOUNT_EDIT', $transaction->getAccount());
+            $account = $transaction->getAccount();
+            $isNew = false;
         }
 
-        $this->denyAccessUnlessGranted('ACCOUNT_EDIT', $account);
-
-        $transaction = new Transaction($account, $this->getUser());
         $form = $this->createForm(TransactionType::class, $transaction, [
             'currency' => $account->getCurrency(),
         ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->em->persist($transaction);
+            if ($isNew) {
+                $this->em->persist($transaction);
+            }
             $this->em->flush();
+            $this->addFlash('success', $isNew ? 'Movimiento registrado.' : 'Movimiento actualizado.');
 
-            $this->addFlash('success', 'Movimiento registrado.');
-
-            if ($request->request->get('_redirect') === 'dashboard') {
-                return $this->redirectToRoute('dashboard', ['account' => $account->getId()]);
+            $redirectUrl = $request->request->get('_redirect_url');
+            if ($redirectUrl && str_starts_with($redirectUrl, '/')) {
+                return $this->redirect($redirectUrl);
             }
 
             return $this->redirectToRoute('transaction_index', ['account' => $account->getId()]);
         }
 
-        return $this->render('transaction/create.html.twig', [
-            'form'    => $form,
-            'account' => $account,
-        ]);
-    }
-
-    #[Route('/{id}/edit', name: 'edit', requirements: ['id' => '\d+'])]
-    public function edit(Transaction $transaction, Request $request): Response
-    {
-        $this->denyAccessUnlessGranted('ACCOUNT_EDIT', $transaction->getAccount());
-
-        $form = $this->createForm(TransactionType::class, $transaction, [
-            'currency' => $transaction->getAccount()->getCurrency(),
-        ]);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $this->em->flush();
-            $this->addFlash('success', 'Movimiento actualizado.');
-            return $this->redirectToRoute('transaction_index', ['account' => $transaction->getAccount()->getId()]);
-        }
-
         return $this->render('transaction/edit.html.twig', [
             'form'        => $form,
             'transaction' => $transaction,
+            'account'     => $account,
+            'isNew'       => $isNew,
         ]);
     }
 

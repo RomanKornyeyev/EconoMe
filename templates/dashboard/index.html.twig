@@ -17,7 +17,7 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
     <h1 class="h3 mb-0">Dashboard</h1>
     <div class="btn-group" role="group">
-        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
             {{ currentAccount.name }}
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
@@ -44,11 +44,11 @@
 
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2 bg-body">
     <div class="btn-group" role="group">
-        <a href="{{ prevUrl }}" class="btn btn-sm btn-outline-secondary" style="padding-left: 0.75rem; padding-right: 0.75rem;"><i class="fa-solid fa-chevron-left fa-sm"></i></a>
+        <a href="{{ prevUrl }}" class="btn btn-sm btn-outline-primary" style="padding-left: 0.75rem; padding-right: 0.75rem;"><i class="fa-solid fa-chevron-left fa-sm"></i></a>
 
         {# Desplegable de mes #}
         <div class="btn-group" role="group">
-            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                 {% if month == 0 %}Año completo{% else %}{{ monthNames[month - 1] }}{% endif %}
             </button>
             <ul class="dropdown-menu">
@@ -72,7 +72,7 @@
 
         {# Desplegable de año #}
         <div class="btn-group" role="group">
-            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                 {{ year }}
             </button>
             <ul class="dropdown-menu">
@@ -82,7 +82,7 @@
             </ul>
         </div>
 
-        <a href="{{ nextUrl }}" class="btn btn-sm btn-outline-secondary" style="padding-left: 0.75rem; padding-right: 0.75rem;"><i class="fa-solid fa-chevron-right fa-sm"></i></a>
+        <a href="{{ nextUrl }}" class="btn btn-sm btn-outline-primary" style="padding-left: 0.75rem; padding-right: 0.75rem;"><i class="fa-solid fa-chevron-right fa-sm"></i></a>
     </div>
     <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newTransactionModal">
         <i class="fa-solid fa-plus me-1"></i>Nuevo movimiento

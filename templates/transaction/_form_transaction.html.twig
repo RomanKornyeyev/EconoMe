@@ -1,0 +1,45 @@
+<div class="row g-3">
+    <div class="col-6">
+        {{ form_row(form.amount) }}
+    </div>
+    <div class="col-6">
+        {{ form_row(form.type) }}
+    </div>
+    <div class="col-12">
+        {{ form_row(form.name) }}
+    </div>
+    <div class="col-12">
+        {{ form_row(form.description) }}
+    </div>
+    <div class="col-6">
+        {{ form_row(form.category) }}
+    </div>
+    <div class="col-6">
+        {{ form_row(form.date, { attr: { class: 'flatpickr-date' } }) }}
+    </div>
+</div>
+
+<script>
+(function () {
+    function initDatePicker() {
+        document.querySelectorAll('.flatpickr-date:not([data-fp-init])').forEach(function (el) {
+            el.setAttribute('data-fp-init', '1');
+            flatpickr(el, {
+                locale: 'es',
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'd/m/Y',
+                altInputClass: 'form-control',
+                allowInput: true,
+                appendTo: el.closest('.modal') || document.body,
+            });
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initDatePicker);
+    } else {
+        initDatePicker();
+    }
+})();
+</script>
