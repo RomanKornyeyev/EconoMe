@@ -15,7 +15,7 @@
 
 {# Zona 1: Cabecera — título + selector de cuenta #}
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-    <h1 class="h3 mb-0">Dashboard</h1>
+    <h1 class="h2 mb-0">Dashboard</h1>
     <div class="btn-group" role="group">
         <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
             {{ currentAccount.name }}
@@ -103,18 +103,16 @@
 </div>
 
 {# Zona 5: Movimientos #}
-<div class="card border-0 shadow-sm">
-    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Movimientos <span class="text-muted fw-normal small" id="cardPeriodLabel">{{ periodLabel }}</span></h5>
-        <div class="d-flex align-items-center gap-2">
-            <div id="cardBulkActions" class="d-none d-flex align-items-center gap-2">
-                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#bulkConfirmModal">
-                    <i class="fa-solid fa-trash fa-xs me-1"></i>Eliminar seleccionados
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="bulkClear">Cancelar</button>
-            </div>
-            <a id="cardVerTodos" href="{{ path('transaction_index', {account: currentAccount.id}) }}" class="btn btn-sm btn-outline-secondary">Ver todos</a>
+<div class="card border-0 shadow-sm" data-controller="bulk-select">
+    <div class="card-header bg-transparent d-flex align-items-center">
+        {# Estado normal #}
+        <div data-bulk-select-target="normalBar" class="d-flex justify-content-between align-items-center w-100">
+            <h5 class="mb-0">Movimientos <span class="text-muted fw-normal small">{{ periodLabel }}</span></h5>
+            <a href="{{ path('transaction_index', {account: currentAccount.id}) }}"
+               class="btn btn-sm btn-outline-secondary">Ver todos</a>
         </div>
+        {# Estado bulk #}
+        {% include 'transaction/_table_bulk_bar.html.twig' %}
     </div>
 
     {# Tabla desktop: visible en md+ #}

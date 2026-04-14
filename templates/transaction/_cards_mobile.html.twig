@@ -21,12 +21,13 @@
                             </a>
                         </li>
                         <li>
-                            <form method="post" action="{{ path('transaction_delete', {id: tx.id}) }}" onsubmit="return confirm('¿Eliminar este movimiento?')">
-                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tx.id) }}">
-                                <button class="dropdown-item text-danger">
-                                    <i class="fa-solid fa-trash fa-sm me-2"></i>Eliminar
-                                </button>
-                            </form>
+                            <button class="dropdown-item text-danger"
+                                    data-action="click->bulk-select#confirmSingleDelete"
+                                    data-url="{{ path('transaction_delete', {id: tx.id}) }}"
+                                    data-token="{{ csrf_token('delete' ~ tx.id) }}"
+                                    data-name="{{ tx.name }}">
+                                <i class="fa-solid fa-trash fa-sm me-2"></i>Eliminar
+                            </button>
                         </li>
                     </ul>
                 </div>

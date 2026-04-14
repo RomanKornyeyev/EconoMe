@@ -10,9 +10,16 @@
 	</th>
 {% endmacro %}
 
-{# Form bulk: fuera de la tabla para evitar anidamiento. Los checkboxes se asocian via form="bulkForm". #}
-<form id="bulkForm" method="post" action="{{ path('transaction_bulk_delete') }}">
+{# Form bulk delete: fuera de la tabla para evitar anidamiento. Checkboxes se asocian via form="bulkForm". #}
+<form id="bulkForm" data-bulk-select-target="bulkForm"
+      method="post" action="{{ path('transaction_bulk_delete') }}">
 	<input type="hidden" name="_token" value="{{ csrf_token('bulk_delete') }}">
+	<input type="hidden" name="_redirect_url" value="{{ app.request.requestUri }}">
+</form>
+
+{# Form single delete: action y token se inyectan dinámicamente desde el controller. #}
+<form data-bulk-select-target="singleDeleteForm" method="post">
+	<input type="hidden" name="_token" data-bulk-select-target="singleDeleteToken">
 	<input type="hidden" name="_redirect_url" value="{{ app.request.requestUri }}">
 </form>
 
@@ -20,7 +27,11 @@
 	<thead>
 		<tr>
 			<th style="width:2.5rem">
-				<input type="checkbox" id="selectAll" class="form-check-input" title="Seleccionar todo">
+				<input type="checkbox"
+				       class="form-check-input"
+				       title="Seleccionar todo"
+				       data-bulk-select-target="selectAll"
+				       data-action="change->bulk-select#toggleAll">
 			</th>
 			{{ _self.sortHeader(q, 'date',     'Fecha',     sf, sd, '') }}
 			{{ _self.sortHeader(q, 'name',     'Nombre',    sf, sd, '') }}
@@ -35,8 +46,11 @@
 		{% for tx in transactions %}
 			<tr>
 				<td>
-					{# form="bulkForm" asocia el checkbox al form externo sin anidamiento #}
-					<input type="checkbox" name="ids[]" value="{{ tx.id }}" class="form-check-input tx-check" form="bulkForm">
+					<input type="checkbox" name="ids[]" value="{{ tx.id }}"
+					       class="form-check-input"
+					       form="bulkForm"
+					       data-bulk-select-target="checkbox"
+					       data-action="change->bulk-select#toggle">
 				</td>
 				<td class="small">{{ tx.date|date('d/m/Y') }}</td>
 				<td class="fw-semibold">
@@ -48,10 +62,8 @@
 				<td class="text-muted">
 					{% if tx.description %}
 						{{ tx.description|slice(0,8) }}
-						{% if tx.description|length > 8 %}…
-						{% endif %}
-					{% else %}—
-					{% endif %}
+						{% if tx.description|length > 8 %}…{% endif %}
+					{% else %}—{% endif %}
 				</td>
 				<td>
 					{% if tx.category %}
@@ -78,13 +90,18 @@
 						</button>
 						<ul class="dropdown-menu dropdown-menu-end">
 							<li>
-								<a class="dropdown-item" href="{{ path('transaction_edit', {id: tx.id}) }}">Editar</a>
+								<a class="dropdown-item" href="{{ path('transaction_edit', {id: tx.id}) }}">
+									<i class="fa-solid fa-pen fa-sm me-2 text-muted"></i>Editar
+								</a>
 							</li>
 							<li>
-								<form method="post" action="{{ path('transaction_delete', {id: tx.id}) }}" onsubmit="return confirm('¿Eliminar este movimiento?')">
-									<input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tx.id) }}">
-									<button class="dropdown-item text-danger">Eliminar</button>
-								</form>
+								<button class="dropdown-item text-danger"
+								        data-action="click->bulk-select#confirmSingleDelete"
+								        data-url="{{ path('transaction_delete', {id: tx.id}) }}"
+								        data-token="{{ csrf_token('delete' ~ tx.id) }}"
+								        data-name="{{ tx.name }}">
+									<i class="fa-solid fa-trash fa-sm me-2"></i>Eliminar
+								</button>
 							</li>
 						</ul>
 					</div>
@@ -98,7 +115,7 @@
 	</tbody>
 </table>
 
-{# Modal de confirmación bulk delete #}
+{# Modal de confirmación — bulk delete #}
 <div class="modal fade" id="bulkConfirmModal" tabindex="-1" aria-labelledby="bulkConfirmModalLabel" aria-hidden="true">
 	<div class="modal-dialog modal-dialog-centered">
 		<div class="modal-content">
@@ -107,11 +124,11 @@
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
 			</div>
 			<div class="modal-body">
-				¿Eliminar <strong id="bulkConfirmCount"></strong>? Esta acción no se puede deshacer.
+				¿Eliminar <strong data-bulk-select-target="confirmCount"></strong>? Esta acción no se puede deshacer.
 			</div>
 			<div class="modal-footer border-0 pt-0">
 				<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-				<button type="button" class="btn btn-danger" id="bulkConfirmOk">
+				<button type="button" class="btn btn-danger" data-action="bulk-select#submitBulk">
 					<i class="fa-solid fa-trash fa-xs me-1"></i>Eliminar
 				</button>
 			</div>
@@ -119,55 +136,25 @@
 	</div>
 </div>
 
-<script>
-(function () {
-	const selectAll        = document.getElementById('selectAll');
-	const cardPeriodLabel  = document.getElementById('cardPeriodLabel');
-	const cardBulkActions  = document.getElementById('cardBulkActions');
-	const cardVerTodos     = document.getElementById('cardVerTodos');
-	const bulkClear        = document.getElementById('bulkClear');
-	const bulkConfirmCount = document.getElementById('bulkConfirmCount');
-	const bulkConfirmOk    = document.getElementById('bulkConfirmOk');
-	const periodText       = cardPeriodLabel.textContent;
-
-	function getChecked() { return document.querySelectorAll('.tx-check:checked'); }
-	function getAll()     { return document.querySelectorAll('.tx-check'); }
-	function label(n)     { return n === 1 ? '1 movimiento' : n + ' movimientos'; }
-
-	function update() {
-		const n      = getChecked().length;
-		const total  = getAll().length;
-		const active = n > 0;
-
-		cardBulkActions.classList.toggle('d-none', !active);
-		cardBulkActions.classList.toggle('d-flex', active);
-		cardVerTodos.classList.toggle('d-none', active);
-		cardPeriodLabel.textContent = active ? (n === 1 ? '· 1 seleccionado' : '· ' + n + ' seleccionados') : periodText;
-
-		selectAll.checked       = active && n === total;
-		selectAll.indeterminate = active && n < total;
-	}
-
-	selectAll.addEventListener('change', function () {
-		getAll().forEach(cb => cb.checked = this.checked);
-		update();
-	});
-
-	document.querySelectorAll('.tx-check').forEach(cb => cb.addEventListener('change', update));
-
-	bulkClear.addEventListener('click', function () {
-		getAll().forEach(cb => cb.checked = false);
-		selectAll.checked       = false;
-		selectAll.indeterminate = false;
-		update();
-	});
-
-	document.getElementById('bulkConfirmModal').addEventListener('show.bs.modal', function () {
-		bulkConfirmCount.textContent = label(getChecked().length);
-	});
-
-	bulkConfirmOk.addEventListener('click', function () {
-		document.getElementById('bulkForm').submit();
-	});
-})();
-</script>
+{# Modal de confirmación — borrado individual #}
+<div class="modal fade" id="singleConfirmModal"
+     data-bulk-select-target="singleDeleteModal"
+     tabindex="-1" aria-labelledby="singleConfirmModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header border-0 pb-0">
+				<h5 class="modal-title" id="singleConfirmModalLabel">Eliminar movimiento</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+			</div>
+			<div class="modal-body">
+				¿Eliminar <strong data-bulk-select-target="singleDeleteName"></strong>? Esta acción no se puede deshacer.
+			</div>
+			<div class="modal-footer border-0 pt-0">
+				<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+				<button type="button" class="btn btn-danger" data-action="bulk-select#submitSingleDelete">
+					<i class="fa-solid fa-trash fa-xs me-1"></i>Eliminar
+				</button>
+			</div>
+		</div>
+	</div>
+</div>

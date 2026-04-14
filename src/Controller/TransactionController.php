@@ -46,8 +46,15 @@ class TransactionController extends AbstractController
         $type = $request->query->get('type') ?: null;
         $categoryId = $request->query->getInt('category') ?: null;
 
+        $allowedSorts = ['date', 'name', 'amount', 'type', 'category'];
+        $sortField = $request->query->getString('sortBy', 'date');
+        $sortDir   = $request->query->getString('sortDir', 'desc');
+        if (!in_array($sortField, $allowedSorts, true)) {
+            $sortField = 'date';
+        }
+
         $query = $this->transactionRepo->findByFiltersQuery(
-            $account, $year, $month, $type, $categoryId
+            $account, $year, $month, $type, $categoryId, $sortField, $sortDir
         );
 
         $pagination = $paginator->paginate(
@@ -67,6 +74,8 @@ class TransactionController extends AbstractController
             'month'           => $month,
             'currentType'     => $type,
             'currentCategory' => $categoryId,
+            'sortField'       => $sortField,
+            'sortDir'         => $sortDir,
         ]);
     }
 
@@ -130,6 +139,11 @@ class TransactionController extends AbstractController
             $this->em->remove($transaction);
             $this->em->flush();
             $this->addFlash('success', 'Movimiento eliminado.');
+        }
+
+        $redirectUrl = $request->request->get('_redirect_url');
+        if ($redirectUrl && str_starts_with($redirectUrl, '/')) {
+            return $this->redirect($redirectUrl);
         }
 
         return $this->redirectToRoute('transaction_index', ['account' => $accountId]);

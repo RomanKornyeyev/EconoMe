@@ -1,0 +1,20 @@
+{#
+    Barra de acciones bulk para selección múltiple de transacciones.
+    Debe incluirse dentro del card-header de cada vista que use bulk-select.
+    El controller (data-controller="bulk-select") vive en el wrapper padre.
+#}
+<div data-bulk-select-target="bulkBar"
+     class="d-none align-items-center justify-content-between w-100">
+    <span class="text-muted small">
+        <strong data-bulk-select-target="selectionCount"></strong> seleccionados
+    </span>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-sm btn-danger"
+                data-bs-toggle="modal" data-bs-target="#bulkConfirmModal"
+                data-action="bulk-select#openConfirm">
+            <i class="fa-solid fa-trash fa-xs me-1"></i>Eliminar
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                data-action="bulk-select#clearAll">Cancelar</button>
+    </div>
+</div>

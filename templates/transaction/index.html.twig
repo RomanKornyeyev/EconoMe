@@ -69,80 +69,30 @@
 </div>
 
 {# Transactions table #}
-<div class="card border-0 shadow-sm">
-    <div class="d-none d-md-block">
-        <table class="table table-hover mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Fecha</th>
-                    <th>Nombre</th>
-                    <th>Descripción</th>
-                    <th>Categoría</th>
-                    <th class="text-end">Importe</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for transaction in pagination %}
-                    <tr>
-                        <td class="text-muted small align-middle">{{ transaction.date|date('d/m/Y') }}</td>
-                        <td class="align-middle fw-semibold">{{ transaction.name }}</td>
-                        <td class="align-middle text-muted">
-                            {% if transaction.description %}{{ transaction.description|slice(0,8) }}{% if transaction.description|length > 8 %}…{% endif %}{% else %}—{% endif %}
-                        </td>
-                        <td class="align-middle">
-                            {% if transaction.category %}
-                                <span class="badge bg-body-secondary text-body-secondary">{{ transaction.category.name }}</span>
-                            {% else %}
-                                <span class="text-muted small">—</span>
-                            {% endif %}
-                        </td>
-                        <td class="align-middle text-end fw-semibold {{ transaction.type == 'expense' ? 'text-danger' : 'text-success' }}">
-                            {{ transaction.type == 'expense' ? '-' : '+' }}{{ transaction.amount|number_format(2, ',', '.') }} {{ currentAccount.currency }}
-                        </td>
-                        <td class="align-middle text-end">
-                            <a href="{{ path('transaction_edit', {id: transaction.id}) }}" class="btn btn-xs btn-outline-secondary btn-sm py-0 px-1">
-                                <i class="fa-solid fa-pen"></i>
-                            </a>
-                            <form method="post" action="{{ path('transaction_delete', {id: transaction.id}) }}" class="d-inline"
-                                  onsubmit="return confirm('¿Eliminar este movimiento?')">
-                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ transaction.id) }}">
-                                <button type="submit" class="btn btn-xs btn-outline-danger btn-sm py-0 px-1">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="6" class="text-center text-muted py-4">No hay movimientos con estos filtros.</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<div class="card border-0 shadow-sm" data-controller="bulk-select">
+    <div class="card-header bg-transparent d-flex align-items-center">
+        {# Estado normal #}
+        <div data-bulk-select-target="normalBar" class="d-flex justify-content-between align-items-center w-100">
+            <span class="text-muted small">
+                {{ pagination.getTotalItemCount() }}
+                {{ pagination.getTotalItemCount() == 1 ? 'movimiento' : 'movimientos' }}
+            </span>
+            <button class="btn btn-sm" style="visibility:hidden" aria-hidden="true" tabindex="-1">&nbsp;</button>
+        </div>
+        {# Estado bulk #}
+        {% include 'transaction/_table_bulk_bar.html.twig' %}
     </div>
 
-    {# Mobile cards #}
-    <div class="d-md-none p-3">
-        {% for transaction in pagination %}
-            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-                <div>
-                    <div class="fw-semibold">{{ transaction.name }}</div>
-                    <small class="text-muted">{{ transaction.date|date('d/m/Y') }}</small>
-                    {% if transaction.category %}
-                        <span class="badge bg-body-secondary text-body-secondary ms-1">{{ transaction.category.name }}</span>
-                    {% endif %}
-                </div>
-                <div class="text-end">
-                    <div class="fw-semibold {{ transaction.type == 'expense' ? 'text-danger' : 'text-success' }}">
-                        {{ transaction.type == 'expense' ? '-' : '+' }}{{ transaction.amount|number_format(2, ',', '.') }}
-                    </div>
-                </div>
-            </div>
-        {% else %}
-            <p class="text-center text-muted py-3">No hay movimientos.</p>
-        {% endfor %}
+    {# Tabla desktop: visible en md+ #}
+    <div class="d-none d-md-block">
+        {% include 'transaction/_table_desktop.html.twig' with {'transactions': pagination} %}
     </div>
+
+    {# Cards mobile: visible en < md #}
+    <div class="d-md-none">
+        {% include 'transaction/_cards_mobile.html.twig' with {'transactions': pagination} %}
+    </div>
+
 </div>
 
 {# Pagination #}
