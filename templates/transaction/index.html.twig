@@ -3,70 +3,194 @@
 {% block title %}Movimientos{% endblock %}
 
 {% block content %}
+{% set q = app.request.query.all %}
+
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-    <h4 class="mb-0"><i class="fa-solid fa-arrow-right-arrow-left me-2"></i>Movimientos</h4>
+    <div class="d-flex align-items-center gap-2">
+        <h1 class="mb-0 h3">Movimientos</h1>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                {{ currentAccount.name }}
+            </button>
+            <ul class="dropdown-menu">
+                {% for acc in accounts %}
+                    <li><a class="dropdown-item {{ acc.id == currentAccount.id ? 'active' : '' }}" href="?{{ q|merge({'account': acc.id, 'page': 1})|url_encode }}">{{ acc.name }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
     <a href="{{ path('transaction_create', {account: currentAccount.id}) }}" class="btn btn-primary btn-sm">
         <i class="fa-solid fa-plus me-1"></i>Nuevo movimiento
     </a>
 </div>
 
-{# Account selector #}
-{% if accounts|length > 1 %}
-    <div class="mb-3">
-        <select class="form-select form-select-sm w-auto" onchange="window.location.href='?account='+this.value">
-            {% for acc in accounts %}
-                <option value="{{ acc.id }}" {{ acc.id == currentAccount.id ? 'selected' : '' }}>{{ acc.name }}</option>
-            {% endfor %}
-        </select>
-    </div>
-{% endif %}
-
 {# Filters #}
-<div class="card border-0 shadow-sm mb-3">
-    <div class="card-body py-2">
-        <form method="get" class="d-flex flex-wrap gap-2 align-items-end">
+{% set monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'] %}
+<div class="card border-0 shadow-sm mb-3 bg-body-tertiary">
+    <div class="card-body px-3 py-3">
+        <form method="get">
             <input type="hidden" name="account" value="{{ currentAccount.id }}">
-            <div>
-                <label class="form-label small mb-1">Año</label>
-                <select name="year" class="form-select form-select-sm">
-                    {% for y in (year - 2)..(year + 1) %}
-                        <option value="{{ y }}" {{ y == year ? 'selected' : '' }}>{{ y }}</option>
-                    {% endfor %}
-                </select>
+            <input type="hidden" name="sortBy" value="{{ sortField }}">
+            <input type="hidden" name="sortDir" value="{{ sortDir }}">
+
+            {# Fila 1: dropdowns #}
+            <div class="row mb-2">
+                {# Año #}
+                <div class="col-md-3">
+                    <label class="form-label text-muted small mb-1">Año</label>
+                    <input type="hidden" name="year" id="f-year" value="{{ year }}">
+                    <div class="btn-group d-flex" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span id="label-year">{{ year }}</span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            {% for y in (year - 2)..(year + 1) %}
+                                <li><a class="dropdown-item filter-opt {{ y == year ? 'active' : '' }}"
+                                       data-input="f-year" data-label="label-year" data-value="{{ y }}"
+                                       href="#">{{ y }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                {# Mes #}
+                <div class="col-md-3">
+                    <label class="form-label text-muted small mb-1">Mes</label>
+                    <input type="hidden" name="month" id="f-month" value="{{ month ?? '' }}">
+                    <div class="btn-group d-flex" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span id="label-month">{% if month %}{{ monthNames[month - 1] }}{% else %}Todos los meses{% endif %}</span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item filter-opt {{ month is null ? 'active' : '' }}"
+                                   data-input="f-month" data-label="label-month" data-value="" href="#">Todos los meses</a></li>
+                            {% for m in 1..12 %}
+                                <li><a class="dropdown-item filter-opt {{ m == month ? 'active' : '' }}"
+                                       data-input="f-month" data-label="label-month" data-value="{{ m }}"
+                                       href="#">{{ monthNames[m - 1] }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                {# Tipo #}
+                <div class="col-md-3">
+                    <label class="form-label text-muted small mb-1">Tipo</label>
+                    <input type="hidden" name="type" id="f-type" value="{{ currentType ?? '' }}">
+                    <div class="btn-group d-flex" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span id="label-type">{% if currentType == 'expense' %}Gastos{% elseif currentType == 'income' %}Ingresos{% else %}Todos los tipos{% endif %}</span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item filter-opt {{ not currentType ? 'active' : '' }}"
+                                   data-input="f-type" data-label="label-type" data-value="" data-filters-cats="1"
+                                   href="#">Todos los tipos</a></li>
+                            <li><a class="dropdown-item filter-opt {{ currentType == 'expense' ? 'active' : '' }}"
+                                   data-input="f-type" data-label="label-type" data-value="expense" data-filters-cats="1"
+                                   href="#">Gastos</a></li>
+                            <li><a class="dropdown-item filter-opt {{ currentType == 'income' ? 'active' : '' }}"
+                                   data-input="f-type" data-label="label-type" data-value="income" data-filters-cats="1"
+                                   href="#">Ingresos</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                {# Categoría #}
+                <div class="col-md-3">
+                    <label class="form-label text-muted small mb-1">Categoría</label>
+                    <input type="hidden" name="category" id="f-category" value="{{ currentCategory is not null ? currentCategory : '' }}">
+                    <div class="btn-group d-flex" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span id="label-category">
+                                {%- if currentCategory == -1 -%}Sin categoría
+                                {%- elseif currentCategory -%}
+                                    {%- for cat in categories -%}{%- if cat.id == currentCategory -%}{{ cat.name }}{%- endif -%}{%- endfor -%}
+                                {%- else -%}Todas las categorías
+                                {%- endif -%}
+                            </span>
+                        </button>
+                        <ul class="dropdown-menu" id="cat-dropdown">
+                            <li><a class="dropdown-item filter-opt {{ not currentCategory ? 'active' : '' }}"
+                                   data-input="f-category" data-label="label-category" data-value=""
+                                   href="#">Todas las categorías</a></li>
+                            <li><a class="dropdown-item filter-opt {{ currentCategory == -1 ? 'active' : '' }}"
+                                   data-input="f-category" data-label="label-category" data-value="-1"
+                                   href="#">Sin categoría</a></li>
+                            {% if categories|length > 0 %}
+                                <li><hr class="dropdown-divider"></li>
+                                {% for cat in categories %}
+                                    <li data-cat-type="{{ cat.type }}">
+                                        <a class="dropdown-item filter-opt {{ cat.id == currentCategory ? 'active' : '' }}"
+                                           data-input="f-category" data-label="label-category" data-value="{{ cat.id }}"
+                                           href="#">{{ cat.name }}</a>
+                                    </li>
+                                {% endfor %}
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
             </div>
-            <div>
-                <label class="form-label small mb-1">Mes</label>
-                <select name="month" class="form-select form-select-sm">
-                    <option value="">Todos</option>
-                    {% for m in 1..12 %}
-                        <option value="{{ m }}" {{ m == month ? 'selected' : '' }}>
-                            {{ ('2000-' ~ m ~ '-01')|date('F') }}
-                        </option>
-                    {% endfor %}
-                </select>
+
+            {# Fila 2: texto libre #}
+            <div class="row mb-4">
+                <div class="col-12 col-md-6">
+                    <label class="form-label text-muted small mb-1">Nombre</label>
+                    <input type="text" name="search" class="form-control form-control-sm"
+                           placeholder="Buscar por nombre…" value="{{ currentSearch ?? '' }}">
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label text-muted small mb-1">Descripción</label>
+                    <input type="text" name="desc" class="form-control form-control-sm"
+                           placeholder="Buscar por descripción…" value="{{ currentDesc ?? '' }}">
+                </div>
             </div>
-            <div>
-                <label class="form-label small mb-1">Tipo</label>
-                <select name="type" class="form-select form-select-sm">
-                    <option value="">Todos</option>
-                    <option value="expense" {{ currentType == 'expense' ? 'selected' : '' }}>Gastos</option>
-                    <option value="income" {{ currentType == 'income' ? 'selected' : '' }}>Ingresos</option>
-                </select>
+
+            {# Fila 3: acciones #}
+            <div class="d-flex justify-content-end gap-3">
+                <a href="{{ path('transaction_index', {account: currentAccount.id}) }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fa-solid fa-eraser"></i>Limpiar
+                </a>
+                <button type="submit" class="btn btn-sm btn-primary px-4">
+                    <i class="fa-solid fa-magnifying-glass me-1"></i>Filtrar
+                </button>
             </div>
-            <div>
-                <label class="form-label small mb-1">Categoría</label>
-                <select name="category" class="form-select form-select-sm">
-                    <option value="">Todas</option>
-                    {% for cat in categories %}
-                        <option value="{{ cat.id }}" {{ cat.id == currentCategory ? 'selected' : '' }}>{{ cat.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <button type="submit" class="btn btn-sm btn-outline-primary">Filtrar</button>
-            <a href="{{ path('transaction_index', {account: currentAccount.id}) }}" class="btn btn-sm btn-outline-secondary">Limpiar</a>
         </form>
     </div>
 </div>
+
+<script>
+(function () {
+    document.querySelectorAll('.filter-opt').forEach(function (link) {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.getElementById(this.dataset.input).value = this.dataset.value;
+            document.getElementById(this.dataset.label).textContent = this.textContent.trim();
+            this.closest('ul').querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('active'));
+            this.classList.add('active');
+            if (this.dataset.filtersCats) filterCats(this.dataset.value);
+        });
+    });
+
+    function filterCats(type) {
+        document.querySelectorAll('#cat-dropdown [data-cat-type]').forEach(function (li) {
+            li.hidden = !!(type && li.dataset.catType !== type);
+        });
+        // Si la categoría seleccionada quedó oculta, resetear a "Todas"
+        const catInput = document.getElementById('f-category');
+        if (catInput.value && catInput.value !== '-1') {
+            const sel = document.querySelector('#cat-dropdown [data-cat-type] a[data-value="' + catInput.value + '"]');
+            if (sel && sel.closest('[data-cat-type]').hidden) {
+                catInput.value = '';
+                document.getElementById('label-category').textContent = 'Todas las categorías';
+                document.querySelectorAll('#cat-dropdown .dropdown-item').forEach(i => i.classList.remove('active'));
+                document.querySelector('#cat-dropdown a[data-value=""]').classList.add('active');
+            }
+        }
+    }
+
+    filterCats(document.getElementById('f-type').value);
+})();
+</script>
 
 {# Transactions table #}
 <div class="card border-0 shadow-sm" data-controller="bulk-select">

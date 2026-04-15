@@ -100,6 +100,9 @@ class TransactionRepository extends ServiceEntityRepository
         ?int $month = null,
         ?string $type = null,
         ?int $categoryId = null,
+        bool $noCategory = false,
+        ?string $search = null,
+        ?string $desc = null,
         string $sortField = 'date',
         string $sortDir = 'desc'
     ): \Doctrine\ORM\QueryBuilder {
@@ -133,9 +136,21 @@ class TransactionRepository extends ServiceEntityRepository
                ->setParameter('type', $type);
         }
 
-        if ($categoryId) {
+        if ($noCategory) {
+            $qb->andWhere('t.category IS NULL');
+        } elseif ($categoryId) {
             $qb->andWhere('t.category = :cat')
                ->setParameter('cat', $categoryId);
+        }
+
+        if ($search !== null) {
+            $qb->andWhere('LOWER(t.name) LIKE LOWER(:search)')
+               ->setParameter('search', '%' . $search . '%');
+        }
+
+        if ($desc !== null) {
+            $qb->andWhere('LOWER(t.description) LIKE LOWER(:desc)')
+               ->setParameter('desc', '%' . $desc . '%');
         }
 
         return $qb;
