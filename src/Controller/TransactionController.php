@@ -41,8 +41,17 @@ class TransactionController extends AbstractController
         $account = $this->em->getRepository(Account::class)->find($accountId);
         $this->denyAccessUnlessGranted('ACCOUNT_VIEW', $account);
 
-        $year = $request->query->getInt('year', (int) date('Y'));
-        $month = ($raw = $request->query->get('month', '')) !== '' ? (int) $raw : null;
+        $dateFrom = null;
+        $dateTo   = null;
+        if ($raw = $request->query->get('date_from', '')) {
+            $dateFrom = \DateTime::createFromFormat('Y-m-d', $raw) ?: null;
+        }
+        if ($raw = $request->query->get('date_to', '')) {
+            $dateTo = \DateTime::createFromFormat('Y-m-d', $raw) ?: null;
+            if ($dateTo) {
+                $dateTo->setTime(23, 59, 59);
+            }
+        }
         $type = $request->query->get('type') ?: null;
         $categoryRaw = $request->query->get('category', '');
         $noCategory = ($categoryRaw === '-1');
@@ -58,7 +67,7 @@ class TransactionController extends AbstractController
         }
 
         $query = $this->transactionRepo->findByFiltersQuery(
-            $account, $year, $month, $type, $categoryId, $noCategory, $search, $desc, $sortField, $sortDir
+            $account, $dateFrom, $dateTo, $type, $categoryId, $noCategory, $search, $desc, $sortField, $sortDir
         );
 
         $pagination = $paginator->paginate(
@@ -74,8 +83,8 @@ class TransactionController extends AbstractController
             'currentAccount'  => $account,
             'pagination'      => $pagination,
             'categories'      => $categories,
-            'year'            => $year,
-            'month'           => $month,
+            'dateFrom'        => $dateFrom,
+            'dateTo'          => $dateTo,
             'currentType'     => $type,
             'currentCategory' => $noCategory ? -1 : $categoryId,
             'currentSearch'   => $search,

@@ -25,7 +25,6 @@
 </div>
 
 {# Filters #}
-{% set monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'] %}
 <div class="card border-0 shadow-sm mb-3 bg-body-tertiary">
     <div class="card-body px-3 py-3">
         <form method="get">
@@ -35,42 +34,18 @@
 
             {# Fila 1: dropdowns #}
             <div class="row mb-2">
-                {# Año #}
+                {# Desde #}
                 <div class="col-md-3">
-                    <label class="form-label text-muted small mb-1">Año</label>
-                    <input type="hidden" name="year" id="f-year" value="{{ year }}">
-                    <div class="btn-group d-flex" role="group">
-                        <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            <span id="label-year">{{ year }}</span>
-                        </button>
-                        <ul class="dropdown-menu">
-                            {% for y in (year - 2)..(year + 1) %}
-                                <li><a class="dropdown-item filter-opt {{ y == year ? 'active' : '' }}"
-                                       data-input="f-year" data-label="label-year" data-value="{{ y }}"
-                                       href="#">{{ y }}</a></li>
-                            {% endfor %}
-                        </ul>
-                    </div>
+                    <label class="form-label text-muted small mb-1">Desde</label>
+                    <input type="text" name="date_from" class="form-control form-control-sm flatpickr-filter"
+                           value="{{ dateFrom ? dateFrom|date('Y-m-d') : '' }}" placeholder="dd/mm/aaaa" autocomplete="off">
                 </div>
 
-                {# Mes #}
+                {# Hasta #}
                 <div class="col-md-3">
-                    <label class="form-label text-muted small mb-1">Mes</label>
-                    <input type="hidden" name="month" id="f-month" value="{{ month ?? '' }}">
-                    <div class="btn-group d-flex" role="group">
-                        <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            <span id="label-month">{% if month %}{{ monthNames[month - 1] }}{% else %}Todos los meses{% endif %}</span>
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item filter-opt {{ month is null ? 'active' : '' }}"
-                                   data-input="f-month" data-label="label-month" data-value="" href="#">Todos los meses</a></li>
-                            {% for m in 1..12 %}
-                                <li><a class="dropdown-item filter-opt {{ m == month ? 'active' : '' }}"
-                                       data-input="f-month" data-label="label-month" data-value="{{ m }}"
-                                       href="#">{{ monthNames[m - 1] }}</a></li>
-                            {% endfor %}
-                        </ul>
-                    </div>
+                    <label class="form-label text-muted small mb-1">Hasta</label>
+                    <input type="text" name="date_to" class="form-control form-control-sm flatpickr-filter"
+                           value="{{ dateTo ? dateTo|date('Y-m-d') : '' }}" placeholder="dd/mm/aaaa" autocomplete="off">
                 </div>
 
                 {# Tipo #}
@@ -189,6 +164,18 @@
     }
 
     filterCats(document.getElementById('f-type').value);
+
+    // Flatpickr para los campos de fecha del filtro
+    document.querySelectorAll('.flatpickr-filter').forEach(function (el) {
+        flatpickr(el, {
+            locale: 'es',
+            dateFormat: 'Y-m-d',
+            altInput: true,
+            altFormat: 'd/m/Y',
+            altInputClass: 'form-control form-control-sm',
+            allowInput: true,
+        });
+    });
 })();
 </script>
 

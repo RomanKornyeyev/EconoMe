@@ -96,8 +96,8 @@ class TransactionRepository extends ServiceEntityRepository
 
     public function findByFiltersQuery(
         Account $account,
-        ?int $year = null,
-        ?int $month = null,
+        ?\DateTimeInterface $dateFrom = null,
+        ?\DateTimeInterface $dateTo = null,
         ?string $type = null,
         ?int $categoryId = null,
         bool $noCategory = false,
@@ -118,17 +118,13 @@ class TransactionRepository extends ServiceEntityRepository
             ->addOrderBy('t.date', 'DESC')
             ->addOrderBy('t.createdAt', 'DESC');
 
-        if ($year) {
-            if ($month !== null) {
-                $from = new \DateTime("$year-$month-01");
-                $to = (clone $from)->modify('last day of this month');
-            } else {
-                $from = new \DateTime("$year-01-01");
-                $to = new \DateTime("$year-12-31");
-            }
-            $qb->andWhere('t.date >= :from AND t.date <= :to')
-               ->setParameter('from', $from)
-               ->setParameter('to', $to);
+        if ($dateFrom) {
+            $qb->andWhere('t.date >= :dateFrom')
+               ->setParameter('dateFrom', $dateFrom);
+        }
+        if ($dateTo) {
+            $qb->andWhere('t.date <= :dateTo')
+               ->setParameter('dateTo', $dateTo);
         }
 
         if ($type) {

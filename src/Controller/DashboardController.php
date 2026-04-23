@@ -50,7 +50,8 @@ class DashboardController extends AbstractController
             $to   = new \DateTime("$year-12-31");
         } else {
             $from = new \DateTime("$year-$month-01");
-            $to   = (clone $from)->modify('last day of this month');
+            $to   = new \DateTime("$year-$month-01");
+            $to->modify('last day of this month');
         }
 
         $monthNames = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
@@ -93,7 +94,7 @@ class DashboardController extends AbstractController
         }
 
         $pagination = $paginator->paginate(
-            $transactionRepo->findByFiltersQuery($account, $year, $yearOnly ? null : $month, null, null, false, null, null, $sortField, $sortDir),
+            $transactionRepo->findByFiltersQuery($account, $from, $to, null, null, false, null, null, $sortField, $sortDir),
             $request->query->getInt('page', 1),
             10
         );
