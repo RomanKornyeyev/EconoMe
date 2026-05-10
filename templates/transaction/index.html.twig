@@ -51,72 +51,48 @@
                 {# Tipo #}
                 <div class="col-md-3">
                     <label class="form-label text-muted small mb-1">Tipo</label>
-                    <input type="hidden" name="type" id="f-type" value="{{ currentType ?? '' }}">
-                    <div class="btn-group d-flex" role="group">
-                        <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            <span id="label-type">{% if currentType == 'expense' %}Gastos{% elseif currentType == 'income' %}Ingresos{% else %}Todos los tipos{% endif %}</span>
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item filter-opt {{ not currentType ? 'active' : '' }}"
-                                   data-input="f-type" data-label="label-type" data-value="" data-filters-cats="1"
-                                   href="#">Todos los tipos</a></li>
-                            <li><a class="dropdown-item filter-opt {{ currentType == 'expense' ? 'active' : '' }}"
-                                   data-input="f-type" data-label="label-type" data-value="expense" data-filters-cats="1"
-                                   href="#">Gastos</a></li>
-                            <li><a class="dropdown-item filter-opt {{ currentType == 'income' ? 'active' : '' }}"
-                                   data-input="f-type" data-label="label-type" data-value="income" data-filters-cats="1"
-                                   href="#">Ingresos</a></li>
-                        </ul>
-                    </div>
+                    <select name="type" id="f-type" class="form-select form-select-sm">
+                        <option value="" {{ not currentType ? 'selected' : '' }}>Todos los tipos</option>
+                        <option value="expense" {{ currentType == 'expense' ? 'selected' : '' }}>Gastos</option>
+                        <option value="income" {{ currentType == 'income' ? 'selected' : '' }}>Ingresos</option>
+                    </select>
                 </div>
 
                 {# Categoría #}
                 <div class="col-md-3">
                     <label class="form-label text-muted small mb-1">Categoría</label>
-                    <input type="hidden" name="category" id="f-category" value="{{ currentCategory is not null ? currentCategory : '' }}">
-                    <div class="btn-group d-flex" role="group">
-                        <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            <span id="label-category">
-                                {%- if currentCategory == -1 -%}Sin categoría
-                                {%- elseif currentCategory -%}
-                                    {%- for cat in categories -%}{%- if cat.id == currentCategory -%}{{ cat.name }}{%- endif -%}{%- endfor -%}
-                                {%- else -%}Todas las categorías
-                                {%- endif -%}
-                            </span>
-                        </button>
-                        <ul class="dropdown-menu" id="cat-dropdown">
-                            <li><a class="dropdown-item filter-opt {{ not currentCategory ? 'active' : '' }}"
-                                   data-input="f-category" data-label="label-category" data-value=""
-                                   href="#">Todas las categorías</a></li>
-                            <li><a class="dropdown-item filter-opt {{ currentCategory == -1 ? 'active' : '' }}"
-                                   data-input="f-category" data-label="label-category" data-value="-1"
-                                   href="#">Sin categoría</a></li>
-                            {% if categories|length > 0 %}
-                                <li><hr class="dropdown-divider"></li>
-                                {% for cat in categories %}
-                                    <li data-cat-type="{{ cat.type }}">
-                                        <a class="dropdown-item filter-opt {{ cat.id == currentCategory ? 'active' : '' }}"
-                                           data-input="f-category" data-label="label-category" data-value="{{ cat.id }}"
-                                           href="#">{{ cat.name }}</a>
-                                    </li>
-                                {% endfor %}
-                            {% endif %}
-                        </ul>
-                    </div>
+                    <select name="category" id="f-category" class="form-select form-select-sm">
+                        <option value="" {{ not currentCategory ? 'selected' : '' }}>Todas las categorías</option>
+                        <option value="-1" {{ currentCategory == -1 ? 'selected' : '' }}>Sin categoría</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.id }}" data-cat-type="{{ cat.type }}"
+                                    {{ cat.id == currentCategory ? 'selected' : '' }}>{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
             </div>
 
-            {# Fila 2: texto libre #}
+            {# Fila 2: texto libre + importe #}
             <div class="row mb-4">
-                <div class="col-12 col-md-6">
+                <div class="col-12 col-md-3">
                     <label class="form-label text-muted small mb-1">Nombre</label>
                     <input type="text" name="search" class="form-control form-control-sm"
                            placeholder="Buscar por nombre…" value="{{ currentSearch ?? '' }}">
                 </div>
-                <div class="col-12 col-md-6">
+                <div class="col-12 col-md-3">
                     <label class="form-label text-muted small mb-1">Descripción</label>
                     <input type="text" name="desc" class="form-control form-control-sm"
                            placeholder="Buscar por descripción…" value="{{ currentDesc ?? '' }}">
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label text-muted small mb-1">Importe desde</label>
+                    <input type="number" name="amount_from" class="form-control form-control-sm"
+                           placeholder="-25,00" step="0.01" value="{{ currentAmountFrom ?? '' }}">
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label text-muted small mb-1">Importe hasta</label>
+                    <input type="number" name="amount_to" class="form-control form-control-sm"
+                           placeholder="100,00" step="0.01" value="{{ currentAmountTo ?? '' }}">
                 </div>
             </div>
 
@@ -135,33 +111,22 @@
 
 <script>
 (function () {
-    document.querySelectorAll('.filter-opt').forEach(function (link) {
-        link.addEventListener('click', function (e) {
-            e.preventDefault();
-            document.getElementById(this.dataset.input).value = this.dataset.value;
-            document.getElementById(this.dataset.label).textContent = this.textContent.trim();
-            this.closest('ul').querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('active'));
-            this.classList.add('active');
-            if (this.dataset.filtersCats) filterCats(this.dataset.value);
-        });
-    });
-
     function filterCats(type) {
-        document.querySelectorAll('#cat-dropdown [data-cat-type]').forEach(function (li) {
-            li.hidden = !!(type && li.dataset.catType !== type);
+        const catSelect = document.getElementById('f-category');
+        catSelect.querySelectorAll('option[data-cat-type]').forEach(function (opt) {
+            const matches = !type || opt.dataset.catType === type;
+            opt.hidden = !matches;
+            opt.disabled = !matches;
         });
-        // Si la categoría seleccionada quedó oculta, resetear a "Todas"
-        const catInput = document.getElementById('f-category');
-        if (catInput.value && catInput.value !== '-1') {
-            const sel = document.querySelector('#cat-dropdown [data-cat-type] a[data-value="' + catInput.value + '"]');
-            if (sel && sel.closest('[data-cat-type]').hidden) {
-                catInput.value = '';
-                document.getElementById('label-category').textContent = 'Todas las categorías';
-                document.querySelectorAll('#cat-dropdown .dropdown-item').forEach(i => i.classList.remove('active'));
-                document.querySelector('#cat-dropdown a[data-value=""]').classList.add('active');
-            }
+        const selected = catSelect.options[catSelect.selectedIndex];
+        if (selected && (selected.hidden || selected.disabled)) {
+            catSelect.value = '';
         }
     }
+
+    document.getElementById('f-type').addEventListener('change', function () {
+        filterCats(this.value);
+    });
 
     filterCats(document.getElementById('f-type').value);
 

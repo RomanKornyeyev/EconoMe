@@ -104,7 +104,9 @@ class TransactionRepository extends ServiceEntityRepository
         ?string $search = null,
         ?string $desc = null,
         string $sortField = 'date',
-        string $sortDir = 'desc'
+        string $sortDir = 'desc',
+        ?float $amountFrom = null,
+        ?float $amountTo = null,
     ): \Doctrine\ORM\QueryBuilder {
         $sortDir = strtoupper($sortDir) === 'ASC' ? 'ASC' : 'DESC';
         $sortCol = self::SORT_FIELDS[$sortField] ?? 't.date';
@@ -147,6 +149,20 @@ class TransactionRepository extends ServiceEntityRepository
         if ($desc !== null) {
             $qb->andWhere('LOWER(t.description) LIKE LOWER(:desc)')
                ->setParameter('desc', '%' . $desc . '%');
+        }
+
+        if ($amountFrom !== null || $amountTo !== null) {
+            $qb->setParameter('expenseType', Transaction::TYPE_EXPENSE);
+        }
+
+        if ($amountFrom !== null) {
+            $qb->andWhere('CASE WHEN t.type = :expenseType THEN (-1 * t.amount) ELSE t.amount END >= :amountFrom')
+               ->setParameter('amountFrom', $amountFrom);
+        }
+
+        if ($amountTo !== null) {
+            $qb->andWhere('CASE WHEN t.type = :expenseType THEN (-1 * t.amount) ELSE t.amount END <= :amountTo')
+               ->setParameter('amountTo', $amountTo);
         }
 
         return $qb;

@@ -59,6 +59,15 @@ class TransactionController extends AbstractController
         $search = trim($request->query->get('search', '')) ?: null;
         $desc   = trim($request->query->get('desc', '')) ?: null;
 
+        $amountFrom = null;
+        $amountTo   = null;
+        if ($request->query->get('amount_from', '') !== '') {
+            $amountFrom = (float) $request->query->get('amount_from');
+        }
+        if ($request->query->get('amount_to', '') !== '') {
+            $amountTo = (float) $request->query->get('amount_to');
+        }
+
         $allowedSorts = ['date', 'name', 'amount', 'type', 'category'];
         $sortField = $request->query->getString('sortBy', 'date');
         $sortDir   = $request->query->getString('sortDir', 'desc');
@@ -67,7 +76,7 @@ class TransactionController extends AbstractController
         }
 
         $query = $this->transactionRepo->findByFiltersQuery(
-            $account, $dateFrom, $dateTo, $type, $categoryId, $noCategory, $search, $desc, $sortField, $sortDir
+            $account, $dateFrom, $dateTo, $type, $categoryId, $noCategory, $search, $desc, $sortField, $sortDir, $amountFrom, $amountTo
         );
 
         $pagination = $paginator->paginate(
@@ -87,10 +96,12 @@ class TransactionController extends AbstractController
             'dateTo'          => $dateTo,
             'currentType'     => $type,
             'currentCategory' => $noCategory ? -1 : $categoryId,
-            'currentSearch'   => $search,
-            'currentDesc'     => $desc,
-            'sortField'       => $sortField,
-            'sortDir'         => $sortDir,
+            'currentSearch'      => $search,
+            'currentDesc'        => $desc,
+            'currentAmountFrom'  => $amountFrom,
+            'currentAmountTo'    => $amountTo,
+            'sortField'          => $sortField,
+            'sortDir'            => $sortDir,
         ]);
     }
 
