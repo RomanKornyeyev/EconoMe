@@ -2,17 +2,14 @@
 
 namespace App\Entity;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use App\Entity\Traits\TimestampableEntity;
-use App\Entity\Account;
 
-#[ORM\Entity(repositoryClass: "App\Repository\CategoryRepository")]
-#[ORM\Table(name: "category")]
+#[ORM\Entity(repositoryClass: "App\Repository\CategoryTemplateRepository")]
+#[ORM\Table(name: "category_template")]
 #[ORM\HasLifecycleCallbacks]
-class Category
+class CategoryTemplate
 {
     use TimestampableEntity;
 
@@ -24,16 +21,9 @@ class Category
     #[ORM\Column(type: "integer")]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: Account::class)]
+    #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
-    private Account $account;
-
-    #[ORM\ManyToOne(targetEntity: self::class, inversedBy: "children")]
-    #[ORM\JoinColumn(nullable: true, onDelete: "SET NULL")]
-    private ?Category $parent = null;
-
-    #[ORM\OneToMany(targetEntity: self::class, mappedBy: "parent")]
-    private Collection $children;
+    private User $user;
 
     #[ORM\Column(type: "string", length: 100)]
     #[Assert\NotBlank]
@@ -50,10 +40,9 @@ class Category
     #[Assert\Choice(choices: [self::TYPE_EXPENSE, self::TYPE_INCOME])]
     private string $type = self::TYPE_EXPENSE;
 
-    public function __construct(Account $account)
+    public function __construct(User $user)
     {
-        $this->account = $account;
-        $this->children = new ArrayCollection();
+        $this->user = $user;
     }
 
     public function getId(): ?int
@@ -61,30 +50,9 @@ class Category
         return $this->id;
     }
 
-    public function getAccount(): Account
+    public function getUser(): User
     {
-        return $this->account;
-    }
-
-    public function getParent(): ?Category
-    {
-        return $this->parent;
-    }
-
-    public function setParent(?Category $parent): self
-    {
-        $this->parent = $parent;
-        return $this;
-    }
-
-    public function getChildren(): Collection
-    {
-        return $this->children;
-    }
-
-    public function isRootCategory(): bool
-    {
-        return $this->parent === null;
+        return $this->user;
     }
 
     public function getName(): ?string

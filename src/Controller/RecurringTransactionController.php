@@ -63,6 +63,7 @@ class RecurringTransactionController extends AbstractController
         $recurring = new RecurringTransaction($account, $this->getUser());
         $form = $this->createForm(RecurringTransactionType::class, $recurring, [
             'currency' => $account->getCurrency(),
+            'account'  => $account,
         ]);
         $form->handleRequest($request);
 
@@ -87,6 +88,7 @@ class RecurringTransactionController extends AbstractController
 
         $form = $this->createForm(RecurringTransactionType::class, $recurring, [
             'currency' => $recurring->getAccount()->getCurrency(),
+            'account'  => $recurring->getAccount(),
         ]);
         $form->handleRequest($request);
 

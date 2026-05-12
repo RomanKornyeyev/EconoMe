@@ -4,7 +4,9 @@ namespace App\Service;
 
 use App\Entity\Account;
 use App\Entity\AccountMember;
+use App\Entity\Category;
 use App\Entity\User;
+use App\Repository\CategoryTemplateRepository;
 use App\Repository\FriendshipRepository;
 use App\Repository\TransactionRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -15,10 +17,11 @@ class AccountService
         private EntityManagerInterface $em,
         private FriendshipRepository $friendshipRepository,
         private TransactionRepository $transactionRepository,
+        private CategoryTemplateRepository $templateRepo,
     ) {}
 
     /**
-     * Crea una cuenta y asigna al creador como owner.
+     * Crea una cuenta, asigna al creador como owner y copia sus CategoryTemplates.
      */
     public function createAccount(User $owner, string $name, ?string $description = null, string $currency = 'EUR'): Account
     {
@@ -31,9 +34,29 @@ class AccountService
 
         $this->em->persist($account);
         $this->em->persist($member);
+
+        $this->copyTemplatesToAccount($owner, $account);
+
         $this->em->flush();
 
         return $account;
+    }
+
+    /**
+     * Copia las CategoryTemplates de un usuario como Categories de una cuenta.
+     */
+    private function copyTemplatesToAccount(User $user, Account $account): void
+    {
+        $templates = $this->templateRepo->findAllByUser($user);
+
+        foreach ($templates as $template) {
+            $category = new Category($account);
+            $category->setName($template->getName());
+            $category->setIcon($template->getIcon());
+            $category->setColor($template->getColor());
+            $category->setType($template->getType());
+            $this->em->persist($category);
+        }
     }
 
     /**

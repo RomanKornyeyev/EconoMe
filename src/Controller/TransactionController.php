@@ -85,7 +85,7 @@ class TransactionController extends AbstractController
             15
         );
 
-        $categories = $this->categoryRepo->findAllByUser($user);
+        $categories = $this->categoryRepo->findAllByAccount($account);
 
         return $this->render('transaction/index.html.twig', [
             'accounts'        => $accounts,
@@ -129,6 +129,7 @@ class TransactionController extends AbstractController
 
         $form = $this->createForm(TransactionType::class, $transaction, [
             'currency' => $account->getCurrency(),
+            'account'  => $account,
         ]);
         $form->handleRequest($request);
 

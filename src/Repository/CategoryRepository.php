@@ -2,8 +2,8 @@
 
 namespace App\Repository;
 
+use App\Entity\Account;
 use App\Entity\Category;
-use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -15,15 +15,15 @@ class CategoryRepository extends ServiceEntityRepository
     }
 
     /**
-     * Categorías raíz de un usuario filtradas por tipo.
+     * Categorías raíz de una cuenta filtradas por tipo.
      */
-    public function findRootByUserAndType(User $user, string $type): array
+    public function findRootByAccountAndType(Account $account, string $type): array
     {
         return $this->createQueryBuilder('c')
-            ->where('c.user = :user')
+            ->where('c.account = :account')
             ->andWhere('c.type = :type')
             ->andWhere('c.parent IS NULL')
-            ->setParameter('user', $user)
+            ->setParameter('account', $account)
             ->setParameter('type', $type)
             ->orderBy('c.name', 'ASC')
             ->getQuery()
@@ -31,14 +31,14 @@ class CategoryRepository extends ServiceEntityRepository
     }
 
     /**
-     * Todas las categorías de un usuario (para selects con optgroup por tipo).
+     * Todas las categorías raíz de una cuenta (para selects en formularios).
      */
-    public function findAllByUser(User $user): array
+    public function findAllByAccount(Account $account): array
     {
         return $this->createQueryBuilder('c')
-            ->where('c.user = :user')
+            ->where('c.account = :account')
             ->andWhere('c.parent IS NULL')
-            ->setParameter('user', $user)
+            ->setParameter('account', $account)
             ->orderBy('c.type', 'ASC')
             ->addOrderBy('c.name', 'ASC')
             ->getQuery()

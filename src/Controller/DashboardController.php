@@ -102,6 +102,7 @@ class DashboardController extends AbstractController
         $transaction = new Transaction($account, $user);
         $transactionForm = $this->createForm(TransactionType::class, $transaction, [
             'currency' => $account->getCurrency(),
+            'account'  => $account,
             'action'   => $this->generateUrl('transaction_create', ['account' => $account->getId()]),
         ]);
 

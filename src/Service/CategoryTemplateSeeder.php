@@ -2,13 +2,13 @@
 
 namespace App\Service;
 
-use App\Entity\Category;
+use App\Entity\CategoryTemplate;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 
-class CategorySeeder
+class CategoryTemplateSeeder
 {
-    private const EXPENSE_CATEGORIES = [
+    private const EXPENSE_TEMPLATES = [
         ['name' => 'Alimentación', 'icon' => 'cart', 'color' => '#4CAF50'],
         ['name' => 'Transporte', 'icon' => 'car', 'color' => '#2196F3'],
         ['name' => 'Vivienda', 'icon' => 'home', 'color' => '#795548'],
@@ -20,7 +20,7 @@ class CategorySeeder
         ['name' => 'Otros', 'icon' => 'dots', 'color' => '#607D8B'],
     ];
 
-    private const INCOME_CATEGORIES = [
+    private const INCOME_TEMPLATES = [
         ['name' => 'Nómina', 'icon' => 'briefcase', 'color' => '#4CAF50'],
         ['name' => 'Freelance', 'icon' => 'laptop', 'color' => '#2196F3'],
         ['name' => 'Inversiones', 'icon' => 'trending-up', 'color' => '#FF9800'],
@@ -31,26 +31,28 @@ class CategorySeeder
         private EntityManagerInterface $em,
     ) {}
 
+    /**
+     * Crea las plantillas por defecto para un nuevo usuario.
+     * Llamar al registrar. No hace flush.
+     */
     public function seedForUser(User $user): void
     {
-        foreach (self::EXPENSE_CATEGORIES as $data) {
-            $category = new Category($user);
-            $category->setName($data['name']);
-            $category->setIcon($data['icon']);
-            $category->setColor($data['color']);
-            $category->setType(Category::TYPE_EXPENSE);
-            $this->em->persist($category);
+        foreach (self::EXPENSE_TEMPLATES as $data) {
+            $template = new CategoryTemplate($user);
+            $template->setName($data['name']);
+            $template->setIcon($data['icon']);
+            $template->setColor($data['color']);
+            $template->setType(CategoryTemplate::TYPE_EXPENSE);
+            $this->em->persist($template);
         }
 
-        foreach (self::INCOME_CATEGORIES as $data) {
-            $category = new Category($user);
-            $category->setName($data['name']);
-            $category->setIcon($data['icon']);
-            $category->setColor($data['color']);
-            $category->setType(Category::TYPE_INCOME);
-            $this->em->persist($category);
+        foreach (self::INCOME_TEMPLATES as $data) {
+            $template = new CategoryTemplate($user);
+            $template->setName($data['name']);
+            $template->setIcon($data['icon']);
+            $template->setColor($data['color']);
+            $template->setType(CategoryTemplate::TYPE_INCOME);
+            $this->em->persist($template);
         }
-
-        // No flush aquí — se hace en el servicio/controlador que llame a seedForUser
     }
 }

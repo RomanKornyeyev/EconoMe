@@ -2,6 +2,7 @@
 
 namespace App\Form;
 
+use App\Entity\Account;
 use App\Entity\Category;
 use App\Entity\RecurringTransaction;
 use App\Repository\CategoryRepository;
@@ -15,18 +16,11 @@ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 class RecurringTransactionType extends AbstractType
 {
-    public function __construct(
-        private TokenStorageInterface $tokenStorage,
-    ) {}
-
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $user = $this->tokenStorage->getToken()?->getUser();
-
         $builder
             ->add('name', TextType::class, [
                 'label' => 'Nombre',
@@ -67,10 +61,10 @@ class RecurringTransactionType extends AbstractType
                 'choice_label' => 'name',
                 'required' => false,
                 'placeholder' => 'Sin categoría',
-                'query_builder' => function (CategoryRepository $repo) use ($user) {
+                'query_builder' => function (CategoryRepository $repo) use ($options) {
                     return $repo->createQueryBuilder('c')
-                        ->where('c.user = :user')
-                        ->setParameter('user', $user)
+                        ->where('c.account = :account')
+                        ->setParameter('account', $options['account'])
                         ->orderBy('c.type', 'ASC')
                         ->addOrderBy('c.name', 'ASC');
                 },
@@ -96,5 +90,7 @@ class RecurringTransactionType extends AbstractType
             'data_class' => RecurringTransaction::class,
             'currency' => 'EUR',
         ]);
+        $resolver->setRequired('account');
+        $resolver->setAllowedTypes('account', Account::class);
     }
 }
