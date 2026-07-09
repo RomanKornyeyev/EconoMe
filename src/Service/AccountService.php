@@ -7,7 +7,6 @@ use App\Entity\AccountMember;
 use App\Entity\Category;
 use App\Entity\User;
 use App\Repository\CategoryTemplateRepository;
-use App\Repository\FriendshipRepository;
 use App\Repository\TransactionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -15,7 +14,6 @@ class AccountService
 {
     public function __construct(
         private EntityManagerInterface $em,
-        private FriendshipRepository $friendshipRepository,
         private TransactionRepository $transactionRepository,
         private CategoryTemplateRepository $templateRepo,
     ) {}
@@ -60,24 +58,13 @@ class AccountService
     }
 
     /**
-     * Añade un miembro a la cuenta. Requiere amistad aceptada con el owner.
+     * Da de alta a un usuario como miembro tras aceptar una invitación.
+     * Las validaciones (owner, amistad) ya se hicieron al crear la invitación,
+     * por lo que aquí solo se resuelve el alta o el rejoin.
      */
-    public function addMember(Account $account, User $owner, User $newUser, string $role = AccountMember::ROLE_EDITOR): AccountMember
+    public function activateMembership(Account $account, User $user, string $role = AccountMember::ROLE_EDITOR): AccountMember
     {
-        // Validar que quien invita es owner
-        $ownerMember = $this->findActiveMember($account, $owner);
-        if (!$ownerMember || !$ownerMember->isOwner()) {
-            throw new \LogicException('Solo el propietario puede añadir miembros.');
-        }
-
-        // Validar amistad
-        $friendship = $this->friendshipRepository->findBetween($owner, $newUser);
-        if (!$friendship || !$friendship->isAccepted()) {
-            throw new \LogicException('Debes ser amigo de esta persona para invitarla.');
-        }
-
-        // Comprobar si ya fue miembro (soft delete → rejoin)
-        $existingMember = $this->findMemberIncludingLeft($account, $newUser);
+        $existingMember = $this->findMemberIncludingLeft($account, $user);
         if ($existingMember) {
             if (!$existingMember->hasLeft()) {
                 throw new \LogicException('Este usuario ya es miembro de la cuenta.');
@@ -87,7 +74,7 @@ class AccountService
             return $existingMember;
         }
 
-        $member = new AccountMember($account, $newUser, $role);
+        $member = new AccountMember($account, $user, $role);
         $this->em->persist($member);
         $this->em->flush();
 

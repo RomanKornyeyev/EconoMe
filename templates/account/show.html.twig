@@ -111,6 +111,39 @@
                 </li>
             {% endfor %}
         </ul>
+
+        {% if pendingInvitations is not empty %}
+            <div class="px-3 pt-3 pb-1">
+                <small class="text-muted text-uppercase fw-semibold">Invitaciones pendientes</small>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for invitation in pendingInvitations %}
+                    <li class="list-group-item d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2">
+                            <img src="{{ asset(invitation.invitee.profilePhoto) }}" class="rounded-circle" width="32" height="32" style="object-fit:cover;opacity:.7" alt="">
+                            <div>
+                                <div class="fw-semibold">{{ invitation.invitee.nickname }}</div>
+                                <small class="text-muted">{{ invitation.invitee.email }}</small>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-body-secondary text-body-secondary">
+                                <i class="fa-solid fa-clock me-1"></i>Pendiente · {{ invitation.role }}
+                            </span>
+                            {% if currentMember and currentMember.canManageAccount() %}
+                                <form method="post" action="{{ path('account_invitation_cancel', {id: invitation.id}) }}"
+                                      onsubmit="return confirm('¿Cancelar la invitación a {{ invitation.invitee.nickname }}?')">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('invitation_' ~ invitation.id) }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
     </div>
 </div>
 

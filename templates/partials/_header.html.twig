@@ -41,8 +41,12 @@
 								</a>
 							</li>
 							<li class="nav-item col-6 col-lg-auto">
+								{% set accountInvites = pending_account_invitations_count() %}
 								<a class="nav-link py-2 px-0 px-lg-2 {{ app.request.attributes.get('_route') starts with 'account_' ? 'active' : '' }}" href="{{ path('account_index') }}">
 									<i class="fa-solid fa-wallet me-1"></i>Cuentas
+									{% if accountInvites > 0 %}
+										<span class="badge rounded-pill bg-success ms-1">{{ accountInvites }}</span>
+									{% endif %}
 								</a>
 							</li>
 							<li class="nav-item col-6 col-lg-auto">

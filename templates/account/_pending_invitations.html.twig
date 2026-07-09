@@ -1,0 +1,44 @@
+{#
+  Invitaciones a cuentas pendientes de aceptar por el usuario actual.
+
+  Variables:
+    - pendingInvitations: AccountInvitation[]
+#}
+<div class="card border shadow-sm mb-4 bg-body-tertiary">
+    <div class="card-header bg-transparent py-3">
+        <h5 class="mb-0 fw-semibold">
+            Invitaciones
+            <span class="badge rounded-pill bg-success align-middle ms-1">{{ pendingInvitations|length }}</span>
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+            {% for invitation in pendingInvitations %}
+                <li class="list-group-item bg-transparent d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-3 min-w-0">
+                        <img src="{{ asset(invitation.inviter.profilePhoto) }}" class="rounded-circle flex-shrink-0"
+                             width="40" height="40" style="object-fit:cover" alt="">
+                        <div class="min-w-0">
+                            <div class="fw-semibold text-truncate">{{ invitation.account.name }}</div>
+                            <small class="text-muted text-truncate d-block">
+                                Te invitó {{ invitation.inviter.nickname }} · rol {{ invitation.role }}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <form method="post" action="{{ path('account_invitation_accept', {id: invitation.id}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('invitation_' ~ invitation.id) }}">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="fa-solid fa-check me-1"></i>Aceptar
+                            </button>
+                        </form>
+                        <form method="post" action="{{ path('account_invitation_reject', {id: invitation.id}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('invitation_' ~ invitation.id) }}">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">Rechazar</button>
+                        </form>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>

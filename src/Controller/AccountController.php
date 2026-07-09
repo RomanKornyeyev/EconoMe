@@ -3,10 +3,13 @@
 namespace App\Controller;
 
 use App\Entity\Account;
+use App\Entity\AccountInvitation;
 use App\Entity\AccountMember;
 use App\Entity\User;
 use App\Form\AccountType;
+use App\Repository\AccountInvitationRepository;
 use App\Repository\FriendshipRepository;
+use App\Service\AccountInvitationService;
 use App\Service\AccountService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -25,12 +28,14 @@ class AccountController extends AbstractController
     ) {}
 
     #[Route('', name: 'index')]
-    public function index(): Response
+    public function index(AccountInvitationRepository $invitationRepository): Response
     {
         $accounts = $this->accountService->getActiveAccountsForUser($this->getUser());
+        $pendingInvitations = $invitationRepository->findPendingReceivedBy($this->getUser());
 
         return $this->render('account/index.html.twig', [
             'accounts' => $accounts,
+            'pendingInvitations' => $pendingInvitations,
         ]);
     }
 
@@ -59,19 +64,21 @@ class AccountController extends AbstractController
     }
 
     #[Route('/{id}', name: 'show', requirements: ['id' => '\d+'])]
-    public function show(Account $account): Response
+    public function show(Account $account, AccountInvitationRepository $invitationRepository): Response
     {
         $this->denyAccessUnlessGranted('ACCOUNT_VIEW', $account);
 
         $members = $account->getActiveMembers();
         $balance = $this->accountService->getBalance($account);
         $currentMember = $this->accountService->getMemberRole($account, $this->getUser());
+        $pendingInvitations = $invitationRepository->findPendingByAccount($account);
 
         return $this->render('account/show.html.twig', [
             'account' => $account,
             'members' => $members,
             'balance' => $balance,
             'currentMember' => $currentMember,
+            'pendingInvitations' => $pendingInvitations,
         ]);
     }
 
@@ -109,8 +116,12 @@ class AccountController extends AbstractController
     }
 
     #[Route('/{id}/invite/search', name: 'invite_search', methods: ['GET'], requirements: ['id' => '\d+'])]
-    public function inviteSearch(Account $account, Request $request, FriendshipRepository $friendshipRepository): Response
-    {
+    public function inviteSearch(
+        Account $account,
+        Request $request,
+        FriendshipRepository $friendshipRepository,
+        AccountInvitationRepository $invitationRepository,
+    ): Response {
         $this->denyAccessUnlessGranted('ACCOUNT_MANAGE', $account);
 
         $q = trim((string) $request->query->get('q', ''));
@@ -122,8 +133,11 @@ class AccountController extends AbstractController
                 $memberIds[] = $member->getUser()->getId();
             }
 
-            // Solo se puede invitar a amigos aceptados que aún no sean miembros.
-            $results = $friendshipRepository->searchAcceptedFriends($this->getUser(), $q, $memberIds);
+            // Excluir a miembros y a quienes ya tienen invitación pendiente.
+            $excludeIds = array_merge($memberIds, $invitationRepository->findPendingInviteeIds($account));
+
+            // Solo se puede invitar a amigos aceptados.
+            $results = $friendshipRepository->searchAcceptedFriends($this->getUser(), $q, $excludeIds);
         }
 
         return $this->render('account/_invite_results.html.twig', [
@@ -133,7 +147,7 @@ class AccountController extends AbstractController
     }
 
     #[Route('/{id}/invite', name: 'invite', methods: ['POST'], requirements: ['id' => '\d+'])]
-    public function invite(Account $account, Request $request, FriendshipRepository $friendshipRepository): Response
+    public function invite(Account $account, Request $request, AccountInvitationService $invitationService): Response
     {
         $this->denyAccessUnlessGranted('ACCOUNT_MANAGE', $account);
 
@@ -146,20 +160,67 @@ class AccountController extends AbstractController
             return $this->redirectToRoute('account_show', ['id' => $account->getId()]);
         }
 
-        // Solo se puede invitar a amigos aceptados.
-        if (!$friendshipRepository->areFriends($this->getUser(), $user)) {
-            $this->addFlash('error', 'Solo puedes invitar a usuarios que sean amigos tuyos.');
-            return $this->redirectToRoute('account_show', ['id' => $account->getId()]);
-        }
-
         try {
-            $this->accountService->addMember($account, $this->getUser(), $user, $role);
-            $this->addFlash('success', $user->getNickname() . ' ha sido añadido a la cuenta.');
+            $invitationService->invite($account, $this->getUser(), $user, $role);
+            $this->addFlash('success', 'Invitación enviada a ' . $user->getNickname() . '.');
         } catch (\LogicException $e) {
             $this->addFlash('error', $e->getMessage());
         }
 
         return $this->redirectToRoute('account_show', ['id' => $account->getId()]);
+    }
+
+    #[Route('/invitation/{id}/accept', name: 'invitation_accept', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function invitationAccept(AccountInvitation $invitation, Request $request, AccountInvitationService $invitationService): Response
+    {
+        if (!$this->isCsrfTokenValid('invitation_' . $invitation->getId(), $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
+
+        try {
+            $invitationService->accept($invitation, $this->getUser());
+            $this->addFlash('success', 'Te has unido a ' . $invitation->getAccount()->getName() . '.');
+        } catch (\LogicException $e) {
+            $this->addFlash('error', $e->getMessage());
+        }
+
+        return $this->redirectToRoute('account_index');
+    }
+
+    #[Route('/invitation/{id}/reject', name: 'invitation_reject', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function invitationReject(AccountInvitation $invitation, Request $request, AccountInvitationService $invitationService): Response
+    {
+        if (!$this->isCsrfTokenValid('invitation_' . $invitation->getId(), $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
+
+        try {
+            $invitationService->reject($invitation, $this->getUser());
+            $this->addFlash('success', 'Invitación rechazada.');
+        } catch (\LogicException $e) {
+            $this->addFlash('error', $e->getMessage());
+        }
+
+        return $this->redirectToRoute('account_index');
+    }
+
+    #[Route('/invitation/{id}/cancel', name: 'invitation_cancel', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function invitationCancel(AccountInvitation $invitation, Request $request, AccountInvitationService $invitationService): Response
+    {
+        $accountId = $invitation->getAccount()->getId();
+
+        if (!$this->isCsrfTokenValid('invitation_' . $invitation->getId(), $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
+
+        try {
+            $invitationService->cancel($invitation, $this->getUser());
+            $this->addFlash('success', 'Invitación cancelada.');
+        } catch (\LogicException $e) {
+            $this->addFlash('error', $e->getMessage());
+        }
+
+        return $this->redirectToRoute('account_show', ['id' => $accountId]);
     }
 
     #[Route('/{id}/remove-member/{userId}', name: 'remove_member', methods: ['POST'], requirements: ['id' => '\d+', 'userId' => '\d+'])]

@@ -125,16 +125,6 @@ class FriendshipRepository extends ServiceEntityRepository
     }
 
     /**
-     * Indica si dos usuarios son amigos (relación aceptada, en cualquier dirección).
-     */
-    public function areFriends(User $userA, User $userB): bool
-    {
-        $friendship = $this->findBetween($userA, $userB);
-
-        return $friendship !== null && $friendship->isAccepted();
-    }
-
-    /**
      * Busca usuarios por nombre, nickname o email respetando isSearchable.
      */
     public function searchUsers(User $currentUser, string $query): array
