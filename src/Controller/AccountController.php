@@ -5,10 +5,13 @@ namespace App\Controller;
 use App\Entity\Account;
 use App\Entity\AccountInvitation;
 use App\Entity\AccountMember;
+use App\Entity\Category;
 use App\Entity\User;
 use App\Form\AccountType;
 use App\Repository\AccountInvitationRepository;
+use App\Repository\CategoryRepository;
 use App\Repository\FriendshipRepository;
+use App\Repository\RecurringTransactionRepository;
 use App\Service\AccountInvitationService;
 use App\Service\AccountService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -64,8 +67,12 @@ class AccountController extends AbstractController
     }
 
     #[Route('/{id}', name: 'show', requirements: ['id' => '\d+'])]
-    public function show(Account $account, AccountInvitationRepository $invitationRepository): Response
-    {
+    public function show(
+        Account $account,
+        AccountInvitationRepository $invitationRepository,
+        CategoryRepository $categoryRepository,
+        RecurringTransactionRepository $recurringRepository,
+    ): Response {
         $this->denyAccessUnlessGranted('ACCOUNT_VIEW', $account);
 
         $members = $account->getActiveMembers();
@@ -75,10 +82,14 @@ class AccountController extends AbstractController
 
         return $this->render('account/show.html.twig', [
             'account' => $account,
+            'accounts' => $this->accountService->getActiveAccountsForUser($this->getUser()),
             'members' => $members,
             'balance' => $balance,
             'currentMember' => $currentMember,
             'pendingInvitations' => $pendingInvitations,
+            'activeRecurrings' => $recurringRepository->countActiveByAccount($account),
+            'categoryIncomeCount' => $categoryRepository->count(['account' => $account, 'type' => Category::TYPE_INCOME]),
+            'categoryExpenseCount' => $categoryRepository->count(['account' => $account, 'type' => Category::TYPE_EXPENSE]),
         ]);
     }
 
