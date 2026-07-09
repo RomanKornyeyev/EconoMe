@@ -5,28 +5,27 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-12 col-md-8 col-lg-6">
-        <div class="d-flex align-items-center gap-2 mb-4">
-            <a href="{{ path('transaction_index', {account: account.id}) }}" class="btn btn-sm btn-outline-secondary">
-                <i class="fa-solid fa-arrow-left"></i>
+        <div class="mb-4">
+            <a href="{{ path('transaction_index', {account: account.id}) }}" class="btn btn-outline-secondary">
+                <i class="fa-solid fa-arrow-left me-1"></i>Volver
             </a>
-            <div>
-                <h4 class="mb-0">{{ isNew ? 'Nuevo movimiento' : 'Editar movimiento' }}</h4>
-                <small class="text-muted">{{ account.name }}</small>
-            </div>
         </div>
 
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                {{ form_start(form) }}
+        <div class="card border-0 shadow bg-body-tertiary">
+            {{ form_start(form, {attr: {class: 'needs-validation'}}) }}
+                <div class="card-header bg-transparent border-bottom py-3 px-4">
+                    <h5 class="mb-0">{{ isNew ? 'Nuevo movimiento' : 'Editar movimiento' }}</h5>
+                    <small class="text-muted">{{ account.name }}</small>
+                </div>
+                <div class="card-body p-4">
                     {% include 'transaction/_form_transaction.html.twig' %}
-                    <div class="d-flex gap-2 mt-3">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fa-solid fa-check me-1"></i>{{ isNew ? 'Guardar' : 'Guardar cambios' }}
-                        </button>
-                        <a href="{{ path('transaction_index', {account: account.id}) }}" class="btn btn-outline-secondary">Cancelar</a>
-                    </div>
-                {{ form_end(form) }}
-            </div>
+                </div>
+                <div class="card-footer bg-transparent border-top d-flex gap-2 justify-content-center py-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-check me-1"></i>{{ isNew ? 'Guardar' : 'Guardar cambios' }}
+                    </button>
+                </div>
+            {{ form_end(form) }}
         </div>
     </div>
 </div>

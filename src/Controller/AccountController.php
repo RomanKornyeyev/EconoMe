@@ -6,6 +6,7 @@ use App\Entity\Account;
 use App\Entity\AccountMember;
 use App\Entity\User;
 use App\Form\AccountType;
+use App\Repository\FriendshipRepository;
 use App\Service\AccountService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -107,8 +108,32 @@ class AccountController extends AbstractController
         return $this->redirectToRoute('account_index');
     }
 
+    #[Route('/{id}/invite/search', name: 'invite_search', methods: ['GET'], requirements: ['id' => '\d+'])]
+    public function inviteSearch(Account $account, Request $request, FriendshipRepository $friendshipRepository): Response
+    {
+        $this->denyAccessUnlessGranted('ACCOUNT_MANAGE', $account);
+
+        $q = trim((string) $request->query->get('q', ''));
+        $results = [];
+
+        if (mb_strlen($q) >= 2) {
+            $memberIds = [];
+            foreach ($account->getActiveMembers() as $member) {
+                $memberIds[] = $member->getUser()->getId();
+            }
+
+            // Solo se puede invitar a amigos aceptados que aún no sean miembros.
+            $results = $friendshipRepository->searchAcceptedFriends($this->getUser(), $q, $memberIds);
+        }
+
+        return $this->render('account/_invite_results.html.twig', [
+            'account' => $account,
+            'results' => $results,
+        ]);
+    }
+
     #[Route('/{id}/invite', name: 'invite', methods: ['POST'], requirements: ['id' => '\d+'])]
-    public function invite(Account $account, Request $request): Response
+    public function invite(Account $account, Request $request, FriendshipRepository $friendshipRepository): Response
     {
         $this->denyAccessUnlessGranted('ACCOUNT_MANAGE', $account);
 
@@ -118,6 +143,12 @@ class AccountController extends AbstractController
 
         if (!$user) {
             $this->addFlash('error', 'Usuario no encontrado.');
+            return $this->redirectToRoute('account_show', ['id' => $account->getId()]);
+        }
+
+        // Solo se puede invitar a amigos aceptados.
+        if (!$friendshipRepository->areFriends($this->getUser(), $user)) {
+            $this->addFlash('error', 'Solo puedes invitar a usuarios que sean amigos tuyos.');
             return $this->redirectToRoute('account_show', ['id' => $account->getId()]);
         }
 

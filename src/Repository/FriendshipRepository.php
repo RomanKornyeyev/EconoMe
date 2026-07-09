@@ -89,6 +89,52 @@ class FriendshipRepository extends ServiceEntityRepository
     }
 
     /**
+     * Busca entre los amigos aceptados del usuario por apodo, nombre o email
+     * (parcial), excluyendo los ids indicados (p. ej. miembros ya presentes en
+     * una cuenta). Se usa para invitar únicamente a amigos.
+     *
+     * @param int[] $excludeIds
+     * @return User[]
+     */
+    public function searchAcceptedFriends(User $user, string $q, array $excludeIds = [], int $limit = 20): array
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder()
+            ->select('u')
+            ->from(User::class, 'u')
+            ->join(
+                Friendship::class,
+                'f',
+                'WITH',
+                '(f.requester = :user AND f.receiver = u) OR (f.receiver = :user AND f.requester = u)'
+            )
+            ->where('f.status = :status')
+            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.nickname LIKE :q OR u.name LIKE :q OR u.email LIKE :q')
+            ->setParameter('user', $user)
+            ->setParameter('status', Friendship::STATUS_ACCEPTED)
+            ->setParameter('q', '%' . $q . '%')
+            ->orderBy('u.nickname', 'ASC')
+            ->setMaxResults($limit);
+
+        if ($excludeIds) {
+            $qb->andWhere('u.id NOT IN (:excludeIds)')
+               ->setParameter('excludeIds', $excludeIds);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Indica si dos usuarios son amigos (relación aceptada, en cualquier dirección).
+     */
+    public function areFriends(User $userA, User $userB): bool
+    {
+        $friendship = $this->findBetween($userA, $userB);
+
+        return $friendship !== null && $friendship->isAccepted();
+    }
+
+    /**
      * Busca usuarios por nombre, nickname o email respetando isSearchable.
      */
     public function searchUsers(User $currentUser, string $query): array
