@@ -4,7 +4,6 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Validator\Context\ExecutionContextInterface;
 use App\Entity\Traits\TimestampableEntity;
 
 #[ORM\Entity(repositoryClass: "App\Repository\RecurringTransactionRepository")]
@@ -59,10 +58,11 @@ class RecurringTransaction
     #[Assert\Choice(choices: [self::FREQ_DAILY, self::FREQ_WEEKLY, self::FREQ_MONTHLY, self::FREQ_YEARLY])]
     private string $frequency = self::FREQ_MONTHLY;
 
-    #[ORM\Column(type: "integer")]
-    #[Assert\Range(min: 1, max: 31)]
-    private int $dayOfExecution = 1;
-
+    /**
+     * Fecha del primer movimiento efectivo: ancla todo el calendario.
+     * Semanal = cada 7 días desde aquí; mensual = este día de cada mes;
+     * anual = este día y mes de cada año.
+     */
     #[ORM\Column(type: "date")]
     #[Assert\NotNull]
     private ?\DateTimeInterface $startDate = null;
@@ -169,17 +169,6 @@ class RecurringTransaction
         return $this;
     }
 
-    public function getDayOfExecution(): int
-    {
-        return $this->dayOfExecution;
-    }
-
-    public function setDayOfExecution(int $dayOfExecution): self
-    {
-        $this->dayOfExecution = $dayOfExecution;
-        return $this;
-    }
-
     public function getStartDate(): ?\DateTimeInterface
     {
         return $this->startDate;
@@ -240,16 +229,4 @@ class RecurringTransaction
         return new \DateTime() > $this->endDate;
     }
 
-    /**
-     * Para frecuencia semanal, dayOfExecution es día ISO de la semana (1=lunes … 7=domingo).
-     */
-    #[Assert\Callback]
-    public function validateDayOfExecution(ExecutionContextInterface $context): void
-    {
-        if ($this->frequency === self::FREQ_WEEKLY && ($this->dayOfExecution < 1 || $this->dayOfExecution > 7)) {
-            $context->buildViolation('Para frecuencia semanal, el día debe estar entre 1 (lunes) y 7 (domingo).')
-                ->atPath('dayOfExecution')
-                ->addViolation();
-        }
-    }
 }

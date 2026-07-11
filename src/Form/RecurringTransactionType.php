@@ -11,7 +11,6 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
-use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\MoneyType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -52,10 +51,6 @@ class RecurringTransactionType extends AbstractType
                     'Anual' => RecurringTransaction::FREQ_YEARLY,
                 ],
             ])
-            ->add('dayOfExecution', IntegerType::class, [
-                'label' => 'Día de ejecución',
-                'attr' => ['min' => 1, 'max' => 31, 'placeholder' => '1-31'],
-            ])
             ->add('category', EntityType::class, [
                 'label' => 'Categoría',
                 'class' => Category::class,
@@ -74,8 +69,9 @@ class RecurringTransactionType extends AbstractType
                 },
             ])
             ->add('startDate', DateType::class, [
-                'label' => 'Fecha de inicio',
+                'label' => 'Fecha del primer movimiento',
                 'widget' => 'single_text',
+                'help' => 'Ancla el calendario: semanal se repite cada 7 días desde aquí; mensual, este día de cada mes; anual, este día y mes de cada año.',
             ])
             ->add('endDate', DateType::class, [
                 'label' => 'Fecha de fin',

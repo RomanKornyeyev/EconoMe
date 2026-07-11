@@ -168,7 +168,6 @@ class RecurringTransactionController extends AbstractController
     {
         return [
             'frequency' => $recurring->getFrequency(),
-            'day'       => $recurring->getDayOfExecution(),
             'start'     => $recurring->getStartDate()?->format('Y-m-d'),
             'end'       => $recurring->getEndDate()?->format('Y-m-d'),
         ];

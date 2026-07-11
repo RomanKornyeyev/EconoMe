@@ -7,7 +7,7 @@
 			<th class="text-muted small text-uppercase fw-normal">Tipo</th>
 			<th class="text-muted small text-uppercase fw-normal text-end">Importe</th>
 			<th class="text-muted small text-uppercase fw-normal">Frecuencia</th>
-			<th class="text-muted small text-uppercase fw-normal">Día</th>
+			<th class="text-muted small text-uppercase fw-normal">Inicio</th>
 			<th class="text-muted small text-uppercase fw-normal">Categoría</th>
 			<th class="text-muted small text-uppercase fw-normal">Estado</th>
 			<th class="text-muted small text-uppercase fw-normal text-end">Acciones</th>
@@ -34,7 +34,7 @@
 					{{ recurring.type == 'expense' ? '-' : '+' }}{{ recurring.amount|number_format(2, ',', '.') }} {{ currentAccount.currency }}
 				</td>
 				<td>{{ freqMap[recurring.frequency] ?? recurring.frequency }}</td>
-				<td>{{ recurring.dayOfExecution }}</td>
+				<td class="small">{{ recurring.startDate|date('d/m/Y') }}</td>
 				<td>
 					{% if recurring.category %}
 						<span class="d-inline-block rounded-circle me-1" style="width:8px;height:8px;background:{{ recurring.category.color }}"></span>

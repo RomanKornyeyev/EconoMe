@@ -13,8 +13,10 @@ use Doctrine\ORM\EntityManagerInterface;
  * Reglas de diseño:
  *  - Solo se materializa hasta HOY: las ocurrencias futuras las creará el
  *    comando programado cuando llegue su fecha.
- *  - dayOfExecution es el ancla del calendario; startDate/endDate son solo
- *    límites (la primera ocurrencia es el primer día-ancla >= startDate).
+ *  - startDate es la fecha del PRIMER movimiento efectivo y ancla todo el
+ *    calendario (lógica bancaria): semanal = cada 7 días desde startDate;
+ *    mensual = el día de startDate cada mes; anual = el día y mes de startDate
+ *    cada año. endDate es solo límite superior.
  *  - Días 29-31 en meses que no los tienen se ajustan al último día del mes.
  *  - lastGeneratedAt actúa como CURSOR de generación: el comando solo crea
  *    ocurrencias desde el cursor, de modo que los periodos en pausa no se
@@ -59,13 +61,11 @@ class RecurringMaterializer
             return [];
         }
 
-        $day = $rec->getDayOfExecution();
-
         return match ($rec->getFrequency()) {
             RecurringTransaction::FREQ_DAILY   => $this->dailyOccurrences($from, $to),
-            RecurringTransaction::FREQ_WEEKLY  => $this->weeklyOccurrences($from, $to, $day),
-            RecurringTransaction::FREQ_MONTHLY => $this->monthlyOccurrences($from, $to, $day),
-            RecurringTransaction::FREQ_YEARLY  => $this->yearlyOccurrences($from, $to, $day, (int) $start->format('n')),
+            RecurringTransaction::FREQ_WEEKLY  => $this->weeklyOccurrences($from, $to, $start),
+            RecurringTransaction::FREQ_MONTHLY => $this->monthlyOccurrences($from, $to, (int) $start->format('j')),
+            RecurringTransaction::FREQ_YEARLY  => $this->yearlyOccurrences($from, $to, (int) $start->format('j'), (int) $start->format('n')),
             default => [],
         };
     }
@@ -240,16 +240,22 @@ class RecurringMaterializer
         return $dates;
     }
 
-    /** @return \DateTimeImmutable[] */
-    private function weeklyOccurrences(\DateTimeImmutable $from, \DateTimeImmutable $to, int $isoWeekday): array
+    /**
+     * Semanal: startDate + 7·k (mismo día de la semana que startDate).
+     *
+     * @return \DateTimeImmutable[]
+     */
+    private function weeklyOccurrences(\DateTimeImmutable $from, \DateTimeImmutable $to, \DateTimeImmutable $start): array
     {
-        if ($isoWeekday < 1 || $isoWeekday > 7) {
-            return []; // configuración inválida para semanal; la validación del form lo impide
+        // Primer elemento de la serie >= from, sin iterar semana a semana
+        $first = $start;
+        if ($first < $from) {
+            $daysBehind = (int) $start->diff($from)->days;
+            $first = $start->modify('+' . (int) (ceil($daysBehind / 7) * 7) . ' days');
         }
 
-        $offset = ($isoWeekday - (int) $from->format('N') + 7) % 7;
         $dates = [];
-        for ($d = $from->modify("+$offset days"); $d <= $to; $d = $d->modify('+7 days')) {
+        for ($d = $first; $d <= $to; $d = $d->modify('+7 days')) {
             $dates[] = $d;
         }
 
@@ -276,7 +282,7 @@ class RecurringMaterializer
     }
 
     /**
-     * Anual: el mes ancla es el de startDate y el día es dayOfExecution.
+     * Anual: el día y mes de startDate, cada año.
      *
      * @return \DateTimeImmutable[]
      */
