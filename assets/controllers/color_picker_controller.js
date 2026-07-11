@@ -35,6 +35,13 @@ export default class extends Controller {
   }
 
   #build() {
+    // Si el campo viene vacío (p. ej. cuenta nueva), preselecciona el primer
+    // color de la paleta. Usamos el atributo value real para no pisar el color
+    // ya guardado de una cuenta existente.
+    if (!this.inputTarget.getAttribute('value') && this.paletteValue.length) {
+      this.inputTarget.value = this.paletteValue[0];
+    }
+
     this.swatchesEl = document.createElement('div');
     this.swatchesEl.className = 'color-picker-swatches';
 
