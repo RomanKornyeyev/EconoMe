@@ -46,11 +46,12 @@ class AccountController extends AbstractController
     public function create(Request $request): Response
     {
         $account = new Account();
-        $form = $this->createForm(AccountType::class, $account);
+        $form = $this->createForm(AccountType::class, $account, ['with_template_choice' => true]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->accountService->createAccount($this->getUser(), $account);
+            $copyTemplates = (bool) $form->get('copyTemplates')->getData();
+            $this->accountService->createAccount($this->getUser(), $account, $copyTemplates);
 
             $this->addFlash('success', 'Cuenta creada correctamente.');
             return $this->redirectToRoute('account_index');

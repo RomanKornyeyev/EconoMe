@@ -20,18 +20,33 @@
                     {% endif %}
                 </div>
                 <div class="card-body p-4">
-                    {% if isNew %}
-                        <div class="alert alert-info d-flex align-items-center gap-2 py-2 small" role="alert">
-                            <i class="fa-solid fa-circle-info"></i>
-                            <span>Tu plantilla de categorías se copiará automáticamente a la nueva cuenta.</span>
-                        </div>
-                    {% endif %}
                     {{ form_row(form.name) }}
                     {{ form_row(form.description) }}
                     <div class="row g-3">
                         <div class="col-md-6">{{ form_row(form.currency) }}</div>
                         <div class="col-md-6">{{ form_row(form.color) }}</div>
                     </div>
+                    {% if form.copyTemplates is defined %}
+                        <hr class="my-3">
+                        <div class="row g-3">
+                            <div class="d-flex align-items-start gap-2">
+                                <div class="form-check form-switch mb-0 ps-4">
+                                    {{ form_widget(form.copyTemplates, {attr: {class: 'form-check-input', role: 'switch'}}) }}
+                                    {{ form_label(form.copyTemplates, null, {label_attr: {class: 'form-check-label'}}) }}
+                                </div>
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-info rounded-circle d-inline-flex align-items-center justify-content-center p-0"
+                                        style="width:1.6rem;height:1.6rem;"
+                                        data-bs-toggle="popover"
+                                        data-bs-trigger="focus"
+                                        data-bs-placement="top"
+                                        data-bs-content="Si lo desmarcas, la cuenta empezará sin categorías y podrás crearlas después."
+                                        aria-label="Más información sobre las categorías">
+                                    <i class="fa-solid fa-info"></i>
+                                </button>
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
                 <div class="card-footer bg-transparent border-top d-flex gap-2 justify-content-center py-3">
                     <button type="submit" class="btn btn-primary">

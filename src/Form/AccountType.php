@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\Account;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\ColorType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
@@ -40,12 +41,23 @@ class AccountType extends AbstractType
                 'attr' => ['data-color-picker-target' => 'input'],
             ])
         ;
+
+        if ($options['with_template_choice']) {
+            $builder->add('copyTemplates', CheckboxType::class, [
+                'label' => 'Agregar mi plantilla de categorías a esta cuenta',
+                'required' => false,
+                'mapped' => false,
+                'data' => true,
+            ]);
+        }
     }
 
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'data_class' => Account::class,
+            'with_template_choice' => false,
         ]);
+        $resolver->setAllowedTypes('with_template_choice', 'bool');
     }
 }

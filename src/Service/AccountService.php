@@ -20,16 +20,18 @@ class AccountService
 
     /**
      * Persiste una cuenta ya hidratada (por el formulario), asigna al creador
-     * como owner y copia sus CategoryTemplates.
+     * como owner y, opcionalmente, copia sus CategoryTemplates.
      */
-    public function createAccount(User $owner, Account $account): Account
+    public function createAccount(User $owner, Account $account, bool $copyTemplates = true): Account
     {
         $member = new AccountMember($account, $owner, AccountMember::ROLE_OWNER);
 
         $this->em->persist($account);
         $this->em->persist($member);
 
-        $this->copyTemplatesToAccount($owner, $account);
+        if ($copyTemplates) {
+            $this->copyTemplatesToAccount($owner, $account);
+        }
 
         $this->em->flush();
 
