@@ -125,11 +125,18 @@ class RecurringTransactionController extends AbstractController
                     // usuario aún no ha confirmado, mostramos el resumen sin guardar
                     // nada (no hay flush, los cambios en memoria se descartan).
                     if ($impact > 0 && !$request->request->getBoolean('sync_confirmed')) {
+                        // El token CSRF stateless es de un solo uso (la cookie de
+                        // double-submit se borra en esta respuesta): no se re-emite;
+                        // la plantilla renderiza uno fresco.
+                        $payload = $request->request->all();
+                        unset($payload[$form->getName()]['_token']);
+
                         return $this->render('recurring/confirm_sync.html.twig', [
                             'recurring'   => $recurring,
                             'createCount' => \count($plan['create']),
                             'deleteCount' => \count($plan['delete']),
-                            'payload'     => $request->request->all(),
+                            'payload'     => $payload,
+                            'formName'    => $form->getName(),
                         ]);
                     }
 

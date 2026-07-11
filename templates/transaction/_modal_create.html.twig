@@ -11,6 +11,9 @@
                     {% include 'transaction/_form_transaction.html.twig' with {form: transactionForm} %}
                 </div>
                 <div class="modal-footer">
+                    <a href="{{ path('recurring_create', {account: currentAccount.id}) }}" class="me-auto small text-decoration-none">
+                        <i class="fa-solid fa-rotate me-1"></i>Añadir movimiento recurrente
+                    </a>
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Guardar</button>
                 </div>

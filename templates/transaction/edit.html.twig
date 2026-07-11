@@ -20,7 +20,12 @@
                 <div class="card-body p-4">
                     {% include 'transaction/_form_transaction.html.twig' %}
                 </div>
-                <div class="card-footer bg-transparent border-top d-flex gap-2 justify-content-center py-3">
+                <div class="card-footer bg-transparent border-top d-flex gap-2 align-items-center py-3 {{ isNew ? 'justify-content-between' : 'justify-content-center' }}">
+                    {% if isNew %}
+                        <a href="{{ path('recurring_create', {account: account.id}) }}" class="small text-decoration-none">
+                            <i class="fa-solid fa-rotate me-1"></i>Añadir movimiento recurrente
+                        </a>
+                    {% endif %}
                     <button type="submit" class="btn btn-primary">
                         <i class="fa-solid fa-check me-1"></i>{{ isNew ? 'Guardar' : 'Guardar cambios' }}
                     </button>

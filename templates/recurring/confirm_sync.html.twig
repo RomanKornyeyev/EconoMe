@@ -61,6 +61,9 @@
                         {{ _self.hidden(name, value) }}
                     {%- endfor -%}
                     <input type="hidden" name="sync_confirmed" value="1">
+                    {# Token CSRF fresco: el del submit original ya se consumió (stateless
+                       double-submit). data-controller permite al JS regenerarlo al enviar. #}
+                    <input type="hidden" name="{{ formName }}[_token]" value="{{ csrf_token('submit') }}" data-controller="csrf-protection">
 
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
