@@ -2,7 +2,7 @@
 
 {# Sobrescribimos el bloque form_row para manejar form-floating solo en ciertos tipos de input #}
 {% block form_row %}
-    {% if form.vars.block_prefixes[1] in ['text', 'email', 'password', 'number'] %}
+    {% if form.vars.block_prefixes[1] in ['text', 'email', 'password', 'number'] and 'color' not in form.vars.block_prefixes %}
         <div class="form-floating mb-3">
             {{ form_widget(form, { 'attr': {'placeholder': form.vars.label} }) }}
             {{ form_label(form) }}

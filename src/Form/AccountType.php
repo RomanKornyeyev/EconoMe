@@ -36,6 +36,8 @@ class AccountType extends AbstractType
             ->add('color', ColorType::class, [
                 'label' => 'Color',
                 'required' => false,
+                'row_attr' => ['data-controller' => 'color-picker'],
+                'attr' => ['data-color-picker-target' => 'input'],
             ])
         ;
     }

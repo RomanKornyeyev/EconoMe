@@ -172,7 +172,10 @@
                         </span>
                         {% if currentMember and currentMember.canManageAccount() and member.user != app.user %}
                             <form method="post" action="{{ path('account_remove_member', {id: account.id, userId: member.user.id}) }}"
-                                  onsubmit="return confirm('¿Eliminar a {{ member.user.nickname }} de la cuenta?')">
+                                  data-controller="confirm"
+                                  data-action="submit->confirm#submit"
+                                  data-confirm-message-value="¿Eliminar a {{ member.user.nickname }} de la cuenta?"
+                                  data-confirm-text-value="Eliminar">
                                 <input type="hidden" name="_token" value="{{ csrf_token('remove' ~ member.user.id) }}">
                                 <button type="submit" class="btn btn-sm btn-outline-danger">
                                     <i class="fa-solid fa-xmark"></i>
@@ -204,7 +207,10 @@
                             </span>
                             {% if currentMember and currentMember.canManageAccount() %}
                                 <form method="post" action="{{ path('account_invitation_cancel', {id: invitation.id}) }}"
-                                      onsubmit="return confirm('¿Cancelar la invitación a {{ invitation.invitee.nickname }}?')">
+                                      data-controller="confirm"
+                                      data-action="submit->confirm#submit"
+                                      data-confirm-message-value="¿Cancelar la invitación a {{ invitation.invitee.nickname }}?"
+                                      data-confirm-text-value="Cancelar invitación">
                                     <input type="hidden" name="_token" value="{{ csrf_token('invitation_' ~ invitation.id) }}">
                                     <button type="submit" class="btn btn-sm btn-outline-danger">
                                         <i class="fa-solid fa-xmark"></i>

@@ -1,3 +1,40 @@
 body {
     background-color: skyblue;
 }
+
+/* ── Color picker (swatches) ──────────────────────────────────────────────── */
+.color-picker-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-top: .25rem;
+}
+
+.color-picker-swatch {
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border-radius: 50%;
+    border: 2px solid var(--bs-border-color);
+    background-color: var(--swatch, transparent);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    transition: box-shadow .12s ease;
+}
+
+.color-picker-swatch:hover {
+    box-shadow: 0 0 0 2px var(--bs-body-bg), 0 0 0 3px var(--bs-secondary-color);
+}
+
+.color-picker-swatch.is-selected {
+    box-shadow: 0 0 0 2px var(--bs-body-bg), 0 0 0 4px var(--swatch);
+}
+
+.color-picker-custom {
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    border-style: dashed;
+}

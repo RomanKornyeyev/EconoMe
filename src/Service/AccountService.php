@@ -19,15 +19,11 @@ class AccountService
     ) {}
 
     /**
-     * Crea una cuenta, asigna al creador como owner y copia sus CategoryTemplates.
+     * Persiste una cuenta ya hidratada (por el formulario), asigna al creador
+     * como owner y copia sus CategoryTemplates.
      */
-    public function createAccount(User $owner, string $name, ?string $description = null, string $currency = 'EUR'): Account
+    public function createAccount(User $owner, Account $account): Account
     {
-        $account = new Account();
-        $account->setName($name);
-        $account->setDescription($description);
-        $account->setCurrency($currency);
-
         $member = new AccountMember($account, $owner, AccountMember::ROLE_OWNER);
 
         $this->em->persist($account);

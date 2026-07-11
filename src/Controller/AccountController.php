@@ -50,19 +50,16 @@ class AccountController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->accountService->createAccount(
-                $this->getUser(),
-                $account->getName(),
-                $account->getDescription(),
-                $account->getCurrency()
-            );
+            $this->accountService->createAccount($this->getUser(), $account);
 
             $this->addFlash('success', 'Cuenta creada correctamente.');
             return $this->redirectToRoute('account_index');
         }
 
-        return $this->render('account/create.html.twig', [
+        return $this->render('account/edit.html.twig', [
             'form' => $form,
+            'account' => $account,
+            'isNew' => true,
         ]);
     }
 
@@ -110,6 +107,7 @@ class AccountController extends AbstractController
         return $this->render('account/edit.html.twig', [
             'account' => $account,
             'form' => $form,
+            'isNew' => false,
         ]);
     }
 
