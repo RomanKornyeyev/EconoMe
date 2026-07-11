@@ -53,7 +53,7 @@
 
     <div class="alert alert-primary d-flex align-items-center gap-2 py-2 mb-4" role="alert">
         <i class="fa-solid fa-circle-info"></i>
-        <span>Estas son tus plantillas de categoría. Podrás usarlas para tus nuevas cuentas.</span>
+        <span>Esta es tu plantilla de categorías. Podrás usarlas para tus nuevas cuentas.</span>
     </div>
 
     {% set tplExpenses = templates|filter(t => t.type == 'expense') %}
@@ -71,8 +71,8 @@
         <div class="row g-3">
             {% if tplExpenses is not empty %}
                 <div class="col-12 col-md-6">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-transparent">
+                    <div class="card shadow border">
+                        <div class="card-header bg-body-tertiary border-bottom">
                             <h6 class="mb-0 text-danger"><i class="fa-solid fa-arrow-trend-down me-2"></i>Gastos</h6>
                         </div>
                         <ul class="list-group list-group-flush">
@@ -106,8 +106,8 @@
 
             {% if tplIncomes is not empty %}
                 <div class="col-12 col-md-6">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-transparent">
+                    <div class="card shadow border">
+                        <div class="card-header bg-body-tertiary border-bottom">
                             <h6 class="mb-0 text-success"><i class="fa-solid fa-arrow-trend-up me-2"></i>Ingresos</h6>
                         </div>
                         <ul class="list-group list-group-flush">
@@ -161,8 +161,8 @@
         <div class="row g-3">
             {% if expenses is not empty %}
                 <div class="col-12 col-md-6">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-transparent">
+                    <div class="card shadow border">
+                        <div class="card-header bg-body-tertiary border-bottom">
                             <h6 class="mb-0 text-danger"><i class="fa-solid fa-arrow-trend-down me-2"></i>Gastos</h6>
                         </div>
                         <ul class="list-group list-group-flush">
@@ -198,8 +198,8 @@
 
             {% if incomes is not empty %}
                 <div class="col-12 col-md-6">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-transparent">
+                    <div class="card shadow border">
+                        <div class="card-header bg-body-tertiary border-bottom">
                             <h6 class="mb-0 text-success"><i class="fa-solid fa-arrow-trend-up me-2"></i>Ingresos</h6>
                         </div>
                         <ul class="list-group list-group-flush">
