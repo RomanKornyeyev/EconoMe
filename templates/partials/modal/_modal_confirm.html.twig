@@ -12,8 +12,13 @@
                 <h5 class="modal-title">Confirmar acción</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <div class="modal-body py-4" data-modal-body>
-                ¿Estás seguro?
+            <div class="modal-body py-4">
+                <p class="mb-0" data-modal-body>¿Estás seguro?</p>
+                {# Checkbox opcional: visible solo si el form declara data-confirm-checkbox-label-value #}
+                <div class="form-check form-switch mt-3 d-none" data-modal-checkbox-wrap>
+                    <input class="form-check-input" type="checkbox" role="switch" id="confirm-modal-checkbox" data-modal-checkbox>
+                    <label class="form-check-label" for="confirm-modal-checkbox" data-modal-checkbox-label></label>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">

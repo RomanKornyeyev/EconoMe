@@ -15,13 +15,16 @@ class RecurringTransactionRepository extends ServiceEntityRepository
 
     /**
      * Devuelve las transacciones recurrentes activas que podrían necesitar generación.
+     *
+     * No filtra por endDate: si el comando estuvo días sin ejecutarse y la
+     * recurrente expiró entre medias, aún hay que generar las ocurrencias
+     * pendientes hasta endDate (el recorte lo hace el materializador).
      */
     public function findActiveForGeneration(): array
     {
         return $this->createQueryBuilder('r')
             ->where('r.isActive = true')
             ->andWhere('r.startDate <= :today')
-            ->andWhere('r.endDate IS NULL OR r.endDate >= :today')
             ->setParameter('today', new \DateTime('today'))
             ->getQuery()
             ->getResult();

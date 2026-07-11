@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 use App\Entity\Traits\TimestampableEntity;
 
 #[ORM\Entity(repositoryClass: "App\Repository\RecurringTransactionRepository")]
@@ -72,6 +73,11 @@ class RecurringTransaction
     #[ORM\Column(type: "boolean", options: ["default" => true])]
     private bool $isActive = true;
 
+    /**
+     * Cursor de generación: el comando programado solo crea ocurrencias desde
+     * esta fecha. Al reactivar una recurrente pausada se avanza a hoy, de modo
+     * que el periodo en pausa no se rellena retroactivamente.
+     */
     #[ORM\Column(type: "datetime_immutable", nullable: true)]
     private ?\DateTimeImmutable $lastGeneratedAt = null;
 
@@ -235,26 +241,15 @@ class RecurringTransaction
     }
 
     /**
-     * Comprueba si debe generar hoy.
+     * Para frecuencia semanal, dayOfExecution es día ISO de la semana (1=lunes … 7=domingo).
      */
-    public function shouldGenerateToday(): bool
+    #[Assert\Callback]
+    public function validateDayOfExecution(ExecutionContextInterface $context): void
     {
-        if (!$this->isActive || $this->hasExpired()) {
-            return false;
+        if ($this->frequency === self::FREQ_WEEKLY && ($this->dayOfExecution < 1 || $this->dayOfExecution > 7)) {
+            $context->buildViolation('Para frecuencia semanal, el día debe estar entre 1 (lunes) y 7 (domingo).')
+                ->atPath('dayOfExecution')
+                ->addViolation();
         }
-
-        $today = new \DateTime();
-
-        if ($today < $this->startDate) {
-            return false;
-        }
-
-        return match ($this->frequency) {
-            self::FREQ_DAILY => true,
-            self::FREQ_WEEKLY => (int)$today->format('N') === $this->dayOfExecution,
-            self::FREQ_MONTHLY => (int)$today->format('j') === $this->dayOfExecution,
-            self::FREQ_YEARLY => (int)$today->format('z') + 1 === $this->dayOfExecution,
-            default => false,
-        };
     }
 }

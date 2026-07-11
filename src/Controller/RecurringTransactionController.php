@@ -6,7 +6,9 @@ use App\Entity\Account;
 use App\Entity\RecurringTransaction;
 use App\Form\RecurringTransactionType;
 use App\Repository\RecurringTransactionRepository;
+use App\Repository\TransactionRepository;
 use App\Service\AccountService;
+use App\Service\RecurringMaterializer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,7 +23,9 @@ class RecurringTransactionController extends AbstractController
     public function __construct(
         private AccountService $accountService,
         private RecurringTransactionRepository $recurringRepo,
+        private TransactionRepository $transactionRepo,
         private EntityManagerInterface $em,
+        private RecurringMaterializer $materializer,
     ) {}
 
     #[Route('', name: 'index')]
@@ -41,9 +45,10 @@ class RecurringTransactionController extends AbstractController
         $recurrings = $this->recurringRepo->findByAccount($account);
 
         return $this->render('recurring/index.html.twig', [
-            'accounts'       => $accounts,
-            'currentAccount' => $account,
-            'recurrings'     => $recurrings,
+            'accounts'        => $accounts,
+            'currentAccount'  => $account,
+            'recurrings'      => $recurrings,
+            'generatedCounts' => $this->transactionRepo->countByRecurringSourceForAccount($account),
         ]);
     }
 
@@ -68,11 +73,20 @@ class RecurringTransactionController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->em->persist($recurring);
-            $this->em->flush();
+            try {
+                // Backfill: materializa las ocurrencias desde startDate hasta hoy.
+                $created = $this->materializer->generateMissing($recurring);
+                $this->em->persist($recurring);
+                $this->em->flush();
 
-            $this->addFlash('success', 'Transacción recurrente creada.');
-            return $this->redirectToRoute('recurring_index', ['account' => $account->getId()]);
+                $this->addFlash('success', $created > 0
+                    ? sprintf('Transacción recurrente creada. Se han generado %d movimientos.', $created)
+                    : 'Transacción recurrente creada.');
+
+                return $this->redirectToRoute('recurring_index', ['account' => $account->getId()]);
+            } catch (\DomainException $e) {
+                $this->addFlash('error', $e->getMessage());
+            }
         }
 
         return $this->render('recurring/create.html.twig', [
@@ -86,22 +100,78 @@ class RecurringTransactionController extends AbstractController
     {
         $this->denyAccessUnlessGranted('ACCOUNT_EDIT', $recurring->getAccount());
 
+        // Snapshot del calendario antes del submit, para detectar cambios que
+        // alteran QUÉ ocurrencias existen (no solo sus valores).
+        $calendarBefore = $this->calendarSnapshot($recurring);
+
         $form = $this->createForm(RecurringTransactionType::class, $recurring, [
             'currency' => $recurring->getAccount()->getCurrency(),
             'account'  => $recurring->getAccount(),
+            'is_edit'  => true,
         ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->em->flush();
-            $this->addFlash('success', 'Transacción recurrente actualizada.');
-            return $this->redirectToRoute('recurring_index', ['account' => $recurring->getAccount()->getId()]);
+            $calendarChanged = $calendarBefore !== $this->calendarSnapshot($recurring);
+
+            try {
+                $synced = ['created' => 0, 'deleted' => 0];
+
+                if ($calendarChanged) {
+                    $plan = $this->materializer->computeCalendarSyncPlan($recurring);
+                    $impact = \count($plan['create']) + \count($plan['delete']);
+
+                    // Confirmación de impacto: si el re-sync toca movimientos y el
+                    // usuario aún no ha confirmado, mostramos el resumen sin guardar
+                    // nada (no hay flush, los cambios en memoria se descartan).
+                    if ($impact > 0 && !$request->request->getBoolean('sync_confirmed')) {
+                        return $this->render('recurring/confirm_sync.html.twig', [
+                            'recurring'   => $recurring,
+                            'createCount' => \count($plan['create']),
+                            'deleteCount' => \count($plan['delete']),
+                            'payload'     => $request->request->all(),
+                        ]);
+                    }
+
+                    $synced = $this->materializer->applyCalendarSyncPlan($recurring, $plan);
+                }
+
+                $updated = 0;
+                if ($form->get('applyToGenerated')->getData()) {
+                    $updated = $this->materializer->applyValuesToGenerated($recurring);
+                }
+
+                $this->em->flush();
+
+                $detail = [];
+                if ($synced['created'] > 0) $detail[] = sprintf('%d movimientos creados', $synced['created']);
+                if ($synced['deleted'] > 0) $detail[] = sprintf('%d eliminados', $synced['deleted']);
+                if ($updated > 0)           $detail[] = sprintf('%d actualizados', $updated);
+
+                $this->addFlash('success', 'Transacción recurrente actualizada.'
+                    . ($detail ? ' (' . implode(', ', $detail) . ')' : ''));
+
+                return $this->redirectToRoute('recurring_index', ['account' => $recurring->getAccount()->getId()]);
+            } catch (\DomainException $e) {
+                $this->addFlash('error', $e->getMessage());
+            }
         }
 
         return $this->render('recurring/edit.html.twig', [
             'form'      => $form,
             'recurring' => $recurring,
         ]);
+    }
+
+    /** Campos que definen qué ocurrencias existen. */
+    private function calendarSnapshot(RecurringTransaction $recurring): array
+    {
+        return [
+            'frequency' => $recurring->getFrequency(),
+            'day'       => $recurring->getDayOfExecution(),
+            'start'     => $recurring->getStartDate()?->format('Y-m-d'),
+            'end'       => $recurring->getEndDate()?->format('Y-m-d'),
+        ];
     }
 
     #[Route('/{id}/toggle', name: 'toggle', methods: ['POST'], requirements: ['id' => '\d+'])]
@@ -111,6 +181,13 @@ class RecurringTransactionController extends AbstractController
 
         if ($this->isCsrfTokenValid('toggle' . $recurring->getId(), $request->request->get('_token'))) {
             $recurring->setIsActive(!$recurring->isActive());
+
+            if ($recurring->isActive()) {
+                // Avanzar el cursor a hoy: el periodo en pausa no se rellena
+                // retroactivamente al reactivar.
+                $recurring->setLastGeneratedAt(new \DateTimeImmutable('today'));
+            }
+
             $this->em->flush();
 
             $status = $recurring->isActive() ? 'activada' : 'desactivada';
@@ -127,9 +204,18 @@ class RecurringTransactionController extends AbstractController
         $accountId = $recurring->getAccount()->getId();
 
         if ($this->isCsrfTokenValid('delete' . $recurring->getId(), $request->request->get('_token'))) {
+            // Opt-in: por defecto se conserva el historial (la FK queda a NULL).
+            $deletedGenerated = 0;
+            if ($request->request->getBoolean('delete_generated')) {
+                $deletedGenerated = $this->transactionRepo->deleteByRecurringSource($recurring);
+            }
+
             $this->em->remove($recurring);
             $this->em->flush();
-            $this->addFlash('success', 'Transacción recurrente eliminada.');
+
+            $this->addFlash('success', $deletedGenerated > 0
+                ? sprintf('Transacción recurrente eliminada junto con %d movimientos generados.', $deletedGenerated)
+                : 'Transacción recurrente eliminada.');
         }
 
         return $this->redirectToRoute('recurring_index', ['account' => $accountId]);

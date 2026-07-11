@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Account;
+use App\Entity\RecurringTransaction;
 use App\Entity\Transaction;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -12,6 +13,58 @@ class TransactionRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Transaction::class);
+    }
+
+    /**
+     * Transacciones generadas a partir de una recurrente, ordenadas por fecha.
+     *
+     * @return Transaction[]
+     */
+    public function findByRecurringSource(RecurringTransaction $recurring): array
+    {
+        return $this->createQueryBuilder('t')
+            ->where('t.recurringSource = :recurring')
+            ->setParameter('recurring', $recurring)
+            ->orderBy('t.date', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Número de transacciones generadas por cada recurrente de una cuenta.
+     *
+     * @return array<int, int> [recurringId => count]
+     */
+    public function countByRecurringSourceForAccount(Account $account): array
+    {
+        $rows = $this->createQueryBuilder('t')
+            ->select('IDENTITY(t.recurringSource) AS recurringId', 'COUNT(t.id) AS cnt')
+            ->where('t.account = :account')
+            ->andWhere('t.recurringSource IS NOT NULL')
+            ->setParameter('account', $account)
+            ->groupBy('t.recurringSource')
+            ->getQuery()
+            ->getResult();
+
+        $counts = [];
+        foreach ($rows as $row) {
+            $counts[(int) $row['recurringId']] = (int) $row['cnt'];
+        }
+
+        return $counts;
+    }
+
+    /**
+     * Borra todas las transacciones generadas por una recurrente.
+     *
+     * @return int Número de transacciones eliminadas
+     */
+    public function deleteByRecurringSource(RecurringTransaction $recurring): int
+    {
+        return $this->getEntityManager()
+            ->createQuery('DELETE FROM App\Entity\Transaction t WHERE t.recurringSource = :recurring')
+            ->setParameter('recurring', $recurring)
+            ->execute();
     }
 
     /**

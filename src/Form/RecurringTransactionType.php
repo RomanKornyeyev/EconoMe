@@ -8,6 +8,7 @@ use App\Entity\RecurringTransaction;
 use App\Repository\CategoryRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
@@ -82,6 +83,15 @@ class RecurringTransactionType extends AbstractType
                 'required' => false,
             ])
         ;
+
+        if ($options['is_edit']) {
+            $builder->add('applyToGenerated', CheckboxType::class, [
+                'label' => 'Aplicar los cambios de importe, nombre, descripción, tipo y categoría a los movimientos ya generados',
+                'help' => 'Si lo marcas, se sobrescribirán también las ediciones manuales que hayas hecho en esos movimientos.',
+                'mapped' => false,
+                'required' => false,
+            ]);
+        }
     }
 
     public function configureOptions(OptionsResolver $resolver): void
@@ -89,8 +99,10 @@ class RecurringTransactionType extends AbstractType
         $resolver->setDefaults([
             'data_class' => RecurringTransaction::class,
             'currency' => 'EUR',
+            'is_edit' => false,
         ]);
         $resolver->setRequired('account');
         $resolver->setAllowedTypes('account', Account::class);
+        $resolver->setAllowedTypes('is_edit', 'bool');
     }
 }

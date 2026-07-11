@@ -1,0 +1,76 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Confirmar cambios{% endblock %}
+
+{#
+  Confirmación de impacto: el cambio de calendario (frecuencia, día, fechas)
+  altera qué movimientos generados existen. Reenviamos el mismo formulario con
+  sync_confirmed=1 si el usuario acepta; nada se ha guardado todavía.
+#}
+
+{% macro hidden(name, value) %}
+    {%- if value is iterable -%}
+        {%- for k, v in value -%}
+            {{ _self.hidden(name ~ '[' ~ k ~ ']', v) }}
+        {%- endfor -%}
+    {%- else -%}
+        <input type="hidden" name="{{ name }}" value="{{ value }}">
+    {%- endif -%}
+{% endmacro %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="d-flex align-items-center gap-2 mb-4">
+            <a href="{{ path('recurring_edit', {id: recurring.id}) }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div>
+                <h4 class="mb-0">Confirmar cambios</h4>
+                <small class="text-muted">{{ recurring.name }} · {{ recurring.account.name }}</small>
+            </div>
+        </div>
+
+        <div class="card border shadow-sm">
+            <div class="card-body p-4">
+                <div class="alert alert-warning d-flex align-items-start gap-2" role="alert">
+                    <i class="fa-solid fa-triangle-exclamation mt-1"></i>
+                    <div>
+                        Has cambiado la frecuencia, el día o las fechas de esta recurrente.
+                        Para mantener la consistencia, los movimientos generados se resincronizarán con el nuevo calendario.
+                    </div>
+                </div>
+
+                <ul class="list-group list-group-flush mb-3">
+                    {% if deleteCount > 0 %}
+                        <li class="list-group-item d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-trash text-danger"></i>
+                            Se eliminarán <strong>{{ deleteCount }}</strong> {{ deleteCount == 1 ? 'movimiento generado' : 'movimientos generados' }} que ya no encajan con el calendario.
+                        </li>
+                    {% endif %}
+                    {% if createCount > 0 %}
+                        <li class="list-group-item d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-plus text-success"></i>
+                            Se crearán <strong>{{ createCount }}</strong> {{ createCount == 1 ? 'movimiento nuevo' : 'movimientos nuevos' }} según el nuevo calendario.
+                        </li>
+                    {% endif %}
+                </ul>
+
+                <form method="post" action="{{ path('recurring_edit', {id: recurring.id}) }}">
+                    {%- for name, value in payload -%}
+                        {{ _self.hidden(name, value) }}
+                    {%- endfor -%}
+                    <input type="hidden" name="sync_confirmed" value="1">
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-check me-1"></i>Confirmar y guardar
+                        </button>
+                        <a href="{{ path('recurring_edit', {id: recurring.id}) }}" class="btn btn-outline-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

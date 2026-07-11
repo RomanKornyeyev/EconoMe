@@ -32,11 +32,16 @@
                             </form>
                         </li>
                         <li>
+                            {% set genCount = generatedCounts[recurring.id] ?? 0 %}
                             <form method="post" action="{{ path('recurring_delete', {id: recurring.id}) }}"
                                   data-controller="confirm"
                                   data-action="submit->confirm#submit"
-                                  data-confirm-message-value="¿Eliminar la recurrente «{{ recurring.name }}»? Esta acción no se puede deshacer."
-                                  data-confirm-text-value="Eliminar">
+                                  data-confirm-message-value="¿Eliminar el movimiento recurrente «{{ recurring.name }}»? Esta acción no se puede deshacer.{% if genCount > 0 %} Si solo quieres detenerla, puedes pausarla o ponerle una fecha de fin.{% endif %}"
+                                  data-confirm-text-value="Eliminar"
+                                  {% if genCount > 0 %}
+                                  data-confirm-checkbox-label-value="Eliminar también {{ genCount == 1 ? 'el movimiento generado' : 'los ' ~ genCount ~ ' movimientos generados' }}"
+                                  data-confirm-checkbox-name-value="delete_generated"
+                                  {% endif %}>
                                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ recurring.id) }}">
                                 <button type="submit" class="dropdown-item text-danger">
                                     <i class="fa-solid fa-trash fa-sm me-2"></i>Eliminar
