@@ -27,23 +27,28 @@
 						{% if is_granted('IS_AUTHENTICATED_FULLY') or is_granted('IS_AUTHENTICATED_REMEMBERED') %}
 							<li class="nav-item col-6 col-lg-auto">
 								<a class="nav-link py-2 px-0 px-lg-2 {{ app.request.attributes.get('_route') == 'dashboard' ? 'active' : '' }}" href="{{ path('dashboard') }}">
-									<i class="fa-solid fa-chart-line me-1"></i>Dashboard
+									{# <i class="fa-solid fa-chart-line me-1"></i> #}
+									Dashboard
 								</a>
 							</li>
 							<li class="nav-item col-6 col-lg-auto">
-								<a class="nav-link py-2 px-0 px-lg-2 {{ app.request.attributes.get('_route') starts with 'transaction_' ? 'active' : '' }}" href="{{ path('transaction_index') }}">
-									<i class="fa-solid fa-arrow-right-arrow-left me-1"></i>Movimientos
+								<a class="nav-link py-2 px-0 px-lg-2 {{ app.request.attributes.get('_route') starts with 'transaction_' or app.request.attributes.get('_route') starts with 'recurring_' ? 'active' : '' }}" href="{{ path('transaction_index') }}">
+									{# <i class="fa-solid fa-arrow-right-arrow-left me-1"></i> #}
+									Movimientos
 								</a>
 							</li>
+							{# Recurrentes: movido dentro de Movimientos
 							<li class="nav-item col-6 col-lg-auto">
 								<a class="nav-link py-2 px-0 px-lg-2 {{ app.request.attributes.get('_route') starts with 'recurring_' ? 'active' : '' }}" href="{{ path('recurring_index') }}">
-									<i class="fa-solid fa-rotate me-1"></i>Recurrentes
+									Recurrentes
 								</a>
 							</li>
+							#}
 							<li class="nav-item col-6 col-lg-auto">
 								{% set accountInvites = pending_account_invitations_count() %}
 								<a class="nav-link py-2 px-0 px-lg-2 {{ app.request.attributes.get('_route') starts with 'account_' ? 'active' : '' }}" href="{{ path('account_index') }}">
-									<i class="fa-solid fa-wallet me-1"></i>Cuentas
+									{# <i class="fa-solid fa-wallet me-1"></i> #}
+									Cuentas
 									{% if accountInvites > 0 %}
 										<span class="badge rounded-pill bg-success ms-1">{{ accountInvites }}</span>
 									{% endif %}
@@ -51,7 +56,8 @@
 							</li>
 							<li class="nav-item col-6 col-lg-auto">
 								<a class="nav-link py-2 px-0 px-lg-2 {{ app.request.attributes.get('_route') starts with 'category_' ? 'active' : '' }}" href="{{ path('category_index') }}">
-									<i class="fa-solid fa-tags me-1"></i>Categorías
+									{# <i class="fa-solid fa-tags me-1"></i> #}
+									Categorías
 								</a>
 							</li>
 						{% endif %}

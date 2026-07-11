@@ -3,22 +3,36 @@
 {% block title %}Transacciones recurrentes{% endblock %}
 
 {% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ path('transaction_index', {account: currentAccount.id}) }}">Movimientos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Recurrentes</li>
+    </ol>
+</nav>
+
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-    <h4 class="mb-0"><i class="fa-solid fa-rotate me-2"></i>Recurrentes</h4>
+    <div class="d-flex align-items-center gap-2">
+        <h4 class="mb-0">
+            {# <i class="fa-solid fa-rotate me-2"></i> #}
+            Movimientos recurrentes
+        </h4>
+        {% if accounts|length > 1 %}
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    {{ currentAccount.name }}
+                </button>
+                <ul class="dropdown-menu">
+                    {% for acc in accounts %}
+                        <li><a class="dropdown-item {{ acc.id == currentAccount.id ? 'active' : '' }}" href="?account={{ acc.id }}">{{ acc.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    </div>
     <a href="{{ path('recurring_create', {account: currentAccount.id}) }}" class="btn btn-primary btn-sm">
         <i class="fa-solid fa-plus me-1"></i>Nueva recurrente
     </a>
 </div>
-
-{% if accounts|length > 1 %}
-    <div class="mb-3">
-        <select class="form-select form-select-sm w-auto" onchange="window.location.href='?account='+this.value">
-            {% for acc in accounts %}
-                <option value="{{ acc.id }}" {{ acc.id == currentAccount.id ? 'selected' : '' }}>{{ acc.name }}</option>
-            {% endfor %}
-        </select>
-    </div>
-{% endif %}
 
 {% if recurrings is empty %}
     <div class="text-center py-5">

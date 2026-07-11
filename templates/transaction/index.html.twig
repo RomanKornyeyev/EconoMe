@@ -19,9 +19,14 @@
             </ul>
         </div>
     </div>
-    <a href="{{ path('transaction_create', {account: currentAccount.id}) }}" class="btn btn-primary btn-sm">
-        <i class="fa-solid fa-plus me-1"></i>Nuevo movimiento
-    </a>
+    <div class="d-flex align-items-center gap-2">
+        <a href="{{ path('recurring_index', {account: currentAccount.id}) }}" class="btn btn-outline-primary btn-sm">
+            <i class="fa-solid fa-rotate me-1"></i>Movimientos recurrentes
+        </a>
+        <a href="{{ path('transaction_create', {account: currentAccount.id}) }}" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-plus me-1"></i>Nuevo movimiento
+        </a>
+    </div>
 </div>
 
 {# Filters #}
