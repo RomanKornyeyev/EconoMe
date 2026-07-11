@@ -14,80 +14,87 @@
 {% set q = app.request.query.all %}
 
 {# Zona 1: Cabecera — título + selector de cuenta #}
-<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-    <h1 class="h2 mb-0">Dashboard</h1>
-    <div class="btn-group" role="group">
-        <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-            {{ currentAccount.name }}
+<div class="d-flex flex-wrap justify-content-between gap-2">
+    <div class="d-flex flex-wrap justify-content-start align-items-center mb-3 gap-2">
+        <h1 class="h2 mb-0">Dashboard</h1>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                {{ currentAccount.name }}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                {% for acc in accounts %}
+                    <li><a class="dropdown-item {{ acc.id == currentAccount.id ? 'active' : '' }}" href="?{{ q|merge({'account': acc.id})|url_encode }}">{{ acc.name }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        {# Zona 2: Filtros globales #}
+        {% if month == 0 %}
+            {% set prevUrl = '?' ~ q|merge({'year': year - 1, 'month': 0})|url_encode %}
+            {% set nextUrl = '?' ~ q|merge({'year': year + 1, 'month': 0})|url_encode %}
+        {% else %}
+            {% if month == 1 %}{% set prevYear = year - 1 %}{% set prevMonth = 12 %}
+            {% else %}{% set prevYear = year %}{% set prevMonth = month - 1 %}{% endif %}
+            {% if month == 12 %}{% set nextYear = year + 1 %}{% set nextMonth = 1 %}
+            {% else %}{% set nextYear = year %}{% set nextMonth = month + 1 %}{% endif %}
+            {% set prevUrl = '?' ~ q|merge({'year': prevYear, 'month': prevMonth})|url_encode %}
+            {% set nextUrl = '?' ~ q|merge({'year': nextYear, 'month': nextMonth})|url_encode %}
+        {% endif %}
+        {% set monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'] %}
+        <div class="btn-group" role="group">
+            <a href="{{ prevUrl }}" class="btn btn-sm btn-outline-primary" style="padding-left: 0.75rem; padding-right: 0.75rem;"><i class="fa-solid fa-chevron-left fa-sm"></i></a>
+
+            {# Desplegable de mes #}
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    {% if month == 0 %}Año completo{% else %}{{ monthNames[month - 1] }}{% endif %}
+                </button>
+                <ul class="dropdown-menu">
+                    {% for m in 1..12 %}
+                        {% set hasData = m in availableMonths %}
+                        <li>
+                            <a class="dropdown-item {{ m == month ? 'active' : '' }}" href="?{{ q|merge({'month': m})|url_encode }}">
+                                {% if not hasData %}
+                                    <span class="text-muted">{{ monthNames[m - 1] }}</span>
+                                {% else %}
+                                    {{ monthNames[m - 1] }}
+                                {% endif %}
+                                {% if not hasData %}<span class="ms-1" style="font-size:.72em; opacity:.4">(sin datos)</span>{% endif %}
+                            </a>
+                        </li>
+                    {% endfor %}
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item {{ month == 0 ? 'active' : '' }}" href="?{{ q|merge({'month': 0})|url_encode }}">Año completo</a></li>
+                </ul>
+            </div>
+
+            {# Desplegable de año #}
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    {{ year }}
+                </button>
+                <ul class="dropdown-menu">
+                    {% for y in availableYears %}
+                        <li><a class="dropdown-item {{ y == year ? 'active' : '' }}" href="?{{ q|merge({'year': y})|url_encode }}">{{ y }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <a href="{{ nextUrl }}" class="btn btn-sm btn-outline-primary" style="padding-left: 0.75rem; padding-right: 0.75rem;"><i class="fa-solid fa-chevron-right fa-sm"></i></a>
+        </div>
+    </div>
+
+
+    <div class="d-flex flex-wrap justify-content-end align-items-center mb-3 gap-2 bg-body">
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newTransactionModal">
+            <i class="fa-solid fa-plus me-1"></i>Nuevo movimiento
         </button>
-        <ul class="dropdown-menu dropdown-menu-end">
-            {% for acc in accounts %}
-                <li><a class="dropdown-item {{ acc.id == currentAccount.id ? 'active' : '' }}" href="?{{ q|merge({'account': acc.id})|url_encode }}">{{ acc.name }}</a></li>
-            {% endfor %}
-        </ul>
     </div>
 </div>
 
-{# Zona 2: Filtros globales #}
-{% if month == 0 %}
-    {% set prevUrl = '?' ~ q|merge({'year': year - 1, 'month': 0})|url_encode %}
-    {% set nextUrl = '?' ~ q|merge({'year': year + 1, 'month': 0})|url_encode %}
-{% else %}
-    {% if month == 1 %}{% set prevYear = year - 1 %}{% set prevMonth = 12 %}
-    {% else %}{% set prevYear = year %}{% set prevMonth = month - 1 %}{% endif %}
-    {% if month == 12 %}{% set nextYear = year + 1 %}{% set nextMonth = 1 %}
-    {% else %}{% set nextYear = year %}{% set nextMonth = month + 1 %}{% endif %}
-    {% set prevUrl = '?' ~ q|merge({'year': prevYear, 'month': prevMonth})|url_encode %}
-    {% set nextUrl = '?' ~ q|merge({'year': nextYear, 'month': nextMonth})|url_encode %}
-{% endif %}
-{% set monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'] %}
 
-<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2 bg-body">
-    <div class="btn-group" role="group">
-        <a href="{{ prevUrl }}" class="btn btn-sm btn-outline-primary" style="padding-left: 0.75rem; padding-right: 0.75rem;"><i class="fa-solid fa-chevron-left fa-sm"></i></a>
 
-        {# Desplegable de mes #}
-        <div class="btn-group" role="group">
-            <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                {% if month == 0 %}Año completo{% else %}{{ monthNames[month - 1] }}{% endif %}
-            </button>
-            <ul class="dropdown-menu">
-                {% for m in 1..12 %}
-                    {% set hasData = m in availableMonths %}
-                    <li>
-                        <a class="dropdown-item {{ m == month ? 'active' : '' }}" href="?{{ q|merge({'month': m})|url_encode }}">
-                            {% if not hasData %}
-                                <span class="text-muted">{{ monthNames[m - 1] }}</span>
-                            {% else %}
-                                {{ monthNames[m - 1] }}
-                            {% endif %}
-                            {% if not hasData %}<span class="ms-1" style="font-size:.72em; opacity:.4">(sin datos)</span>{% endif %}
-                        </a>
-                    </li>
-                {% endfor %}
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item {{ month == 0 ? 'active' : '' }}" href="?{{ q|merge({'month': 0})|url_encode }}">Año completo</a></li>
-            </ul>
-        </div>
 
-        {# Desplegable de año #}
-        <div class="btn-group" role="group">
-            <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                {{ year }}
-            </button>
-            <ul class="dropdown-menu">
-                {% for y in availableYears %}
-                    <li><a class="dropdown-item {{ y == year ? 'active' : '' }}" href="?{{ q|merge({'year': y})|url_encode }}">{{ y }}</a></li>
-                {% endfor %}
-            </ul>
-        </div>
-
-        <a href="{{ nextUrl }}" class="btn btn-sm btn-outline-primary" style="padding-left: 0.75rem; padding-right: 0.75rem;"><i class="fa-solid fa-chevron-right fa-sm"></i></a>
-    </div>
-    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newTransactionModal">
-        <i class="fa-solid fa-plus me-1"></i>Nuevo movimiento
-    </button>
-</div>
 
 {# Zona 3: KPIs #}
 {% include 'components/_stats_cards.html.twig' %}
