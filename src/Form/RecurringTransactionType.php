@@ -41,6 +41,11 @@ class RecurringTransactionType extends AbstractType
             ->add('amount', MoneyType::class, [
                 'label' => 'Importe',
                 'currency' => $options['currency'] ?? 'EUR',
+                'attr' => [
+                    'placeholder' => '0,00',
+                    'pattern' => '[0-9]+([.,][0-9]{1,2})?',
+                    'inputmode' => 'decimal',
+                ],
             ])
             ->add('frequency', ChoiceType::class, [
                 'label' => 'Frecuencia',
@@ -69,9 +74,8 @@ class RecurringTransactionType extends AbstractType
                 },
             ])
             ->add('startDate', DateType::class, [
-                'label' => 'Fecha del primer movimiento',
+                'label' => 'Fecha de inicio',
                 'widget' => 'single_text',
-                'help' => 'Ancla el calendario: semanal se repite cada 7 días desde aquí; mensual, este día de cada mes; anual, este día y mes de cada año.',
             ])
             ->add('endDate', DateType::class, [
                 'label' => 'Fecha de fin',
@@ -86,6 +90,8 @@ class RecurringTransactionType extends AbstractType
                 'help' => 'Si lo marcas, se sobrescribirán también las ediciones manuales que hayas hecho en esos movimientos.',
                 'mapped' => false,
                 'required' => false,
+                'label_attr' => ['class' => 'checkbox-switch'],
+                'attr' => ['role' => 'switch'],
             ]);
         }
     }

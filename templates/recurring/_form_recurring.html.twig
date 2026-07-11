@@ -1,0 +1,110 @@
+<div class="row g-3">
+    <div class="col-6">
+        {{ form_row(form.amount) }}
+    </div>
+    <div class="col-6">
+        {{ form_row(form.type) }}
+    </div>
+    <div class="col-12">
+        {{ form_row(form.name) }}
+    </div>
+    <div class="col-12">
+        {{ form_row(form.description) }}
+    </div>
+    <div class="col-6">
+        {{ form_row(form.category) }}
+    </div>
+    <div class="col-6">
+        {{ form_row(form.frequency) }}
+    </div>
+    <div class="col-6">
+        {{ form_row(form.startDate, { attr: { class: 'flatpickr-date' } }) }}
+        <div class="form-text" id="recurring-schedule-preview"></div>
+    </div>
+    <div class="col-6">
+        {{ form_row(form.endDate, { attr: { class: 'flatpickr-date' } }) }}
+    </div>
+    {% if form.applyToGenerated is defined %}
+        <div class="col-12">
+            <hr class="my-1 mb-3 opacity-25">
+            {{ form_row(form.applyToGenerated) }}
+        </div>
+    {% endif %}
+</div>
+
+<script>
+(function () {
+    function initDatePicker() {
+        document.querySelectorAll('.flatpickr-date:not([data-fp-init])').forEach(function (el) {
+            el.setAttribute('data-fp-init', '1');
+            flatpickr(el, {
+                locale: 'es',
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'd/m/Y',
+                altInputClass: 'form-control',
+                allowInput: true,
+                appendTo: el.closest('.modal') || document.body,
+            });
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initDatePicker);
+    } else {
+        initDatePicker();
+    }
+
+    // ── Preview dinámico del calendario ──────────────────────────────────────
+    function initSchedulePreview() {
+        const freqEl = document.getElementById('{{ form.frequency.vars.id }}');
+        const dateEl = document.getElementById('{{ form.startDate.vars.id }}');
+        const helpEl = document.getElementById('recurring-schedule-preview');
+        if (!freqEl || !dateEl || !helpEl) return;
+
+        function update() {
+            const freq = freqEl.value;
+
+            if (freq === 'daily') {
+                helpEl.textContent = 'Se añadirá un nuevo movimiento cada día.';
+                return;
+            }
+
+            if (!dateEl.value) {
+                helpEl.textContent = 'Selecciona la fecha de inicio para ver el calendario.';
+                return;
+            }
+
+            // Parseo local (evita el desfase UTC de new Date('Y-m-d'))
+            const [y, m, d] = dateEl.value.split('-').map(Number);
+            const date = new Date(y, m - 1, d);
+            const weekday = date.toLocaleDateString('es-ES', { weekday: 'long' });
+            const month = date.toLocaleDateString('es-ES', { month: 'long' });
+
+            if (freq === 'weekly') {
+                helpEl.textContent = `Se añadirá un nuevo movimiento cada semana, el ${weekday}.`;
+            } else if (freq === 'monthly') {
+                let text = `Se añadirá un nuevo movimiento el día ${d} de cada mes.`;
+                if (d >= 29) text += ' En meses más cortos, el último día.';
+                helpEl.textContent = text;
+            } else if (freq === 'yearly') {
+                let text = `Se añadirá un nuevo movimiento cada año, el ${d} de ${month}.`;
+                if (m === 2 && d === 29) text += ' En años no bisiestos, el 28 de febrero.';
+                helpEl.textContent = text;
+            } else {
+                helpEl.textContent = '';
+            }
+        }
+
+        freqEl.addEventListener('change', update);
+        dateEl.addEventListener('change', update); // flatpickr propaga change al input original
+        update();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSchedulePreview);
+    } else {
+        initSchedulePreview();
+    }
+})();
+</script>
