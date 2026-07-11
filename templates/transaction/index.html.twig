@@ -30,7 +30,7 @@
 </div>
 
 {# Filters #}
-<div class="card border-0 shadow-sm mb-3 bg-body-tertiary">
+<div class="card border shadow-sm mb-3 bg-body-tertiary">
     <div class="card-body px-4 py-4">
         <form method="get">
             <input type="hidden" name="account" value="{{ currentAccount.id }}">
@@ -150,8 +150,8 @@
 </script>
 
 {# Transactions table #}
-<div class="card border-0 shadow-sm" data-controller="bulk-select">
-    <div class="card-header bg-transparent d-flex align-items-center">
+<div class="card border shadow-sm" data-controller="bulk-select">
+    <div class="card-header bg-body-tertiary border-bottom d-flex align-items-center">
         {# Estado normal #}
         <div data-bulk-select-target="normalBar" class="d-flex justify-content-between align-items-center w-100">
             <span class="text-muted small">
