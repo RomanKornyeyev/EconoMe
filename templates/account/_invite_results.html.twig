@@ -7,7 +7,10 @@
     - results: User[]
 #}
 {% if results|length == 0 %}
-    <p class="text-muted small mb-0 py-2 px-1">No se encontraron usuarios.</p>
+    <p class="text-muted small mb-0 py-2 px-1">
+        No se encontró ningún amigo con ese nombre.<br>
+        Solo puedes invitar a tus amigos. <a href="{{ path('app_friends_index') }}">Gestionar amigos</a>
+    </p>
 {% else %}
     <ul class="list-group list-group-flush">
         {% for user in results %}

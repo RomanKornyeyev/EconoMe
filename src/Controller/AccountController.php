@@ -12,6 +12,7 @@ use App\Repository\AccountInvitationRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\FriendshipRepository;
 use App\Repository\RecurringTransactionRepository;
+use App\Repository\TransactionRepository;
 use App\Service\AccountInvitationService;
 use App\Service\AccountService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -70,6 +71,7 @@ class AccountController extends AbstractController
         AccountInvitationRepository $invitationRepository,
         CategoryRepository $categoryRepository,
         RecurringTransactionRepository $recurringRepository,
+        TransactionRepository $transactionRepository,
     ): Response {
         $this->denyAccessUnlessGranted('ACCOUNT_VIEW', $account);
 
@@ -86,6 +88,7 @@ class AccountController extends AbstractController
             'currentMember' => $currentMember,
             'pendingInvitations' => $pendingInvitations,
             'activeRecurrings' => $recurringRepository->countActiveByAccount($account),
+            'transactionCount' => $transactionRepository->count(['account' => $account]),
             'categoryIncomeCount' => $categoryRepository->count(['account' => $account, 'type' => Category::TYPE_INCOME]),
             'categoryExpenseCount' => $categoryRepository->count(['account' => $account, 'type' => Category::TYPE_EXPENSE]),
         ]);

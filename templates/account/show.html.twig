@@ -60,16 +60,16 @@
         </div>
     </div>
     <div class="col-12 col-md-4">
-        <div class="bg-body-secondary rounded-3 p-3 text-center">
-            <div class="text-muted small text-uppercase mb-1">Moneda</div>
-            <div class="fs-5 fw-semibold">{{ account.currency }}</div>
-        </div>
+        <a href="{{ path('transaction_index', {account: account.id}) }}" class="d-block bg-body-secondary rounded-3 p-3 text-center text-decoration-none">
+            <div class="text-muted small text-uppercase mb-1">Movimientos</div>
+            <div class="fs-5 fw-semibold text-body">{{ transactionCount }}</div>
+        </a>
     </div>
     <div class="col-12 col-md-4">
-        <div class="bg-body-secondary rounded-3 p-3 text-center">
-            <div class="text-muted small text-uppercase mb-1">Movimientos periódicos</div>
-            <div class="fs-5 fw-semibold">{{ activeRecurrings }}</div>
-        </div>
+        <a href="{{ path('recurring_index', {account: account.id}) }}" class="d-block bg-body-secondary rounded-3 p-3 text-center text-decoration-none">
+            <div class="text-muted small text-uppercase mb-1">Movimientos periódicos activos</div>
+            <div class="fs-5 fw-semibold text-body">{{ activeRecurrings }}</div>
+        </a>
     </div>
 </div>
 
@@ -237,7 +237,7 @@
                 <div class="modal-body p-4"
                      data-controller="user-search"
                      data-user-search-url-value="{{ path('account_invite_search', {id: account.id}) }}">
-                    <label class="form-label small text-muted">Busca por nombre, apodo o email</label>
+                    <label class="form-label small text-muted">Busca entre tus amigos por nombre, apodo o email</label>
                     <input type="text"
                            class="form-control"
                            placeholder="Escribe al menos 2 caracteres…"
