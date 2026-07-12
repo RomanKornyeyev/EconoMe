@@ -25,4 +25,11 @@ return [
     '@hotwired/turbo' => [
         'version' => '7.3.0',
     ],
+    'driver.js' => [
+        'version' => '1.6.0',
+    ],
+    'driver.js/dist/driver.css' => [
+        'version' => '1.6.0',
+        'type' => 'css',
+    ],
 ];

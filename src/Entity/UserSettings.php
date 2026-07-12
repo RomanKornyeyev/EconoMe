@@ -27,6 +27,15 @@ class UserSettings
     #[ORM\Column(type: "boolean", options: ["default" => true])]
     private bool $allowFriendRequests = true;
 
+    /**
+     * Nombres de los tours de onboarding ya vistos (o saltados) por el usuario.
+     * Ej: ["dashboard", "transactions", "categories"]
+     *
+     * @var string[]
+     */
+    #[ORM\Column(type: "json")]
+    private array $completedTours = [];
+
     public function __construct(User $user)
     {
         $this->user = $user;
@@ -61,6 +70,27 @@ class UserSettings
     public function setAllowFriendRequests(bool $allowFriendRequests): self
     {
         $this->allowFriendRequests = $allowFriendRequests;
+        return $this;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getCompletedTours(): array
+    {
+        return $this->completedTours;
+    }
+
+    public function hasCompletedTour(string $name): bool
+    {
+        return in_array($name, $this->completedTours, true);
+    }
+
+    public function markTourCompleted(string $name): self
+    {
+        if (!$this->hasCompletedTour($name)) {
+            $this->completedTours[] = $name;
+        }
         return $this;
     }
 }

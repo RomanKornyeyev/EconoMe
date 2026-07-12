@@ -4,6 +4,7 @@ import BulkSelectController      from './controllers/bulk_select_controller.js';
 import ColorPickerController     from './controllers/color_picker_controller.js';
 import ConfirmController         from './controllers/confirm_controller.js';
 import FriendshipController      from './controllers/friendship_controller.js';
+import TourController            from './controllers/tour_controller.js';
 import UserSearchController      from './controllers/user_search_controller.js';
 
 const app = startStimulusApp();
@@ -12,4 +13,5 @@ app.register('bulk-select',   BulkSelectController);
 app.register('color-picker',  ColorPickerController);
 app.register('confirm',       ConfirmController);
 app.register('friendship',    FriendshipController);
+app.register('tour',          TourController);
 app.register('user-search',   UserSearchController);

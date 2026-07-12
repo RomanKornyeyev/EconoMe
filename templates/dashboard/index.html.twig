@@ -7,13 +7,19 @@
     {% include 'partials/_no_account.html.twig' with {message: 'Crea tu primera cuenta para empezar a visualizar las métricas.'} %}
 {% else %}
 
+{% import 'partials/macros/_tour.html.twig' as tour %}
 {% set q = app.request.query.all %}
+
+<div {{ tour.attrs('dashboard') }}>
 
 {# Zona 1: Cabecera — título + selector de cuenta #}
 <div class="d-flex flex-wrap justify-content-between gap-2">
     <div class="d-flex flex-wrap justify-content-start align-items-center mb-3 gap-2">
         <h1 class="h2 mb-0">Dashboard</h1>
-        <div class="btn-group" role="group">
+        <div class="btn-group" role="group"
+             data-tour-step="1"
+             data-tour-title="Selector de cuenta"
+             data-tour-text="Todo lo que ves en el dashboard pertenece a la cuenta seleccionada. Cambia de cuenta desde aquí.">
             <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                 {{ currentAccount.name }}
             </button>
@@ -37,7 +43,10 @@
             {% set nextUrl = '?' ~ q|merge({'year': nextYear, 'month': nextMonth})|url_encode %}
         {% endif %}
         {% set monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'] %}
-        <div class="btn-group" role="group">
+        <div class="btn-group" role="group"
+             data-tour-step="2"
+             data-tour-title="Filtra por período"
+             data-tour-text="Navega mes a mes o consulta el año completo. Los meses sin datos aparecen atenuados.">
             <a href="{{ prevUrl }}" class="btn btn-sm btn-outline-primary" style="padding-left: 0.75rem; padding-right: 0.75rem;"><i class="fa-solid fa-chevron-left fa-sm"></i></a>
 
             {# Desplegable de mes #}
@@ -82,9 +91,13 @@
 
 
     <div class="d-flex flex-wrap justify-content-end align-items-center mb-3 gap-2 bg-body">
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newTransactionModal">
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newTransactionModal"
+                data-tour-step="6"
+                data-tour-title="Añade movimientos"
+                data-tour-text="Registra un gasto o un ingreso sin salir del dashboard.">
             <i class="fa-solid fa-plus me-1"></i>Nuevo movimiento
         </button>
+        {{ tour.help_button() }}
     </div>
 </div>
 
@@ -96,7 +109,11 @@
 {% include 'components/_stats_cards.html.twig' %}
 
 {# Zona 4: Gráficos #}
-<div class="row g-3 mb-3">
+<div class="row g-3 mb-3"
+     data-tour-step="4"
+     data-tour-title="Tus gráficos"
+     data-tour-text="Evolución mensual de ingresos y gastos del año, y reparto por categorías del período seleccionado."
+     data-tour-side="top">
     <div class="col-12 col-lg-8">
         {% include 'components/_chart_bar.html.twig' %}
     </div>
@@ -106,7 +123,11 @@
 </div>
 
 {# Zona 5: Movimientos #}
-<div class="card border shadow-sm" data-controller="bulk-select">
+<div class="card border shadow-sm" data-controller="bulk-select"
+     data-tour-step="5"
+     data-tour-title="Movimientos del período"
+     data-tour-text="Los movimientos de la cuenta en el período seleccionado. Desde «Ver todos» accedes al listado completo con filtros avanzados."
+     data-tour-side="top">
     <div class="card-header bg-body-tertiary border-bottom d-flex align-items-center">
         {# Estado normal #}
         <div data-bulk-select-target="normalBar" class="d-flex justify-content-between align-items-center w-100">
@@ -134,6 +155,8 @@
 </div>
 
 {% include 'transaction/_modal_create.html.twig' %}
+
+</div> {# /tour #}
 
 {% endif %}
 {% endblock %}

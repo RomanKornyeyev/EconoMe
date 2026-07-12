@@ -3,11 +3,18 @@
 {% block title %}Categorías{% endblock %}
 
 {% block content %}
+{% import 'partials/macros/_tour.html.twig' as tour %}
+
+<div {{ tour.attrs('categories', not isTemplateView) }}>
+
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <div class="d-flex align-items-center gap-2">
         <h4 class="mb-0">Categorías</h4>
 
-        <div class="btn-group" role="group">
+        <div class="btn-group" role="group"
+             data-tour-step="1"
+             data-tour-title="Cuenta o plantilla"
+             data-tour-text="Cada cuenta tiene sus propias categorías. Además, dispones de «Mi plantilla»: un juego personal de categorías que puedes aplicar al crear cuentas nuevas.">
             <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                 {% if isTemplateView %}
                     Mi plantilla
@@ -37,15 +44,21 @@
         </div>
     </div>
 
-    {% if isTemplateView %}
-        <a href="{{ path('category_template_create') }}" class="btn btn-primary btn-sm">
-            <i class="fa-solid fa-plus me-1"></i>Nueva categoría (plantilla)
-        </a>
-    {% elseif is_granted('ACCOUNT_EDIT', currentAccount) %}
-        <a href="{{ path('category_create', {account: currentAccount.id}) }}" class="btn btn-primary btn-sm">
-            <i class="fa-solid fa-plus me-1"></i>Nueva categoría
-        </a>
-    {% endif %}
+    <div class="d-flex align-items-center gap-2">
+        {% if isTemplateView %}
+            <a href="{{ path('category_template_create') }}" class="btn btn-primary btn-sm">
+                <i class="fa-solid fa-plus me-1"></i>Nueva categoría (plantilla)
+            </a>
+        {% elseif is_granted('ACCOUNT_EDIT', currentAccount) %}
+            <a href="{{ path('category_create', {account: currentAccount.id}) }}" class="btn btn-primary btn-sm"
+               data-tour-step="2"
+               data-tour-title="Crea categorías"
+               data-tour-text="Añade las categorías que necesites para clasificar tus gastos e ingresos.">
+                <i class="fa-solid fa-plus me-1"></i>Nueva categoría
+            </a>
+        {% endif %}
+        {{ tour.help_button() }}
+    </div>
 </div>
 
 {# ── Vista: plantillas ───────────────────────────────────────────────────── #}
@@ -162,7 +175,11 @@
             {% endif %}
         </div>
     {% else %}
-        <div class="row g-3">
+        <div class="row g-3"
+             data-tour-step="3"
+             data-tour-title="Gastos e ingresos"
+             data-tour-text="Tus categorías, separadas por tipo. Al crear movimientos podrás asignarles una categoría y así ver en qué se te va el dinero."
+             data-tour-side="top">
             {% if expenses is not empty %}
                 <div class="col-12 col-md-6">
                     <div class="card shadow border">
@@ -244,4 +261,6 @@
     {% endif %}
 
 {% endif %}
+
+</div> {# /tour #}
 {% endblock %}

@@ -1,0 +1,33 @@
+{#
+    Macros del tour de onboarding (driver.js + tour_controller.js).
+
+    Uso:
+        {% import 'partials/macros/_tour.html.twig' as tour %}
+
+        <div {{ tour.attrs('dashboard') }}>
+            …elementos con data-tour-step / data-tour-title / data-tour-text…
+            {{ tour.help_button() }}
+        </div>
+
+    El segundo parámetro de attrs() permite vetar el auto-lanzado (p. ej.
+    cuando la vista está en un modo donde el tour no aplica). El nombre debe
+    existir en TourController::TOURS.
+#}
+
+{% macro attrs(name, enabled = true) %}
+    data-controller="tour"
+    data-tour-name-value="{{ name }}"
+    data-tour-auto-value="{{ enabled and app.user.settings and not app.user.settings.hasCompletedTour(name) ? 'true' : 'false' }}"
+    data-tour-complete-url-value="{{ path('tour_complete', {name: name}) }}"
+    data-tour-csrf-value="{{ csrf_token('tour') }}"
+{%- endmacro %}
+
+{% macro help_button() %}
+    <button type="button"
+            class="btn btn-sm btn-outline-secondary border-0 rounded-circle"
+            data-action="click->tour#restart"
+            title="Ver tutorial"
+            aria-label="Ver tutorial">
+        <i class="fa-solid fa-circle-question"></i>
+    </button>
+{% endmacro %}

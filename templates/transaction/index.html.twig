@@ -3,12 +3,18 @@
 {% block title %}Movimientos{% endblock %}
 
 {% block content %}
+{% import 'partials/macros/_tour.html.twig' as tour %}
 {% set q = app.request.query.all %}
+
+<div {{ tour.attrs('transactions') }}>
 
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <div class="d-flex align-items-center gap-2">
         <h1 class="mb-0 h3">Movimientos</h1>
-        <div class="btn-group" role="group">
+        <div class="btn-group" role="group"
+             data-tour-step="1"
+             data-tour-title="Selector de cuenta"
+             data-tour-text="Aquí ves los movimientos de la cuenta seleccionada. Cambia de cuenta cuando quieras.">
             <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                 {{ currentAccount.name }}
             </button>
@@ -20,17 +26,27 @@
         </div>
     </div>
     <div class="d-flex align-items-center gap-2">
-        <a href="{{ path('recurring_index', {account: currentAccount.id}) }}" class="btn btn-outline-primary btn-sm">
+        <a href="{{ path('recurring_index', {account: currentAccount.id}) }}" class="btn btn-outline-primary btn-sm"
+           data-tour-step="4"
+           data-tour-title="Movimientos recurrentes"
+           data-tour-text="Automatiza los gastos e ingresos periódicos (nómina, alquiler, suscripciones…) para no tener que registrarlos a mano.">
             <i class="fa-solid fa-rotate me-1"></i>Movimientos recurrentes
         </a>
-        <a href="{{ path('transaction_create', {account: currentAccount.id}) }}" class="btn btn-primary btn-sm">
+        <a href="{{ path('transaction_create', {account: currentAccount.id}) }}" class="btn btn-primary btn-sm"
+           data-tour-step="5"
+           data-tour-title="Nuevo movimiento"
+           data-tour-text="Registra aquí tus gastos e ingresos.">
             <i class="fa-solid fa-plus me-1"></i>Nuevo movimiento
         </a>
+        {{ tour.help_button() }}
     </div>
 </div>
 
 {# Filters #}
-<div class="card border shadow-sm mb-3 bg-body-tertiary">
+<div class="card border shadow-sm mb-3 bg-body-tertiary"
+     data-tour-step="2"
+     data-tour-title="Filtros"
+     data-tour-text="Encuentra cualquier movimiento filtrando por fechas, tipo, categoría, texto o importe.">
     <div class="card-body px-4 py-4">
         <form method="get">
             <input type="hidden" name="account" value="{{ currentAccount.id }}">
@@ -150,7 +166,11 @@
 </script>
 
 {# Transactions table #}
-<div class="card border shadow-sm" data-controller="bulk-select">
+<div class="card border shadow-sm" data-controller="bulk-select"
+     data-tour-step="3"
+     data-tour-title="Tus movimientos"
+     data-tour-text="El listado completo de la cuenta. Ordena haciendo clic en las columnas y selecciona varios movimientos para acciones en bloque."
+     data-tour-side="top">
     <div class="card-header bg-body-tertiary border-bottom d-flex align-items-center">
         {# Estado normal #}
         <div data-bulk-select-target="normalBar" class="d-flex justify-content-between align-items-center w-100">
@@ -180,4 +200,6 @@
 <div class="mt-3 d-flex justify-content-center">
     {{ knp_pagination_render(pagination) }}
 </div>
+
+</div> {# /tour #}
 {% endblock %}
