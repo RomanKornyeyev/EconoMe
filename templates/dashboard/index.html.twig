@@ -4,11 +4,7 @@
 
 {% block content %}
 {% if not hasAccounts %}
-    <div class="text-center py-5">
-        <h4>No tienes ninguna cuenta</h4>
-        <p class="text-muted">Crea tu primera cuenta para empezar a registrar movimientos.</p>
-        <a href="{{ path('account_create') }}" class="btn btn-primary">Crear cuenta</a>
-    </div>
+    {% include 'partials/_no_account.html.twig' with {message: 'Crea tu primera cuenta para empezar a visualizar las métricas.'} %}
 {% else %}
 
 {% set q = app.request.query.all %}

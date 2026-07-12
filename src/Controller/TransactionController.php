@@ -34,7 +34,7 @@ class TransactionController extends AbstractController
         $accounts = $this->accountService->getActiveAccountsForUser($user);
 
         if (empty($accounts)) {
-            return $this->redirectToRoute('account_create');
+            return $this->render('transaction/no_account.html.twig');
         }
 
         $accountId = $request->query->getInt('account', $accounts[0]->getId());
