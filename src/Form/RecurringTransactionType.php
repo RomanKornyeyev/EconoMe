@@ -86,7 +86,7 @@ class RecurringTransactionType extends AbstractType
 
         if ($options['is_edit']) {
             $builder->add('applyToGenerated', CheckboxType::class, [
-                'label' => 'Aplicar los cambios de importe, nombre, descripción, tipo y categoría a los movimientos ya generados',
+                'label' => 'Aplicar los cambios de importe, nombre, descripción, tipo y categoría a los movimientos anteriores ya generados',
                 'help' => 'Si lo marcas, se sobrescribirán también las ediciones manuales que hayas hecho en esos movimientos.',
                 'mapped' => false,
                 'required' => false,

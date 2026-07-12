@@ -8,6 +8,7 @@
 			<th class="text-muted small text-uppercase fw-normal text-end">Importe</th>
 			<th class="text-muted small text-uppercase fw-normal">Frecuencia</th>
 			<th class="text-muted small text-uppercase fw-normal">Inicio</th>
+			<th class="text-muted small text-uppercase fw-normal">Fin</th>
 			<th class="text-muted small text-uppercase fw-normal">Categoría</th>
 			<th class="text-muted small text-uppercase fw-normal">Estado</th>
 			<th class="text-muted small text-uppercase fw-normal text-end">Acciones</th>
@@ -35,6 +36,13 @@
 				</td>
 				<td>{{ freqMap[recurring.frequency] ?? recurring.frequency }}</td>
 				<td class="small">{{ recurring.startDate|date('d/m/Y') }}</td>
+				<td class="small">
+					{% if recurring.endDate %}
+						{{ recurring.endDate|date('d/m/Y') }}
+					{% else %}
+						<span class="text-muted">—</span>
+					{% endif %}
+				</td>
 				<td>
 					{% if recurring.category %}
 						<span class="d-inline-block rounded-circle me-1" style="width:8px;height:8px;background:{{ recurring.category.color }}"></span>
@@ -91,7 +99,7 @@
 			</tr>
 		{% else %}
 			<tr>
-				<td colspan="9" class="text-center text-muted py-4">No hay transacciones recurrentes.</td>
+				<td colspan="10" class="text-center text-muted py-4">No hay transacciones recurrentes.</td>
 			</tr>
 		{% endfor %}
 	</tbody>
