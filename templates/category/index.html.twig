@@ -62,9 +62,9 @@
     {% if templates is empty %}
         <div class="text-center py-5">
             <i class="fa-solid fa-layer-group fa-3x text-muted mb-3"></i>
-            <h5 class="text-muted">No tienes plantillas de categoría</h5>
+            <h5 class="text-muted">Tu plantilla de categorías está vacía</h5>
             <a href="{{ path('category_template_create') }}" class="btn btn-primary mt-2">
-                <i class="fa-solid fa-plus me-1"></i>Crear plantilla
+                <i class="fa-solid fa-plus me-1"></i>Crear categoría (plantilla)
             </a>
         </div>
     {% else %}
@@ -89,7 +89,10 @@
                                             <i class="fa-solid fa-pen"></i>
                                         </a>
                                         <form method="post" action="{{ path('category_template_delete', {id: tpl.id}) }}" class="d-inline"
-                                              onsubmit="return confirm('¿Eliminar plantilla {{ tpl.name }}?')">
+                                              data-controller="confirm"
+                                              data-action="submit->confirm#submit"
+                                              data-confirm-message-value="¿Eliminar la plantilla «{{ tpl.name }}»?"
+                                              data-confirm-text-value="Eliminar">
                                             <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tpl.id) }}">
                                             <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1">
                                                 <i class="fa-solid fa-trash"></i>
@@ -123,7 +126,10 @@
                                             <i class="fa-solid fa-pen"></i>
                                         </a>
                                         <form method="post" action="{{ path('category_template_delete', {id: tpl.id}) }}" class="d-inline"
-                                              onsubmit="return confirm('¿Eliminar plantilla {{ tpl.name }}?')">
+                                              data-controller="confirm"
+                                              data-action="submit->confirm#submit"
+                                              data-confirm-message-value="¿Eliminar la plantilla «{{ tpl.name }}»?"
+                                              data-confirm-text-value="Eliminar">
                                             <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tpl.id) }}">
                                             <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1">
                                                 <i class="fa-solid fa-trash"></i>
@@ -178,7 +184,10 @@
                                                 <i class="fa-solid fa-pen"></i>
                                             </a>
                                             <form method="post" action="{{ path('category_delete', {id: cat.id}) }}" class="d-inline"
-                                                  onsubmit="return confirm('¿Eliminar categoría {{ cat.name }}?')">
+                                                  data-controller="confirm"
+                                                  data-action="submit->confirm#submit"
+                                                  data-confirm-message-value="¿Eliminar la categoría «{{ cat.name }}»?"
+                                                  data-confirm-text-value="Eliminar">
                                                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cat.id) }}">
                                                 <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1">
                                                     <i class="fa-solid fa-trash"></i>
@@ -214,7 +223,10 @@
                                                 <i class="fa-solid fa-pen"></i>
                                             </a>
                                             <form method="post" action="{{ path('category_delete', {id: cat.id}) }}" class="d-inline"
-                                                  onsubmit="return confirm('¿Eliminar categoría {{ cat.name }}?')">
+                                                  data-controller="confirm"
+                                                  data-action="submit->confirm#submit"
+                                                  data-confirm-message-value="¿Eliminar la categoría «{{ cat.name }}»?"
+                                                  data-confirm-text-value="Eliminar">
                                                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cat.id) }}">
                                                 <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1">
                                                     <i class="fa-solid fa-trash"></i>

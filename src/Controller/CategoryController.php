@@ -37,7 +37,10 @@ class CategoryController extends AbstractController
         $accounts = $this->accountService->getActiveAccountsForUser($user);
         $isTemplate = $request->query->getBoolean('template');
 
-        if ($isTemplate) {
+        // Vista de plantillas: cuando se pide explícitamente o cuando el usuario
+        // aún no tiene ninguna cuenta (al menos puede ver/editar su plantilla en
+        // vez de ser forzado a crear una cuenta).
+        if ($isTemplate || empty($accounts)) {
             $templates = $this->templateRepo->findAllByUser($user);
 
             return $this->render('category/index.html.twig', [
@@ -47,10 +50,6 @@ class CategoryController extends AbstractController
                 'templates'      => $templates,
                 'isTemplateView' => true,
             ]);
-        }
-
-        if (empty($accounts)) {
-            return $this->redirectToRoute('account_create');
         }
 
         $accountId = $request->query->getInt('account', $accounts[0]->getId());
