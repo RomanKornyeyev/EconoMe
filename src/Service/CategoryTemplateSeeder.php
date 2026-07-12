@@ -9,14 +9,22 @@ use Doctrine\ORM\EntityManagerInterface;
 class CategoryTemplateSeeder
 {
     private const EXPENSE_TEMPLATES = [
+        ['name' => 'Alquiler / hipoteca', 'color' => '#795548'],
+        ['name' => 'Seguros', 'color' => '#3F51B5'],
+        ['name' => 'Hogar', 'color' => '#8BC34A'],
         ['name' => 'Alimentación', 'color' => '#4CAF50'],
         ['name' => 'Transporte', 'color' => '#2196F3'],
-        ['name' => 'Vivienda', 'color' => '#795548'],
-        ['name' => 'Ocio', 'color' => '#E91E63'],
+        ['name' => 'Ropa', 'color' => '#9C27B0'],
+        
+        ['name' => 'Restaurantes / Ocio', 'color' => '#E91E63'],
+        ['name' => 'Suscripciones', 'color' => '#00BCD4'],
+        ['name' => 'Viajes', 'color' => '#FF5722'],
+
         ['name' => 'Salud', 'color' => '#F44336'],
         ['name' => 'Educación', 'color' => '#FF9800'],
-        ['name' => 'Ropa', 'color' => '#9C27B0'],
-        ['name' => 'Suscripciones', 'color' => '#00BCD4'],
+        ['name' => 'Mascotas', 'color' => '#FFC107'],
+        ['name' => 'Regalos', 'color' => '#9E9E9E'],
+        
         ['name' => 'Otros', 'color' => '#607D8B'],
     ];
 
@@ -24,7 +32,7 @@ class CategoryTemplateSeeder
         ['name' => 'Nómina', 'color' => '#4CAF50'],
         ['name' => 'Freelance', 'color' => '#2196F3'],
         ['name' => 'Inversiones', 'color' => '#FF9800'],
-        ['name' => 'Otros ingresos', 'color' => '#607D8B'],
+        ['name' => 'Otros', 'color' => '#607D8B'],
     ];
 
     public function __construct(
