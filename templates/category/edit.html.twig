@@ -1,43 +1,46 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ isTemplateView ? 'Editar plantilla' : 'Editar categoría' }}{% endblock %}
+{% set entity = isTemplateView ? template : category %}
+{% if isTemplateView %}
+    {% set heading = isNew ? 'Nueva categoría (mi plantilla)' : 'Editar plantilla' %}
+    {% set backUrl = path('category_index', {template: 'true'}) %}
+{% else %}
+    {% set heading = isNew ? 'Nueva categoría' : 'Editar categoría' %}
+    {% set backUrl = path('category_index', {account: entity.account.id}) %}
+{% endif %}
+
+{% block title %}{{ heading }}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-12 col-md-6 col-lg-4">
-        <div class="d-flex align-items-center gap-2 mb-4">
-            {% if isTemplateView %}
-                <a href="{{ path('category_index', {template: 'true'}) }}" class="btn btn-sm btn-outline-secondary">
-                    <i class="fa-solid fa-arrow-left"></i>
-                </a>
-                <h4 class="mb-0">Editar plantilla</h4>
-            {% else %}
-                <a href="{{ path('category_index', {account: category.account.id}) }}" class="btn btn-sm btn-outline-secondary">
-                    <i class="fa-solid fa-arrow-left"></i>
-                </a>
-                <h4 class="mb-0">Editar categoría</h4>
-            {% endif %}
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="mb-4">
+            <a href="{{ backUrl }}" class="btn btn-outline-secondary">
+                <i class="fa-solid fa-arrow-left me-1"></i>Volver
+            </a>
         </div>
 
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                {{ form_start(form) }}
+        <div class="card border-0 shadow bg-body-tertiary">
+            {{ form_start(form, {attr: {class: 'needs-validation'}}) }}
+                <div class="card-header bg-transparent border-bottom py-3 px-4">
+                    <h5 class="mb-0">{{ heading }}</h5>
+                    {% if not isNew %}
+                        <small class="text-muted">{{ entity.name }}</small>
+                    {% endif %}
+                </div>
+                <div class="card-body p-4">
                     {{ form_row(form.name) }}
-                    {{ form_row(form.type) }}
-                    {{ form_row(form.icon) }}
-                    {{ form_row(form.color) }}
-                    <div class="d-flex gap-2 mt-3">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fa-solid fa-check me-1"></i>Guardar cambios
-                        </button>
-                        {% if isTemplateView %}
-                            <a href="{{ path('category_index', {template: 'true'}) }}" class="btn btn-outline-secondary">Cancelar</a>
-                        {% else %}
-                            <a href="{{ path('category_index', {account: category.account.id}) }}" class="btn btn-outline-secondary">Cancelar</a>
-                        {% endif %}
+                    <div class="row g-3">
+                        <div class="col-md-12">{{ form_row(form.type) }}</div>
+                        <div class="col-md-12">{{ form_row(form.color) }}</div>
                     </div>
-                {{ form_end(form) }}
-            </div>
+                </div>
+                <div class="card-footer bg-transparent border-top d-flex gap-2 justify-content-center py-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-check me-1"></i>{{ isNew ? 'Crear' : 'Guardar cambios' }}
+                    </button>
+                </div>
+            {{ form_end(form) }}
         </div>
     </div>
 </div>

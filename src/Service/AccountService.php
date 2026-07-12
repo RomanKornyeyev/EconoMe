@@ -48,7 +48,6 @@ class AccountService
         foreach ($templates as $template) {
             $category = new Category($account);
             $category->setName($template->getName());
-            $category->setIcon($template->getIcon());
             $category->setColor($template->getColor());
             $category->setType($template->getType());
             $this->em->persist($category);

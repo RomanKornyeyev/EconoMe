@@ -102,10 +102,12 @@ class CategoryController extends AbstractController
             return $this->redirectToRoute('category_index', ['account' => $account->getId()]);
         }
 
-        return $this->render('category/create.html.twig', [
+        return $this->render('category/edit.html.twig', [
             'form'           => $form,
-            'account'        => $account,
+            'category'       => $category,
+            'template'       => null,
             'isTemplateView' => false,
+            'isNew'          => true,
         ]);
     }
 
@@ -130,6 +132,7 @@ class CategoryController extends AbstractController
             'category'       => $category,
             'template'       => null,
             'isTemplateView' => false,
+            'isNew'          => false,
         ]);
     }
 
@@ -173,6 +176,7 @@ class CategoryController extends AbstractController
             'category'       => null,
             'template'       => $template,
             'isTemplateView' => true,
+            'isNew'          => false,
         ]);
     }
 
@@ -209,10 +213,12 @@ class CategoryController extends AbstractController
             return $this->redirectToRoute('category_index', ['template' => 'true']);
         }
 
-        return $this->render('category/create.html.twig', [
+        return $this->render('category/edit.html.twig', [
             'form'           => $form,
-            'account'        => null,
+            'category'       => null,
+            'template'       => $template,
             'isTemplateView' => true,
+            'isNew'          => true,
         ]);
     }
 }

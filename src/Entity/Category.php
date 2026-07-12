@@ -40,9 +40,6 @@ class Category
     #[Assert\Length(min: 1, max: 100)]
     private ?string $name = null;
 
-    #[ORM\Column(type: "string", length: 50, nullable: true)]
-    private ?string $icon = null;
-
     #[ORM\Column(type: "string", length: 7, nullable: true)]
     private ?string $color = null;
 
@@ -95,17 +92,6 @@ class Category
     public function setName(string $name): self
     {
         $this->name = $name;
-        return $this;
-    }
-
-    public function getIcon(): ?string
-    {
-        return $this->icon;
-    }
-
-    public function setIcon(?string $icon): self
-    {
-        $this->icon = $icon;
         return $this;
     }
 

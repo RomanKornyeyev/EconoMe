@@ -26,14 +26,14 @@ class CategoryTemplateType extends AbstractType
                     'Ingreso' => CategoryTemplate::TYPE_INCOME,
                 ],
             ])
-            ->add('icon', TextType::class, [
-                'label' => 'Icono',
-                'required' => false,
-                'attr' => ['placeholder' => 'Ej: cart, car, home...'],
-            ])
             ->add('color', ColorType::class, [
                 'label' => 'Color',
                 'required' => false,
+                'row_attr' => [
+                    'data-controller' => 'color-picker',
+                    'data-color-picker-palette-value' => CategoryType::COLOR_PALETTE,
+                ],
+                'attr' => ['data-color-picker-target' => 'input'],
             ])
         ;
     }

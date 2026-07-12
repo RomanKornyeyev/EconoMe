@@ -12,6 +12,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class CategoryType extends AbstractType
 {
+    /** Paleta de 12 colores para el selector de categorías (JSON para el controlador Stimulus). */
+    public const COLOR_PALETTE = '["#94a3b8","#f87171","#fb923c","#fbbf24","#a3e635","#34d399","#2dd4bf","#38bdf8","#60a5fa","#818cf8","#a78bfa","#e879f9","#f472b6"]';
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -26,14 +29,14 @@ class CategoryType extends AbstractType
                     'Ingreso' => Category::TYPE_INCOME,
                 ],
             ])
-            ->add('icon', TextType::class, [
-                'label' => 'Icono',
-                'required' => false,
-                'attr' => ['placeholder' => 'Ej: cart, car, home...'],
-            ])
             ->add('color', ColorType::class, [
                 'label' => 'Color',
                 'required' => false,
+                'row_attr' => [
+                    'data-controller' => 'color-picker',
+                    'data-color-picker-palette-value' => self::COLOR_PALETTE,
+                ],
+                'attr' => ['data-color-picker-target' => 'input'],
             ])
         ;
     }
