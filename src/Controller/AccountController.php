@@ -55,7 +55,7 @@ class AccountController extends AbstractController
             $this->accountService->createAccount($this->getUser(), $account, $copyTemplates);
 
             $this->addFlash('success', 'Cuenta creada correctamente.');
-            return $this->redirectToRoute('account_index');
+            return $this->redirectToRoute('account_show', ['id' => $account->getId()]);
         }
 
         return $this->render('account/edit.html.twig', [

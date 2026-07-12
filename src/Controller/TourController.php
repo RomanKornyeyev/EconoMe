@@ -15,7 +15,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class TourController extends AbstractController
 {
     /** Tours de onboarding existentes. Añadir aquí los nuevos. */
-    public const TOURS = ['dashboard', 'transactions', 'categories'];
+    public const TOURS = ['dashboard', 'transactions', 'categories', 'accounts'];
 
     #[Route('/tour/{name}/complete', name: 'tour_complete', methods: ['POST'])]
     public function complete(string $name, Request $request, EntityManagerInterface $em): Response
@@ -28,6 +28,7 @@ class TourController extends AbstractController
             return new JsonResponse(['error' => 'Token inválido'], Response::HTTP_FORBIDDEN);
         }
 
+        /** @var \App\Entity\User $user */
         $user = $this->getUser();
         $settings = $user->getSettings();
 
