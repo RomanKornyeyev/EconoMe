@@ -26,3 +26,7 @@ services:
     App\Service\ProfilePhotoManager:
         arguments:
             $userProfilePhotoDir: '%user_profile_photo_dir%'
+
+    App\Service\MailService:
+        arguments:
+            $from: '%env(MAILER_FROM)%'

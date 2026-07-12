@@ -9,11 +9,13 @@ class MailService
 {
   private MailerInterface $mailer;
   private UrlGeneratorInterface $router;
+  private string $from;
 
-  public function __construct(MailerInterface $mailer, UrlGeneratorInterface $router)
+  public function __construct(MailerInterface $mailer, UrlGeneratorInterface $router, string $from)
   {
     $this->mailer = $mailer;
     $this->router = $router;
+    $this->from = $from;
   }
 
   public function sendConfirmationEmail(string $to, string $token, string $name = ''): void
@@ -21,7 +23,7 @@ class MailService
     $url = $this->router->generate('app_confirm_email', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
 
     $email = (new TemplatedEmail())
-      ->from('no.reply.financeflow.team@gmail.com')
+      ->from($this->from)
       ->to($to)
       ->subject('Confirma tu cuenta')
       ->htmlTemplate('email/confirm_email.html.twig')
@@ -38,7 +40,7 @@ class MailService
     $url = $this->router->generate('app_reset_password', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
 
     $email = (new TemplatedEmail())
-      ->from('no.reply.financeflow.team@gmail.com')
+      ->from($this->from)
       ->to($to)
       ->subject('Recuperación de contraseña')
       ->htmlTemplate('email/reset_password.html.twig')
@@ -55,7 +57,7 @@ class MailService
     $url = $this->router->generate('app_forgot_password', [], UrlGeneratorInterface::ABSOLUTE_URL);
 
     $email = (new TemplatedEmail())
-      ->from('no.reply.financeflow.team@gmail.com')
+      ->from($this->from)
       ->to($to)
       ->subject('Contraseña modificada')
       ->htmlTemplate('email/password_changed.html.twig')
@@ -77,7 +79,7 @@ class MailService
     $resetPasswordUrl = $this->router->generate('app_forgot_password', [], UrlGeneratorInterface::ABSOLUTE_URL);
 
     $email = (new TemplatedEmail())
-      ->from('no.reply.financeflow.team@gmail.com')
+      ->from($this->from)
       ->to($to)
       ->subject('Autoriza el cambio de correo')
       ->htmlTemplate('email/email_change_authorize_current.html.twig')
@@ -99,7 +101,7 @@ class MailService
     $url = $this->router->generate('app_profile_email_confirm', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
 
     $email = (new TemplatedEmail())
-      ->from('no.reply.financeflow.team@gmail.com')
+      ->from($this->from)
       ->to($to)
       ->subject('Confirma tu nuevo correo')
       ->htmlTemplate('email/email_change_confirm_new.html.twig')
@@ -116,7 +118,7 @@ class MailService
     $resetPasswordUrl = $this->router->generate('app_forgot_password', [], UrlGeneratorInterface::ABSOLUTE_URL);
 
     $email = (new TemplatedEmail())
-      ->from('no.reply.financeflow.team@gmail.com')
+      ->from($this->from)
       ->to($to)
       ->subject('Cambio de correo cancelado')
       ->htmlTemplate('email/email_change_cancelled.html.twig')
@@ -141,14 +143,14 @@ class MailService
     ];
 
     $emailToOld = (new TemplatedEmail())
-      ->from('no.reply.financeflow.team@gmail.com')
+      ->from($this->from)
       ->to($oldEmail)
       ->subject('Correo actualizado')
       ->htmlTemplate('email/email_change_completed.html.twig')
       ->context($context);
 
     $emailToNew = (new TemplatedEmail())
-      ->from('no.reply.financeflow.team@gmail.com')
+      ->from($this->from)
       ->to($newEmail)
       ->subject('Correo actualizado')
       ->htmlTemplate('email/email_change_completed.html.twig')
