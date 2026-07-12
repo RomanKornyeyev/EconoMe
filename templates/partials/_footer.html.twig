@@ -4,26 +4,29 @@
       {{ 'now' | date('Y') }}
       {{ app_name }}</p>
 
-    <a href="/" class="col-md-4 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
+    <a href="{{ path('app_index') }}" class="col-md-4 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
       {{ app_name }}
     </a>
 
     <ul class="nav col-md-4 justify-content-end">
       <li class="nav-item">
-        <a href="#" class="nav-link px-2 text-body-secondary">Home</a>
+        <a href="{{ path('app_index') }}" class="nav-link px-2 text-body-secondary">Inicio</a>
       </li>
       <li class="nav-item">
-        <a href="#" class="nav-link px-2 text-body-secondary">Features</a>
+        <a href="{{ path('app_index') }}#funcionalidades" class="nav-link px-2 text-body-secondary">Funcionalidades</a>
       </li>
       <li class="nav-item">
-        <a href="#" class="nav-link px-2 text-body-secondary">Pricing</a>
+        <a href="{{ path('app_index') }}#faq" class="nav-link px-2 text-body-secondary">FAQs</a>
       </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link px-2 text-body-secondary">FAQs</a>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link px-2 text-body-secondary">About</a>
-      </li>
+      {% if is_granted('IS_AUTHENTICATED_FULLY') or is_granted('IS_AUTHENTICATED_REMEMBERED') %}
+        <li class="nav-item">
+          <a href="{{ path('dashboard') }}" class="nav-link px-2 text-body-secondary">Dashboard</a>
+        </li>
+      {% else %}
+        <li class="nav-item">
+          <a href="{{ path('app_register') }}" class="nav-link px-2 text-body-secondary">Registro</a>
+        </li>
+      {% endif %}
     </ul>
   </footer>
 </div>
