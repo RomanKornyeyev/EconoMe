@@ -72,3 +72,40 @@ APP_SECRET=tu_secreto_aqui
 php bin/console doctrine:migrations:migrate
 ```
 <i>*Si no tienes schema, ejecuta ``php bin/console doctrine:database:create``</i>
+
+---
+
+## Despliegue a producción
+
+> ⚠️ **IMPORTANTE:** con `APP_ENV=prod` los assets (Stimulus, importmap, driver.js, CSS…)
+> **NO se sirven dinámicamente** como en dev. Es **obligatorio compilarlos** en cada
+> despliegue con `asset-map:compile`, o todos los ficheros de `/assets/*` devolverán 404
+> y se romperá todo el JavaScript (validación de formularios, color picker, tours, CSRF…).
+
+Checklist de despliegue (en el servidor, con `APP_ENV=prod` en `.env.local`):
+
+```bash
+# 1. Dependencias PHP (ejecuta también importmap:install, que descarga assets/vendor/)
+composer install --no-dev --optimize-autoloader
+
+# 2. Migraciones
+php bin/console doctrine:migrations:migrate --no-interaction
+
+# 3. Compilar assets => genera public/assets/ (importmap + JS/CSS versionados)
+php bin/console asset-map:compile
+
+# 4. Limpiar y precalentar caché de prod
+php bin/console cache:clear
+```
+
+Notas:
+- `public/assets/` y `assets/vendor/` están en el `.gitignore`: **no llegan por git**,
+  se generan con los comandos de arriba. Si despliegas por FTP/rsync sin ejecutar
+  comandos en el servidor, ejecuta los pasos 1 y 3 en local (con `APP_ENV=prod`) y
+  sube también `vendor/`, `assets/vendor/` y `public/assets/`.
+- Cada vez que cambies un fichero de `assets/` hay que volver a ejecutar
+  `asset-map:compile` (los nombres llevan hash de versión, así que la caché del
+  navegador no da problemas).
+- Para volver a desarrollar en local: pon `APP_ENV=dev` en `.env.local` y **borra
+  `public/assets/`** (si existe, los assets compilados "tapan" a los de `assets/` y
+  verás versiones antiguas de tu JS/CSS).
