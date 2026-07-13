@@ -9,7 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 class CategoryTemplateSeeder
 {
     private const EXPENSE_TEMPLATES = [
-        ['name' => 'Alquiler / hipoteca', 'color' => '#795548'],
+        ['name' => 'Alquiler / hipoteca', 'color' => '#26A69A'],
         ['name' => 'Seguros', 'color' => '#3F51B5'],
         ['name' => 'Hogar', 'color' => '#8BC34A'],
         ['name' => 'Alimentación', 'color' => '#4CAF50'],
@@ -23,16 +23,16 @@ class CategoryTemplateSeeder
         ['name' => 'Salud', 'color' => '#F44336'],
         ['name' => 'Educación', 'color' => '#FF9800'],
         ['name' => 'Mascotas', 'color' => '#FFC107'],
-        ['name' => 'Regalos', 'color' => '#9E9E9E'],
-        
-        ['name' => 'Otros', 'color' => '#607D8B'],
+        ['name' => 'Regalos', 'color' => '#7E57C2'],
+
+        ['name' => 'Otros', 'color' => '#9E9E9E'],
     ];
 
     private const INCOME_TEMPLATES = [
         ['name' => 'Nómina', 'color' => '#4CAF50'],
         ['name' => 'Freelance', 'color' => '#2196F3'],
         ['name' => 'Inversiones', 'color' => '#FF9800'],
-        ['name' => 'Otros', 'color' => '#607D8B'],
+        ['name' => 'Otros', 'color' => '#9E9E9E'],
     ];
 
     public function __construct(
