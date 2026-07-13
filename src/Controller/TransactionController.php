@@ -45,6 +45,9 @@ class TransactionController extends AbstractController
         $dateTo   = null;
         if ($raw = $request->query->get('date_from', '')) {
             $dateFrom = \DateTime::createFromFormat('Y-m-d', $raw) ?: null;
+            if ($dateFrom) {
+                $dateFrom->setTime(0, 0, 0);
+            }
         }
         if ($raw = $request->query->get('date_to', '')) {
             $dateTo = \DateTime::createFromFormat('Y-m-d', $raw) ?: null;

@@ -61,7 +61,6 @@ class TransactionType extends AbstractType
             ->add('date', DateType::class, [
                 'label' => 'Fecha',
                 'widget' => 'single_text',
-                'data' => new \DateTime(),
             ])
             ->add('description', TextareaType::class, [
                 'label' => 'Descripción',
