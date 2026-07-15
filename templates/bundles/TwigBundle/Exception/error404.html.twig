@@ -1,0 +1,22 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Página no encontrada{% endblock %}
+
+{% block content %}
+	<div class="d-flex flex-column align-items-center justify-content-center text-center py-5">
+		<i class="fa-solid fa-compass fa-4x text-primary mb-4" aria-hidden="true"></i>
+		<h1 class="display-1 fw-bold">404</h1>
+		<h2 class="fs-3 mb-3">Página no encontrada</h2>
+		<p class="text-body-secondary mb-4" style="max-width: 32rem;">
+			La página que buscas no existe o ha sido movida. Revisa la dirección o vuelve al inicio.
+		</p>
+		<div class="d-flex gap-2">
+			<a href="{{ path('app_index') }}" class="btn btn-primary">
+				<i class="fa-solid fa-house me-2"></i>Volver al inicio
+			</a>
+			<button type="button" class="btn btn-outline-primary" onclick="history.back()">
+				<i class="fa-solid fa-arrow-left me-2"></i>Página anterior
+			</button>
+		</div>
+	</div>
+{% endblock %}

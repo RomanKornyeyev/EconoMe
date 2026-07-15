@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Error {{ status_code }}{% endblock %}
+
+{% block content %}
+	<div class="d-flex flex-column align-items-center justify-content-center text-center py-5">
+		<i class="fa-solid fa-triangle-exclamation fa-4x text-warning mb-4" aria-hidden="true"></i>
+		<h1 class="display-1 fw-bold">{{ status_code }}</h1>
+		<h2 class="fs-3 mb-3">{{ status_text }}</h2>
+		<p class="text-body-secondary mb-4" style="max-width: 32rem;">
+			Ha ocurrido un error al procesar tu petición. Si el problema persiste, contacta con nosotros.
+		</p>
+		<a href="{{ path('app_index') }}" class="btn btn-primary">
+			<i class="fa-solid fa-house me-2"></i>Volver al inicio
+		</a>
+	</div>
+{% endblock %}
