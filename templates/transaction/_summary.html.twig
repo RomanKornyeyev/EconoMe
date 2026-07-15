@@ -1,0 +1,99 @@
+{#
+  Partial AJAX: resumen de un movimiento. Devuelve modal-body + modal-footer,
+  inyectados en #txSummaryModal por tx_summary_controller.js.
+
+  Variables:
+    - tx:          Transaction
+    - canEdit:     bool (ACCOUNT_EDIT sobre la cuenta)
+    - redirectUrl: string|null (adónde volver tras eliminar)
+#}
+<div class="modal-body p-4">
+    {# Importe #}
+    <div class="text-center mb-3">
+        <div class="fs-3 fw-bold {{ tx.isExpense() ? 'text-danger' : 'text-success' }}">
+            {{ tx.isExpense() ? '-' : '+' }}{{ tx.amount|number_format(2, ',', '.') }} {{ tx.account.currency }}
+        </div>
+        <span class="badge {{ tx.isExpense() ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success' }}">
+            {{ tx.isExpense() ? 'Gasto' : 'Ingreso' }}
+        </span>
+        {% if tx.wasGeneratedAutomatically() %}
+            <span class="badge bg-body-secondary text-muted"
+                  title="Generado automáticamente por un movimiento recurrente">Auto</span>
+        {% endif %}
+    </div>
+
+    {# Nombre y descripción #}
+    <div class="text-center mb-4">
+        <h5 class="mb-1 fw-semibold text-break">{{ tx.name }}</h5>
+        {% if tx.description %}
+            <p class="text-muted small mb-0 text-break">{{ tx.description }}</p>
+        {% endif %}
+    </div>
+
+    {# Detalles en tiles #}
+    <div class="row g-2">
+        <div class="col-6">
+            <div class="bg-body-secondary rounded-3 px-3 py-2 h-100">
+                <div class="text-muted small text-uppercase">Fecha</div>
+                <div class="fw-semibold small">{{ tx.date|date('d/m/Y') }}</div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="bg-body-secondary rounded-3 px-3 py-2 h-100">
+                <div class="text-muted small text-uppercase">Categoría</div>
+                <div class="fw-semibold small">
+                    {% if tx.category %}
+                        <span class="d-inline-block rounded-circle me-1" style="width:8px;height:8px;background:{{ tx.category.color }}"></span>{{ tx.category.name }}
+                    {% else %}
+                        <span class="text-muted fw-normal">Sin categoría</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="bg-body-secondary rounded-3 px-3 py-2 h-100">
+                <div class="text-muted small text-uppercase">Cuenta</div>
+                <div class="fw-semibold small text-truncate">{{ tx.account.name }}</div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="bg-body-secondary rounded-3 px-3 py-2 h-100">
+                <div class="text-muted small text-uppercase">Creado por</div>
+                <div class="fw-semibold small text-truncate">{{ tx.createdBy.nickname }}</div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="bg-body-secondary rounded-3 px-3 py-2">
+                <div class="text-muted small text-uppercase">Registrado</div>
+                <div class="fw-semibold small">{{ tx.createdAt|date('d/m/Y') }} <span class="text-muted fw-normal">a las {{ tx.createdAt|date('H:i') }}</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    {% if canEdit %}
+        {# Acción destructiva aislada a la izquierda (me-auto empuja el resto a la derecha) #}
+        <form method="post" action="{{ path('transaction_delete', {id: tx.id}) }}"
+              class="me-auto"
+              data-controller="confirm"
+              data-action="submit->confirm#submit"
+              data-confirm-message-value="¿Eliminar «{{ tx.name }}»? Esta acción no se puede deshacer."
+              data-confirm-text-value="Eliminar">
+            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tx.id) }}">
+            {% if redirectUrl %}
+                <input type="hidden" name="_redirect_url" value="{{ redirectUrl }}">
+            {% endif %}
+            {# data-bs-dismiss cierra el resumen antes de que se abra la confirmación #}
+            <button type="submit" class="btn btn-outline-danger" data-bs-dismiss="modal">
+                <i class="fa-solid fa-trash me-1"></i>Eliminar
+            </button>
+        </form>
+    {% endif %}
+    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+    {% if canEdit %}
+        <a href="{{ path('transaction_edit', {id: tx.id}) }}" class="btn btn-primary">
+            <i class="fa-solid fa-pen me-1"></i>Editar
+        </a>
+    {% endif %}
+</div>

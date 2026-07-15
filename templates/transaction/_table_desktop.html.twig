@@ -54,15 +54,22 @@
 				</td>
 				<td class="small">{{ tx.date|date('d/m/Y') }}</td>
 				<td class="fw-semibold">
-					{{ tx.name }}
+					{% if tx.name|length > 20 %}
+						<span data-bs-toggle="tooltip" data-bs-title="{{ tx.name }}">{{ tx.name|slice(0,20) }}…</span>
+					{% else %}
+						{{ tx.name }}
+					{% endif %}
 					{% if tx.wasGeneratedAutomatically() %}
 						<span class="badge bg-body-secondary text-muted ms-1" style="font-size:10px">Auto</span>
 					{% endif %}
 				</td>
 				<td class="text-muted">
 					{% if tx.description %}
-						{{ tx.description|slice(0,8) }}
-						{% if tx.description|length > 8 %}…{% endif %}
+						{% if tx.description|length > 20 %}
+							<span data-bs-toggle="tooltip" data-bs-title="{{ tx.description }}">{{ tx.description|slice(0,20) }}…</span>
+						{% else %}
+							{{ tx.description }}
+						{% endif %}
 					{% else %}—{% endif %}
 				</td>
 				<td>
@@ -85,6 +92,14 @@
 				</td>
 				<td class="text-end">
 					<div class="d-inline-flex gap-2">
+						<button type="button"
+						        class="btn btn-sm btn-outline-primary py-0 px-1"
+						        data-bs-toggle="tooltip" data-bs-title="Ver detalle" aria-label="Ver detalle"
+						        data-controller="tx-summary"
+						        data-tx-summary-url-value="{{ path('transaction_summary', {id: tx.id}) }}"
+						        data-action="click->tx-summary#show">
+							<i class="fa-solid fa-eye fa-sm"></i>
+						</button>
 						<a href="{{ path('transaction_edit', {id: tx.id}) }}"
 						   class="btn btn-sm btn-outline-primary py-0 px-1"
 						   data-bs-toggle="tooltip" data-bs-title="Editar" aria-label="Editar">

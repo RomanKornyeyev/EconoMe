@@ -3,7 +3,11 @@
     <div class="bg-body-secondary rounded-3 p-3">
         <div class="d-flex justify-content-between align-items-center mb-1">
             <span class="fw-semibold small">
-                {{ tx.name }}
+                {% if tx.name|length > 20 %}
+                    <span data-bs-toggle="tooltip" data-bs-title="{{ tx.name }}" data-bs-trigger="focus" tabindex="0">{{ tx.name|slice(0,20) }}…</span>
+                {% else %}
+                    {{ tx.name }}
+                {% endif %}
                 {% if tx.wasGeneratedAutomatically() %}
                     <span class="badge bg-body text-muted ms-1" style="font-size:10px">Auto</span>
                 {% endif %}
@@ -15,6 +19,14 @@
                 <div class="dropdown">
                     <button class="btn btn-sm btn-outline-secondary text-muted text-decoration-none lh-1" data-bs-toggle="dropdown" aria-expanded="false">&#8942;</button>
                     <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <button class="dropdown-item"
+                                    data-controller="tx-summary"
+                                    data-tx-summary-url-value="{{ path('transaction_summary', {id: tx.id}) }}"
+                                    data-action="click->tx-summary#show">
+                                <i class="fa-solid fa-eye fa-sm me-2 text-muted"></i>Ver detalle
+                            </button>
+                        </li>
                         <li>
                             <a class="dropdown-item" href="{{ path('transaction_edit', {id: tx.id}) }}">
                                 <i class="fa-solid fa-pen fa-sm me-2 text-muted"></i>Editar

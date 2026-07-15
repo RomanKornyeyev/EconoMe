@@ -159,6 +159,24 @@ class TransactionController extends AbstractController
         ]);
     }
 
+    #[Route('/{id}/summary', name: 'summary', methods: ['GET'], requirements: ['id' => '\d+'])]
+    public function summary(Transaction $transaction, Request $request): Response
+    {
+        $this->denyAccessUnlessGranted('ACCOUNT_VIEW', $transaction->getAccount());
+
+        // URL a la que volver tras eliminar desde el modal (conserva filtros/página)
+        $redirect = (string) $request->query->get('redirect', '');
+        if (!str_starts_with($redirect, '/')) {
+            $redirect = null;
+        }
+
+        return $this->render('transaction/_summary.html.twig', [
+            'tx' => $transaction,
+            'canEdit' => $this->isGranted('ACCOUNT_EDIT', $transaction->getAccount()),
+            'redirectUrl' => $redirect,
+        ]);
+    }
+
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function delete(Transaction $transaction, Request $request): Response
     {

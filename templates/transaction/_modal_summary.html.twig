@@ -1,0 +1,16 @@
+{#
+  Modal contenedor del resumen de movimiento. El contenido (modal-body +
+  modal-footer) lo inyecta tx_summary_controller.js desde transaction_summary,
+  de modo que los botones del footer los decide el servidor según permisos.
+#}
+<div class="modal fade" id="txSummaryModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-body-tertiary">
+            <div class="modal-header">
+                <h5 class="modal-title">Resumen del movimiento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div data-tx-summary-content></div>
+        </div>
+    </div>
+</div>

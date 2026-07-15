@@ -5,6 +5,7 @@ import ColorPickerController     from './controllers/color_picker_controller.js'
 import ConfirmController         from './controllers/confirm_controller.js';
 import FriendshipController      from './controllers/friendship_controller.js';
 import TourController            from './controllers/tour_controller.js';
+import TxSummaryController       from './controllers/tx_summary_controller.js';
 import UserSearchController      from './controllers/user_search_controller.js';
 
 const app = startStimulusApp();
@@ -14,4 +15,5 @@ app.register('color-picker',  ColorPickerController);
 app.register('confirm',       ConfirmController);
 app.register('friendship',    FriendshipController);
 app.register('tour',          TourController);
+app.register('tx-summary',    TxSummaryController);
 app.register('user-search',   UserSearchController);
