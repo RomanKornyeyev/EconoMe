@@ -105,12 +105,18 @@ class SecurityController extends AbstractController
             throw $this->createNotFoundException('Token inválido.');
         }
 
+        // Con el usuario anónimo, AccessDeniedException dispara el entry point del firewall
+        // (redirección silenciosa a login), así que usamos flash + redirect en su lugar
         if ($token->isExpired()) {
-            throw $this->createAccessDeniedException('El token ha expirado.');
+            // throw $this->createAccessDeniedException('El token ha expirado.');
+            $this->addFlash('danger', 'El token ha expirado. Solicita un nuevo email de confirmación.');
+            return $this->redirectToRoute('app_resend_confirmation');
         }
 
         if ($token->isUsed()) {
-            throw $this->createAccessDeniedException('El token ya fue utilizado.');
+            // throw $this->createAccessDeniedException('El token ya fue utilizado.');
+            $this->addFlash('danger', 'El token ya fue utilizado. Si tu cuenta está confirmada, puedes iniciar sesión.');
+            return $this->redirectToRoute('app_login');
         }
 
         // Marcar el usuario como verificado
