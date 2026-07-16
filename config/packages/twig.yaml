@@ -2,6 +2,7 @@ twig:
     file_name_pattern: '*.twig'
     globals:
         app_name: '%app.name%'
+        app_version: '%app.version%'
     form_themes:
         - 'bootstrap_5_layout.html.twig'  # Mantiene el estilo general
         - 'form/bootstrap_5_floating.html.twig'  # Sobrescribe solo lo necesario

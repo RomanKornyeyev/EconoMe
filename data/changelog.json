@@ -1,0 +1,24 @@
+[
+    {
+        "version": "v1.0.0",
+        "date": "2026-07-13",
+        "title": "Primera versión estable",
+        "changes": [
+            { "type": "feat", "text": "Lanzamiento inicial: cuentas, movimientos, categorías y movimientos recurrentes." },
+            { "type": "feat", "text": "Dashboard con resumen y gráficas." },
+            { "type": "feat", "text": "Sistema de amistades y perfil de usuario." },
+            { "type": "improvement", "text": "Mejora de los colores base de las categorías." },
+            { "type": "fix", "text": "Corregido un bug con las fechas en los movimientos." }
+        ]
+    },
+    {
+        "version": "v1.0.1",
+        "date": "2026-07-15",
+        "title": "Mejoras de usabilidad y errores amigables",
+        "changes": [
+            { "type": "improvement", "text": "Grandes mejoras en la tabla de movimientos y nuevo botón de ver detalle." },
+            { "type": "improvement", "text": "Mensajes más amigables cuando la sesión expira." },
+            { "type": "feat", "text": "Páginas de error personalizadas (403, 404, 500...)." }
+        ]
+    }
+]

@@ -2,7 +2,8 @@
   <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 mt-4 border-top">
     <p class="col-md-4 mb-0 text-body-secondary">&copy;
       {{ 'now' | date('Y') }}
-      {{ app_name }}</p>
+      {{ app_name }}
+      <a href="{{ path('app_changelog') }}" class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle ms-1 text-decoration-none" title="Ver novedades">{{ app_version }}</a></p>
 
     <a href="{{ path('app_index') }}" class="col-md-4 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
       {{ app_name }}

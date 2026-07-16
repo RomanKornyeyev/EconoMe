@@ -1,0 +1,82 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Novedades{% endblock %}
+
+{% block stylesheets %}
+	<style>
+		.timeline {
+			position: relative;
+			padding-left: 2.5rem;
+		}
+		.timeline::before {
+			content: '';
+			position: absolute;
+			left: 0.5rem;
+			top: 0.5rem;
+			bottom: 0;
+			width: 2px;
+			background: var(--bs-border-color);
+		}
+		.timeline-item {
+			position: relative;
+			padding-bottom: 2.5rem;
+		}
+		.timeline-item:last-child {
+			padding-bottom: 0;
+		}
+		.timeline-item::before {
+			content: '';
+			position: absolute;
+			left: -2.5rem;
+			top: 0.35rem;
+			width: 1.125rem;
+			height: 1.125rem;
+			border-radius: 50%;
+			background: var(--bs-primary);
+			border: 0.25rem solid var(--bs-body-bg);
+		}
+	</style>
+{% endblock %}
+
+{% block content %}
+	{% set type_badges = {
+		'feat':        { label: 'Nuevo',   class: 'text-bg-success' },
+		'improvement': { label: 'Mejora',  class: 'text-bg-info' },
+		'fix':         { label: 'Arreglo', class: 'text-bg-warning' }
+	} %}
+
+	<div class="row justify-content-center">
+		<div class="col-lg-8">
+			<h1 class="mb-1">Novedades</h1>
+			<p class="text-body-secondary mb-5">Historial de versiones de {{ app_name }}.</p>
+
+			<div class="timeline">
+				{% for release in releases %}
+					<div class="timeline-item">
+						<div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+							<span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">{{ release.version }}</span>
+							{% if loop.first %}
+								<span class="badge rounded-pill text-bg-primary">Actual</span>
+							{% endif %}
+							<small class="text-body-secondary">{{ release.date | date('d/m/Y') }}</small>
+						</div>
+
+						<h2 class="h5 mb-3">{{ release.title }}</h2>
+
+						<ul class="list-unstyled d-flex flex-column gap-2 mb-0">
+							{% for change in release.changes %}
+								{% set badge = type_badges[change.type] ?? { label: change.type, class: 'text-bg-secondary' } %}
+								<li class="d-flex align-items-start gap-2">
+									<span class="badge {{ badge.class }} flex-shrink-0" style="min-width: 4.5rem;">{{ badge.label }}</span>
+									<span>{{ change.text }}</span>
+								</li>
+							{% endfor %}
+						</ul>
+					</div>
+				{% else %}
+					<p class="text-body-secondary">Todavía no hay versiones publicadas.</p>
+				{% endfor %}
+			</div>
+		</div>
+	</div>
+{% endblock %}
