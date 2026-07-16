@@ -39,6 +39,11 @@ body {
     border-style: dashed;
 }
 
+/* Destino del ancla de paginación: deja hueco para el navbar sticky */
+#table_transactions {
+    scroll-margin-top: 90px;
+}
+
 /* ── Tour de onboarding (driver.js) ───────────────────────────────────────── */
 /* Adapta el popover al tema activo (light/dark) usando variables de Bootstrap.
    La clase .econome-tour la añade tour_controller.js vía popoverClass y da la

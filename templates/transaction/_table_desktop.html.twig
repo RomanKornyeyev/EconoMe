@@ -6,7 +6,7 @@
 	{% set newDir = (active and sd == 'asc') ? 'desc' : 'asc' %}
 	{% set icon = active ? (sd == 'asc' ? '<i class="fa-solid fa-sort-up fa-xs ms-1"></i>' : '<i class="fa-solid fa-sort-down fa-xs ms-1"></i>') : '<i class="fa-solid fa-sort fa-xs ms-1 opacity-25"></i>' %}
 	<th class="text-muted small text-uppercase fw-normal {{ extraClass }}">
-		<a href="?{{ q|merge({'sortBy': field, 'sortDir': newDir, 'page': 1})|url_encode }}" class="text-reset text-decoration-none text-nowrap">{{ label }}{{ icon|raw }}</a>
+		<a href="?{{ q|merge({'sortBy': field, 'sortDir': newDir, 'page': 1})|url_encode }}#table_transactions" class="text-reset text-decoration-none text-nowrap">{{ label }}{{ icon|raw }}</a>
 	</th>
 {% endmacro %}
 
