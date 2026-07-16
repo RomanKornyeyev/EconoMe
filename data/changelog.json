@@ -1,5 +1,26 @@
 [
     {
+        "version": "v1.0.2",
+        "date": "2026-07-16",
+        "title": "Filtros mejorados y página de novedades",
+        "changes": [
+            { "type": "feat", "text": "Nueva página de novedades con el historial de versiones." },
+            { "type": "improvement", "text": "Filtros de movimientos mejorados: nombre y descripción fusionados. Fechas unificadas en rango." },
+            { "type": "improvement", "text": "Mejor navegación en la tabla de movimientos (paginación y ordenación)." },
+            { "type": "improvement", "text": "Versiones de librerías fijadas para mayor estabilidad." }
+        ]
+    },
+    {
+        "version": "v1.0.1",
+        "date": "2026-07-15",
+        "title": "Mejoras de usabilidad y errores amigables",
+        "changes": [
+            { "type": "improvement", "text": "Grandes mejoras en la tabla de movimientos y nuevo botón de ver detalle." },
+            { "type": "improvement", "text": "Mensajes más amigables cuando la sesión expira y los enlaces de confirmación no son válidos." },
+            { "type": "feat", "text": "Páginas de error personalizadas (403, 404, 500...)." }            
+        ]
+    },
+    {
         "version": "v1.0.0",
         "date": "2026-07-13",
         "title": "Primera versión estable",
@@ -9,16 +30,6 @@
             { "type": "feat", "text": "Sistema de amistades y perfil de usuario." },
             { "type": "improvement", "text": "Mejora de los colores base de las categorías." },
             { "type": "fix", "text": "Corregido un bug con las fechas en los movimientos." }
-        ]
-    },
-    {
-        "version": "v1.0.1",
-        "date": "2026-07-15",
-        "title": "Mejoras de usabilidad y errores amigables",
-        "changes": [
-            { "type": "improvement", "text": "Grandes mejoras en la tabla de movimientos y nuevo botón de ver detalle." },
-            { "type": "improvement", "text": "Mensajes más amigables cuando la sesión expira." },
-            { "type": "feat", "text": "Páginas de error personalizadas (403, 404, 500...)." }
         ]
     }
 ]

@@ -20,6 +20,16 @@ final class ChangelogController extends AbstractController
             ltrim($a['version'], 'v')
         ));
 
+        // Dentro de cada versión: primero lo nuevo, luego mejoras, luego arreglos
+        $typeOrder = ['feat' => 0, 'improvement' => 1, 'fix' => 2];
+        foreach ($releases as &$release) {
+            usort(
+                $release['changes'],
+                fn (array $a, array $b) => ($typeOrder[$a['type']] ?? 99) <=> ($typeOrder[$b['type']] ?? 99)
+            );
+        }
+        unset($release);
+
         return $this->render('changelog/index.html.twig', [
             'releases' => $releases,
         ]);
