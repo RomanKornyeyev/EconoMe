@@ -155,7 +155,6 @@ class TransactionRepository extends ServiceEntityRepository
         ?int $categoryId = null,
         bool $noCategory = false,
         ?string $search = null,
-        ?string $desc = null,
         string $sortField = 'date',
         string $sortDir = 'desc',
         ?float $amountFrom = null,
@@ -195,13 +194,9 @@ class TransactionRepository extends ServiceEntityRepository
         }
 
         if ($search !== null) {
-            $qb->andWhere('LOWER(t.name) LIKE LOWER(:search)')
+            // Paréntesis obligatorios: andWhere une con AND, que liga más fuerte que OR
+            $qb->andWhere('(LOWER(t.name) LIKE LOWER(:search) OR LOWER(t.description) LIKE LOWER(:search))')
                ->setParameter('search', '%' . $search . '%');
-        }
-
-        if ($desc !== null) {
-            $qb->andWhere('LOWER(t.description) LIKE LOWER(:desc)')
-               ->setParameter('desc', '%' . $desc . '%');
         }
 
         if ($amountFrom !== null || $amountTo !== null) {

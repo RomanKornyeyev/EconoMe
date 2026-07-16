@@ -60,7 +60,6 @@ class TransactionController extends AbstractController
         $noCategory = ($categoryRaw === '-1');
         $categoryId = (!$noCategory && $categoryRaw !== '') ? (int) $categoryRaw : null;
         $search = trim($request->query->get('search', '')) ?: null;
-        $desc   = trim($request->query->get('desc', '')) ?: null;
 
         $amountFrom = null;
         $amountTo   = null;
@@ -79,7 +78,7 @@ class TransactionController extends AbstractController
         }
 
         $query = $this->transactionRepo->findByFiltersQuery(
-            $account, $dateFrom, $dateTo, $type, $categoryId, $noCategory, $search, $desc, $sortField, $sortDir, $amountFrom, $amountTo
+            $account, $dateFrom, $dateTo, $type, $categoryId, $noCategory, $search, $sortField, $sortDir, $amountFrom, $amountTo
         );
 
         $pagination = $paginator->paginate(
@@ -100,7 +99,6 @@ class TransactionController extends AbstractController
             'currentType'     => $type,
             'currentCategory' => $noCategory ? -1 : $categoryId,
             'currentSearch'      => $search,
-            'currentDesc'        => $desc,
             'currentAmountFrom'  => $amountFrom,
             'currentAmountTo'    => $amountTo,
             'sortField'          => $sortField,

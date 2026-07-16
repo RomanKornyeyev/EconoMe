@@ -94,7 +94,7 @@ class DashboardController extends AbstractController
         }
 
         $pagination = $paginator->paginate(
-            $transactionRepo->findByFiltersQuery($account, $from, $to, null, null, false, null, null, $sortField, $sortDir),
+            $transactionRepo->findByFiltersQuery($account, $from, $to, null, null, false, null, $sortField, $sortDir),
             $request->query->getInt('page', 1),
             10
         );

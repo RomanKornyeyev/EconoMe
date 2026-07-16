@@ -145,8 +145,10 @@ span.flatpickr-weekday { background: var(--bs-secondary-bg); color: var(--bs-sec
 .flatpickr-day.today:hover { background: var(--bs-primary); border-color: var(--bs-primary); color: #fff; }
 .flatpickr-day.selected,
 .flatpickr-day.selected:hover { background: var(--bs-primary); border-color: var(--bs-primary); color: #fff; }
+/* Atenuados solo con color de texto: opacity haría translúcido también el
+   fondo/conector cuando forman parte de un rango, oscureciendo el solape. */
 .flatpickr-day.prevMonthDay,
-.flatpickr-day.nextMonthDay   { color: var(--bs-secondary-color); opacity: .5; }
+.flatpickr-day.nextMonthDay   { color: var(--bs-tertiary-color); }
 
 /* Spinners numéricos (año) */
 .numInputWrapper:hover { background: var(--bs-tertiary-bg); }

@@ -84,3 +84,162 @@ body {
 .econome-tour .driver-popover-navigation-btns button:disabled {
     opacity: .5;
 }
+
+/* ── Flatpickr adaptado al tema activo (variables Bootstrap) ──────────────── */
+/* El CSS de flatpickr trae colores claros fijos; aquí se sustituyen por
+   variables de Bootstrap para que el calendario respete el modo claro/oscuro. */
+.flatpickr-calendar {
+    /* Tono atenuado (sólido, sin alpha) para la selección en días de meses
+       adyacentes. Sólido a propósito: con transparencia, los solapes del
+       conector de rango se oscurecerían. */
+    --fp-selected: color-mix(in srgb, var(--bs-primary) 72%, #fff);
+
+    background: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    border: 1px solid var(--bs-border-color);
+    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .175);
+}
+
+/* Flecha del popover */
+.flatpickr-calendar.arrowTop:before    { border-bottom-color: var(--bs-border-color); }
+.flatpickr-calendar.arrowTop:after     { border-bottom-color: var(--bs-body-bg); }
+.flatpickr-calendar.arrowBottom:before { border-top-color: var(--bs-border-color); }
+.flatpickr-calendar.arrowBottom:after  { border-top-color: var(--bs-body-bg); }
+
+/* Cabecera: mes, año y flechas de navegación */
+.flatpickr-months .flatpickr-month,
+.flatpickr-current-month input.cur-year,
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+    color: var(--bs-body-color);
+    fill: var(--bs-body-color);
+}
+/* El select del mes va transparente (como flatpickr); solo las opciones
+   desplegadas necesitan fondo propio */
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+    background: transparent;
+}
+.flatpickr-current-month .flatpickr-monthDropdown-months:hover {
+    background: var(--bs-secondary-bg);
+}
+.flatpickr-current-month .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month {
+    background: var(--bs-body-bg);
+    color: var(--bs-body-color);
+}
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month {
+    color: var(--bs-secondary-color);
+    fill: var(--bs-secondary-color);
+}
+.flatpickr-months .flatpickr-prev-month:hover svg,
+.flatpickr-months .flatpickr-next-month:hover svg {
+    fill: var(--bs-primary);
+}
+
+span.flatpickr-weekday { color: var(--bs-secondary-color); }
+
+/* Días */
+.flatpickr-day { color: var(--bs-body-color); }
+.flatpickr-day.flatpickr-disabled,
+.flatpickr-day.flatpickr-disabled:hover,
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay {
+    color: var(--bs-tertiary-color);
+}
+.flatpickr-day:hover,
+.flatpickr-day:focus,
+.flatpickr-day.prevMonthDay:hover,
+.flatpickr-day.nextMonthDay:hover {
+    background: var(--bs-secondary-bg);
+    border-color: var(--bs-secondary-bg);
+    color: var(--bs-body-color);
+}
+.flatpickr-day.today { border-color: var(--bs-primary); }
+
+/* Selección y extremos del rango (incluye días de meses adyacentes, cuyos
+   selectores originales de flatpickr son más específicos) */
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange,
+.flatpickr-day.selected:hover,
+.flatpickr-day.startRange:hover,
+.flatpickr-day.endRange:hover,
+.flatpickr-day.selected:focus,
+.flatpickr-day.startRange:focus,
+.flatpickr-day.endRange:focus {
+    background: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: #fff;
+}
+
+/* En días de meses adyacentes la selección va en el tono atenuado */
+.flatpickr-day.selected.prevMonthDay,
+.flatpickr-day.startRange.prevMonthDay,
+.flatpickr-day.endRange.prevMonthDay,
+.flatpickr-day.selected.nextMonthDay,
+.flatpickr-day.startRange.nextMonthDay,
+.flatpickr-day.endRange.nextMonthDay {
+    background: var(--fp-selected);
+    border-color: var(--fp-selected);
+    color: #fff;
+}
+
+/* Días intermedios del rango (flatpickr rellena huecos con box-shadow).
+   Los combos con prevMonthDay/nextMonthDay/today son necesarios para ganar
+   en especificidad a las reglas originales. */
+.flatpickr-day.inRange,
+.flatpickr-day.prevMonthDay.inRange,
+.flatpickr-day.nextMonthDay.inRange,
+.flatpickr-day.today.inRange,
+.flatpickr-day.prevMonthDay.today.inRange,
+.flatpickr-day.nextMonthDay.today.inRange {
+    background: var(--bs-secondary-bg);
+    border-color: var(--bs-secondary-bg);
+    box-shadow: -5px 0 0 var(--bs-secondary-bg), 5px 0 0 var(--bs-secondary-bg);
+    color: var(--bs-body-color);
+}
+.flatpickr-day.prevMonthDay.inRange,
+.flatpickr-day.nextMonthDay.inRange {
+    color: var(--bs-tertiary-color);
+}
+/* Extremos del rango en media píldora (lado interior plano), reforzando los
+   días de meses adyacentes para que ninguna regla original gane por
+   especificidad y deje el círculo completo (causa de la costura). */
+.flatpickr-day.selected.startRange,
+.flatpickr-day.startRange.startRange,
+.flatpickr-day.endRange.startRange,
+.flatpickr-day.startRange.prevMonthDay,
+.flatpickr-day.startRange.nextMonthDay {
+    border-radius: 50px 0 0 50px;
+}
+.flatpickr-day.selected.endRange,
+.flatpickr-day.startRange.endRange,
+.flatpickr-day.endRange.endRange,
+.flatpickr-day.endRange.prevMonthDay,
+.flatpickr-day.endRange.nextMonthDay {
+    border-radius: 0 50px 50px 0;
+}
+/* Día único (inicio = fin): círculo completo */
+.flatpickr-day.selected.startRange.endRange,
+.flatpickr-day.startRange.startRange.endRange,
+.flatpickr-day.endRange.startRange.endRange {
+    border-radius: 50px;
+}
+
+/* Conector entre dos extremos contiguos: mismo color exacto que los extremos,
+   de modo que el solape (que existe por diseño de flatpickr) sea invisible. */
+.flatpickr-day.selected.startRange + .endRange:not(:nth-child(7n+1)),
+.flatpickr-day.startRange.startRange + .endRange:not(:nth-child(7n+1)),
+.flatpickr-day.endRange.startRange + .endRange:not(:nth-child(7n+1)) {
+    box-shadow: -10px 0 0 var(--bs-primary);
+}
+/* El conector se dibuja solapado sobre el día de inicio: si ese día es de un
+   mes adyacente, debe llevar su mismo tono atenuado para no crear costura. */
+.flatpickr-day.startRange.prevMonthDay + .endRange:not(:nth-child(7n+1)),
+.flatpickr-day.startRange.nextMonthDay + .endRange:not(:nth-child(7n+1)) {
+    box-shadow: -10px 0 0 var(--fp-selected);
+}
+
+/* Flechas del input numérico del año */
+.numInputWrapper span.arrowUp:after   { border-bottom-color: var(--bs-secondary-color); }
+.numInputWrapper span.arrowDown:after { border-top-color: var(--bs-secondary-color); }
+.numInputWrapper:hover { background: transparent; }

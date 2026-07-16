@@ -55,29 +55,19 @@
 
             {# Fila 1: dropdowns #}
             <div class="row mb-2">
-                <div class="col-12 col-md-3">
-                    <label class="form-label small mb-1">Nombre</label>
+                <div class="col-12 col-md-9">
+                    <label class="form-label small mb-1">Nombre o descripción</label>
                     <input type="text" name="search" class="form-control form-control-sm"
-                           placeholder="Buscar por nombre…" value="{{ currentSearch ?? '' }}">
-                </div>
-                <div class="col-12 col-md-3">
-                    <label class="form-label small mb-1">Descripción</label>
-                    <input type="text" name="desc" class="form-control form-control-sm"
-                           placeholder="Buscar por descripción…" value="{{ currentDesc ?? '' }}">
+                           placeholder="Buscar por nombre o descripción…" value="{{ currentSearch ?? '' }}">
                 </div>
 
-                {# Desde #}
+                {# Rango de fechas: un solo campo visible; los hidden alimentan al backend #}
                 <div class="col-md-3">
-                    <label class="form-label small mb-1">Desde</label>
-                    <input type="text" name="date_from" class="form-control form-control-sm flatpickr-filter"
-                           value="{{ dateFrom ? dateFrom|date('Y-m-d') : '' }}" placeholder="dd/mm/aaaa" autocomplete="off">
-                </div>
-
-                {# Hasta #}
-                <div class="col-md-3">
-                    <label class="form-label small mb-1">Hasta</label>
-                    <input type="text" name="date_to" class="form-control form-control-sm flatpickr-filter"
-                           value="{{ dateTo ? dateTo|date('Y-m-d') : '' }}" placeholder="dd/mm/aaaa" autocomplete="off">
+                    <label class="form-label small mb-1">Fechas</label>
+                    <input type="text" id="f-daterange" class="form-control form-control-sm"
+                           placeholder="Selecciona un rango…" autocomplete="off">
+                    <input type="hidden" name="date_from" id="f-date-from" value="{{ dateFrom ? dateFrom|date('Y-m-d') : '' }}">
+                    <input type="hidden" name="date_to" id="f-date-to" value="{{ dateTo ? dateTo|date('Y-m-d') : '' }}">
                 </div>
             </div>
 
@@ -121,7 +111,7 @@
 
             {# Fila 3: acciones #}
             <div class="d-flex justify-content-end gap-3">
-                <a href="{{ path('transaction_index', {account: currentAccount.id}) }}" class="btn btn-sm btn-outline-secondary">
+                <a href="{{ path('transaction_index', {account: currentAccount.id}) }}" class="btn btn-sm btn-outline-primary">
                     <i class="fa-solid fa-eraser"></i>Limpiar
                 </a>
                 <button type="submit" class="btn btn-sm btn-primary px-4">
@@ -153,16 +143,49 @@
 
     filterCats(document.getElementById('f-type').value);
 
-    // Flatpickr para los campos de fecha del filtro
-    document.querySelectorAll('.flatpickr-filter').forEach(function (el) {
-        flatpickr(el, {
-            locale: 'es',
-            dateFormat: 'Y-m-d',
-            altInput: true,
-            altFormat: 'd/m/Y',
-            altInputClass: 'form-control form-control-sm',
-            allowInput: true,
-        });
+    // Flatpickr en modo rango: un campo visible, dos hidden (date_from/date_to)
+    const hiddenFrom = document.getElementById('f-date-from');
+    const hiddenTo = document.getElementById('f-date-to');
+
+    function syncHidden(dates, dateStr, fp) {
+        hiddenFrom.value = dates[0] ? fp.formatDate(dates[0], 'Y-m-d') : '';
+        // Con un solo día seleccionado, filtramos exactamente ese día
+        hiddenTo.value = dates[1] ? fp.formatDate(dates[1], 'Y-m-d')
+                       : (dates[0] ? fp.formatDate(dates[0], 'Y-m-d') : '');
+    }
+
+    // Si inicio y fin coinciden, muestra la fecha una sola vez (en vez de "X a X")
+    function tidyDisplay(fp) {
+        const d = fp.selectedDates;
+        if (d.length === 2 && d[0].getTime() === d[1].getTime()) {
+            fp.altInput.value = fp.formatDate(d[0], 'd/m/Y');
+        }
+    }
+
+    flatpickr('#f-daterange', {
+        mode: 'range',
+        locale: 'es',
+        dateFormat: 'Y-m-d',
+        altInput: true,
+        altFormat: 'd/m/Y',
+        altInputClass: 'form-control form-control-sm',
+        defaultDate: [
+            {% if dateFrom %}'{{ dateFrom|date('Y-m-d') }}',{% endif %}
+            {% if dateTo %}'{{ dateTo|date('Y-m-d') }}',{% endif %}
+        ],
+        onChange: syncHidden,
+        onClose: function (dates, dateStr, fp) {
+            // Rango a medias (1 sola fecha): consolidarlo como día único
+            // también a nivel visual, no solo en los hidden
+            if (dates.length === 1) {
+                fp.setDate([dates[0], dates[0]], false);
+            }
+            syncHidden(fp.selectedDates, dateStr, fp);
+            tidyDisplay(fp);
+        },
+        onReady: function (dates, dateStr, fp) {
+            tidyDisplay(fp);
+        },
     });
 })();
 </script>
