@@ -1,3 +1,4 @@
+{% set canEdit = canEdit ?? is_granted('ACCOUNT_EDIT', currentAccount) %}
 <div class="p-3 d-flex flex-column gap-2">
     {% for tx in transactions %}
     <div class="bg-body-secondary rounded-3 p-3">
@@ -27,6 +28,7 @@
                                 <i class="fa-solid fa-eye fa-sm me-2 text-muted"></i>Ver detalle
                             </button>
                         </li>
+                        {% if canEdit %}
                         <li>
                             <a class="dropdown-item" href="{{ path('transaction_edit', {id: tx.id}) }}">
                                 <i class="fa-solid fa-pen fa-sm me-2 text-muted"></i>Editar
@@ -41,6 +43,7 @@
                                 <i class="fa-solid fa-trash fa-sm me-2"></i>Eliminar
                             </button>
                         </li>
+                        {% endif %}
                     </ul>
                 </div>
             </div>

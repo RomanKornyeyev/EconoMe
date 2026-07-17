@@ -3,6 +3,7 @@
     Debe incluirse dentro del card-header de cada vista que use bulk-select.
     El controller (data-controller="bulk-select") vive en el wrapper padre.
 #}
+{% if canEdit ?? is_granted('ACCOUNT_EDIT', currentAccount) %}
 <div data-bulk-select-target="bulkBar"
      class="d-none align-items-center justify-content-between w-100">
     <span class="text-muted small">
@@ -18,3 +19,4 @@
                 data-action="bulk-select#clearAll">Cancelar</button>
     </div>
 </div>
+{% endif %}

@@ -1,4 +1,5 @@
 {% set freqMap = {daily: 'Diario', weekly: 'Semanal', monthly: 'Mensual', yearly: 'Anual'} %}
+{% set canEdit = canEdit ?? is_granted('ACCOUNT_EDIT', currentAccount) %}
 <table class="table table-hover align-middle mb-0">
 	<thead style="--bs-table-bg: var(--bs-tertiary-bg);">
 		<tr>
@@ -11,7 +12,7 @@
 			<th class="text-muted small text-uppercase fw-normal">Fin</th>
 			<th class="text-muted small text-uppercase fw-normal">Categoría</th>
 			<th class="text-muted small text-uppercase fw-normal">Estado</th>
-			<th class="text-muted small text-uppercase fw-normal text-end">Acciones</th>
+			{% if canEdit %}<th class="text-muted small text-uppercase fw-normal text-end">Acciones</th>{% endif %}
 		</tr>
 	</thead>
 	<tbody>
@@ -58,6 +59,7 @@
 						<span class="badge bg-secondary-subtle text-secondary">Inactiva</span>
 					{% endif %}
 				</td>
+				{% if canEdit %}
 				<td class="text-end">
 					<div class="d-inline-flex align-items-center gap-2">
 						<div class="d-inline">
@@ -96,10 +98,11 @@
 						</form>
 					</div>
 				</td>
+				{% endif %}
 			</tr>
 		{% else %}
 			<tr>
-				<td colspan="10" class="text-center text-muted py-4">No hay transacciones recurrentes.</td>
+				<td colspan="{{ canEdit ? 10 : 9 }}" class="text-center text-muted py-4">No hay transacciones recurrentes.</td>
 			</tr>
 		{% endfor %}
 	</tbody>

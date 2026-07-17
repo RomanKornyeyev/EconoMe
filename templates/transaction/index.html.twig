@@ -5,6 +5,7 @@
 {% block content %}
 {% import 'partials/macros/_tour.html.twig' as tour %}
 {% set q = app.request.query.all %}
+{% set canEdit = is_granted('ACCOUNT_EDIT', currentAccount) %}
 
 <div {{ tour.attrs('transactions') }}>
 
@@ -32,12 +33,14 @@
            data-tour-text="Automatiza los gastos e ingresos periódicos (nómina, alquiler, suscripciones…) para no tener que registrarlos a mano.">
             <i class="fa-solid fa-rotate me-1"></i>Movimientos recurrentes
         </a>
+        {% if canEdit %}
         <a href="{{ path('transaction_create', {account: currentAccount.id}) }}" class="btn btn-primary btn-sm"
            data-tour-step="5"
            data-tour-title="Nuevo movimiento"
            data-tour-text="Registra aquí tus gastos e ingresos.">
             <i class="fa-solid fa-plus me-1"></i>Nuevo movimiento
         </a>
+        {% endif %}
         {{ tour.help_button() }}
     </div>
 </div>

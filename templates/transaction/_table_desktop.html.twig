@@ -1,6 +1,7 @@
 {% set q = app.request.query.all %}
 {% set sf = sortField ?? app.request.query.get('sortBy', 'date') %}
 {% set sd = sortDir ?? app.request.query.get('sortDir', 'desc') %}
+{% set canEdit = canEdit ?? is_granted('ACCOUNT_EDIT', currentAccount) %}
 {% macro sortHeader(q, field, label, sf, sd, extraClass) %}
 	{% set active = (sf == field) %}
 	{% set newDir = (active and sd == 'asc') ? 'desc' : 'asc' %}
@@ -10,29 +11,33 @@
 	</th>
 {% endmacro %}
 
-{# Form bulk delete: fuera de la tabla para evitar anidamiento. Checkboxes se asocian via form="bulkForm". #}
-<form id="bulkForm" data-bulk-select-target="bulkForm"
-      method="post" action="{{ path('transaction_bulk_delete') }}">
-	<input type="hidden" name="_token" value="{{ csrf_token('bulk_delete') }}">
-	<input type="hidden" name="_redirect_url" value="{{ app.request.requestUri }}">
-</form>
+{% if canEdit %}
+	{# Form bulk delete: fuera de la tabla para evitar anidamiento. Checkboxes se asocian via form="bulkForm". #}
+	<form id="bulkForm" data-bulk-select-target="bulkForm"
+	      method="post" action="{{ path('transaction_bulk_delete') }}">
+		<input type="hidden" name="_token" value="{{ csrf_token('bulk_delete') }}">
+		<input type="hidden" name="_redirect_url" value="{{ app.request.requestUri }}">
+	</form>
 
-{# Form single delete: action y token se inyectan dinámicamente desde el controller. #}
-<form data-bulk-select-target="singleDeleteForm" method="post">
-	<input type="hidden" name="_token" data-bulk-select-target="singleDeleteToken">
-	<input type="hidden" name="_redirect_url" value="{{ app.request.requestUri }}">
-</form>
+	{# Form single delete: action y token se inyectan dinámicamente desde el controller. #}
+	<form data-bulk-select-target="singleDeleteForm" method="post">
+		<input type="hidden" name="_token" data-bulk-select-target="singleDeleteToken">
+		<input type="hidden" name="_redirect_url" value="{{ app.request.requestUri }}">
+	</form>
+{% endif %}
 
 <table class="table table-hover align-middle mb-0">
 	<thead style="--bs-table-bg: var(--bs-tertiary-bg);">
 		<tr>
-			<th style="width:2.5rem">
-				<input type="checkbox"
-				       class="form-check-input"
-				       title="Seleccionar todo"
-				       data-bulk-select-target="selectAll"
-				       data-action="change->bulk-select#toggleAll">
-			</th>
+			{% if canEdit %}
+				<th style="width:2.5rem">
+					<input type="checkbox"
+					       class="form-check-input"
+					       title="Seleccionar todo"
+					       data-bulk-select-target="selectAll"
+					       data-action="change->bulk-select#toggleAll">
+				</th>
+			{% endif %}
 			{{ _self.sortHeader(q, 'date',     'Fecha',     sf, sd, '') }}
 			{{ _self.sortHeader(q, 'name',     'Nombre',    sf, sd, '') }}
 			<th class="text-muted small text-uppercase fw-normal">Descripción</th>
@@ -45,13 +50,15 @@
 	<tbody>
 		{% for tx in transactions %}
 			<tr>
-				<td>
-					<input type="checkbox" name="ids[]" value="{{ tx.id }}"
-					       class="form-check-input"
-					       form="bulkForm"
-					       data-bulk-select-target="checkbox"
-					       data-action="change->bulk-select#toggle">
-				</td>
+				{% if canEdit %}
+					<td>
+						<input type="checkbox" name="ids[]" value="{{ tx.id }}"
+						       class="form-check-input"
+						       form="bulkForm"
+						       data-bulk-select-target="checkbox"
+						       data-action="change->bulk-select#toggle">
+					</td>
+				{% endif %}
 				<td class="small">{{ tx.date|date('d/m/Y') }}</td>
 				<td class="fw-semibold">
 					{% if tx.name|length > 20 %}
@@ -100,31 +107,34 @@
 						        data-action="click->tx-summary#show">
 							<i class="fa-solid fa-eye fa-sm"></i>
 						</button>
-						<a href="{{ path('transaction_edit', {id: tx.id}) }}"
-						   class="btn btn-sm btn-outline-primary py-0 px-1"
-						   data-bs-toggle="tooltip" data-bs-title="Editar" aria-label="Editar">
-							<i class="fa-solid fa-pen fa-sm"></i>
-						</a>
-						<button type="button"
-						        class="btn btn-sm btn-outline-danger py-0 px-1"
-						        data-bs-toggle="tooltip" data-bs-title="Eliminar" aria-label="Eliminar"
-						        data-action="click->bulk-select#confirmSingleDelete"
-						        data-url="{{ path('transaction_delete', {id: tx.id}) }}"
-						        data-token="{{ csrf_token('delete' ~ tx.id) }}"
-						        data-name="{{ tx.name }}">
-							<i class="fa-solid fa-trash fa-sm"></i>
-						</button>
+						{% if canEdit %}
+							<a href="{{ path('transaction_edit', {id: tx.id}) }}"
+							   class="btn btn-sm btn-outline-primary py-0 px-1"
+							   data-bs-toggle="tooltip" data-bs-title="Editar" aria-label="Editar">
+								<i class="fa-solid fa-pen fa-sm"></i>
+							</a>
+							<button type="button"
+							        class="btn btn-sm btn-outline-danger py-0 px-1"
+							        data-bs-toggle="tooltip" data-bs-title="Eliminar" aria-label="Eliminar"
+							        data-action="click->bulk-select#confirmSingleDelete"
+							        data-url="{{ path('transaction_delete', {id: tx.id}) }}"
+							        data-token="{{ csrf_token('delete' ~ tx.id) }}"
+							        data-name="{{ tx.name }}">
+								<i class="fa-solid fa-trash fa-sm"></i>
+							</button>
+						{% endif %}
 					</div>
 				</td>
 			</tr>
 		{% else %}
 			<tr>
-				<td colspan="8" class="text-center text-muted py-4">No hay movimientos para este periodo.</td>
+				<td colspan="{{ canEdit ? 8 : 7 }}" class="text-center text-muted py-4">No hay movimientos para este periodo.</td>
 			</tr>
 		{% endfor %}
 	</tbody>
 </table>
 
+{% if canEdit %}
 {# Modal de confirmación — bulk delete #}
 <div class="modal fade" id="bulkConfirmModal" tabindex="-1" aria-labelledby="bulkConfirmModalLabel" aria-hidden="true">
 	<div class="modal-dialog modal-dialog-centered">
@@ -168,3 +178,4 @@
 		</div>
 	</div>
 </div>
+{% endif %}

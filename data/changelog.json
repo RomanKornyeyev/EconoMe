@@ -1,5 +1,13 @@
 [
     {
+        "version": "v1.0.3",
+        "date": "2026-07-17",
+        "title": "Permisos visibles en las tablas",
+        "changes": [
+            { "type": "fix", "text": "Los miembros con rol de solo lectura ya no ven las acciones de crear, editar o eliminar en movimientos y recurrentes." }
+        ]
+    },
+    {
         "version": "v1.0.2",
         "date": "2026-07-16",
         "title": "Filtros mejorados y página de novedades",
