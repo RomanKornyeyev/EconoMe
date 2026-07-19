@@ -4,7 +4,6 @@
 
 {% block content %}
 {% import 'partials/macros/_tour.html.twig' as tour %}
-{% set q = app.request.query.all %}
 {% set canEdit = is_granted('ACCOUNT_EDIT', currentAccount) %}
 
 <div {{ tour.attrs('transactions') }}>
@@ -12,19 +11,14 @@
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <div class="d-flex align-items-center gap-2">
         <h1 class="mb-0 h3">Movimientos</h1>
-        <div class="btn-group" role="group"
-             data-tour-step="1"
-             data-tour-title="Selector de cuenta"
-             data-tour-text="Aquí ves los movimientos de la cuenta seleccionada. Cambia de cuenta cuando quieras.">
-            <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                {{ currentAccount.name }}
-            </button>
-            <ul class="dropdown-menu">
-                {% for acc in accounts %}
-                    <li><a class="dropdown-item {{ acc.id == currentAccount.id ? 'active' : '' }}" href="?{{ q|merge({'account': acc.id, 'page': 1})|url_encode }}">{{ acc.name }}</a></li>
-                {% endfor %}
-            </ul>
-        </div>
+        {% include 'partials/_account_selector.html.twig' with {
+            accounts: accounts,
+            current: currentAccount,
+            resetParams: {page: 1, category: ''},
+            tourStep: 1,
+            tourTitle: 'Selector de cuenta',
+            tourText: 'Aquí ves los movimientos de la cuenta seleccionada. Cambia de cuenta cuando quieras.',
+        } only %}
     </div>
     <div class="d-flex align-items-center gap-2">
         <a href="{{ path('recurring_index', {account: currentAccount.id}) }}" class="btn btn-outline-primary btn-sm"

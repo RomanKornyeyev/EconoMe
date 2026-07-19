@@ -1,0 +1,59 @@
+{#
+    Selector de cuenta compartido por las vistas principales.
+
+    Variables:
+    - accounts:         lista de cuentas del usuario
+    - current:          cuenta activa (null en la vista de plantilla de categorías)
+    - label:            texto del botón (por defecto, el nombre de current)
+    - route:            si se define, los enlaces usan path(route, {routeParam: id});
+                        si no, se conserva la query actual añadiendo ?account=
+    - routeParam:       nombre del parámetro de la ruta (por defecto 'account')
+    - resetParams:      query params a resetear al cambiar de cuenta (p. ej. {page: 1})
+    - withTemplateItem: añade el ítem «Mi plantilla» (categorías)
+    - withCreateItem:   muestra el ítem «Añadir cuenta» (por defecto true)
+    - menuEnd:          alinea el desplegable a la derecha
+    - tourStep / tourTitle / tourText: paso del tour de la página, si aplica
+#}
+<div class="btn-group" role="group"
+     {%- if tourStep is defined %}
+     data-tour-step="{{ tourStep }}"
+     data-tour-title="{{ tourTitle }}"
+     data-tour-text="{{ tourText }}"
+     {%- endif %}>
+    {% set buttonLabel = (label ?? null) ?: (current ? current.name : '') %}
+    <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"
+            {% if buttonLabel|length > 20 %}title="{{ buttonLabel }}"{% endif %}>
+        {{ buttonLabel|length > 20 ? buttonLabel|slice(0, 20)|trim ~ '…' : buttonLabel }}
+    </button>
+    <ul class="dropdown-menu{{ (menuEnd ?? false) ? ' dropdown-menu-end' : '' }}">
+        {% for acc in accounts %}
+            <li>
+                <a class="dropdown-item {{ current and acc.id == current.id ? 'active' : '' }}"
+                   href="{{ route is defined
+                        ? path(route, {(routeParam|default('account')): acc.id})
+                        : '?' ~ app.request.query.all|merge(resetParams|default({}))|merge({'account': acc.id})|url_encode }}"
+                   {% if acc.name|length > 30 %}title="{{ acc.name }}"{% endif %}>
+                    {{ acc.name|length > 30 ? acc.name|slice(0, 30)|trim ~ '…' : acc.name }}
+                </a>
+            </li>
+        {% endfor %}
+        {% if accounts is not empty and ((withTemplateItem ?? false) or (withCreateItem ?? true)) %}
+            <li><hr class="dropdown-divider"></li>
+        {% endif %}
+        {% if withTemplateItem ?? false %}
+            <li>
+                <a class="dropdown-item {{ current is null ? 'active' : '' }}"
+                   href="{{ path('category_index', {template: 'true'}) }}">
+                    Mi plantilla
+                </a>
+            </li>
+        {% endif %}
+        {% if withCreateItem ?? true %}
+            <li>
+                <a class="dropdown-item" href="{{ path('account_create') }}">
+                    <i class="fa-solid fa-plus me-1"></i>Añadir cuenta
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</div>

@@ -11,37 +11,17 @@
     <div class="d-flex align-items-center gap-2">
         <h4 class="mb-0">Categorías</h4>
 
-        <div class="btn-group" role="group"
-             data-tour-step="1"
-             data-tour-title="Cuenta o plantilla"
-             data-tour-text="Cada cuenta tiene sus propias categorías. Además, dispones de «Mi plantilla»: un juego personal de categorías que puedes aplicar al crear cuentas nuevas.">
-            <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                {% if isTemplateView %}
-                    Mi plantilla
-                {% else %}
-                    {{ currentAccount.name }}
-                {% endif %}
-            </button>
-            <ul class="dropdown-menu">
-                {% for acc in accounts %}
-                    <li>
-                        <a class="dropdown-item {{ not isTemplateView and acc.id == currentAccount.id ? 'active' : '' }}"
-                           href="{{ path('category_index', {account: acc.id}) }}">
-                            {{ acc.name }}
-                        </a>
-                    </li>
-                {% endfor %}
-                {% if accounts is not empty %}
-                    <li><hr class="dropdown-divider"></li>
-                {% endif %}
-                <li>
-                    <a class="dropdown-item {{ isTemplateView ? 'active' : '' }}"
-                       href="{{ path('category_index', {template: 'true'}) }}">
-                        Mi plantilla
-                    </a>
-                </li>
-            </ul>
-        </div>
+        {% include 'partials/_account_selector.html.twig' with {
+            accounts: accounts,
+            current: isTemplateView ? null : currentAccount,
+            label: isTemplateView ? 'Mi plantilla' : null,
+            route: 'category_index',
+            withTemplateItem: true,
+            withCreateItem: false,
+            tourStep: 1,
+            tourTitle: 'Cuenta o plantilla',
+            tourText: 'Cada cuenta tiene sus propias categorías. Además, dispones de «Mi plantilla»: un juego personal de categorías que puedes aplicar al crear cuentas nuevas.',
+        } only %}
     </div>
 
     <div class="d-flex align-items-center gap-2">

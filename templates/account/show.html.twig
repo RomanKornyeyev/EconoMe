@@ -14,23 +14,15 @@
         </a>
         <div class="d-flex align-items-center gap-2 flex-wrap">
             <h1 class="mb-0 h3">Detalles de la cuenta</h1>
-            <div class="btn-group" role="group"
-                 data-tour-step="1"
-                 data-tour-title="Selector de cuenta"
-                 data-tour-text="Aquí eliges la cuenta que quieres gestionar. Toda la información de esta página pertenece a la cuenta seleccionada.">
-                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    {{ account.name }}
-                </button>
-                <ul class="dropdown-menu">
-                    {% for acc in accounts %}
-                        <li>
-                            <a class="dropdown-item {{ acc.id == account.id ? 'active' : '' }}" href="{{ path('account_show', {id: acc.id}) }}">
-                                {{ acc.name }}
-                            </a>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
+            {% include 'partials/_account_selector.html.twig' with {
+                accounts: accounts,
+                current: account,
+                route: 'account_show',
+                routeParam: 'id',
+                tourStep: 1,
+                tourTitle: 'Selector de cuenta',
+                tourText: 'Aquí eliges la cuenta que quieres gestionar. Toda la información de esta página pertenece a la cuenta seleccionada.',
+            } only %}
         </div>
     </div>
     <div class="d-flex gap-2">

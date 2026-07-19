@@ -58,6 +58,14 @@ class TransactionController extends AbstractController
         $categoryRaw = $request->query->get('category', '');
         $noCategory = ($categoryRaw === '-1');
         $categoryId = (!$noCategory && $categoryRaw !== '') ? (int) $categoryRaw : null;
+
+        $categories = $this->categoryRepo->findAllByAccount($account);
+
+        // Descarta un filtro de categoría que no pertenece a la cuenta actual
+        // (arrastrado al cambiar de cuenta, o desde una URL antigua/compartida)
+        if ($categoryId !== null && !in_array($categoryId, array_map(fn($c) => $c->getId(), $categories), true)) {
+            $categoryId = null;
+        }
         $search = trim($request->query->get('search', '')) ?: null;
 
         $amountFrom = null;
@@ -85,8 +93,6 @@ class TransactionController extends AbstractController
             $request->query->getInt('page', 1),
             15
         );
-
-        $categories = $this->categoryRepo->findAllByAccount($account);
 
         return $this->render('transaction/index.html.twig', [
             'accounts'        => $accounts,

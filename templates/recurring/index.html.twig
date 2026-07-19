@@ -17,18 +17,10 @@
             {# <i class="fa-solid fa-rotate me-2"></i> #}
             Movimientos recurrentes
         </h4>
-        {% if accounts|length > 1 %}
-            <div class="btn-group" role="group">
-                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    {{ currentAccount.name }}
-                </button>
-                <ul class="dropdown-menu">
-                    {% for acc in accounts %}
-                        <li><a class="dropdown-item {{ acc.id == currentAccount.id ? 'active' : '' }}" href="?account={{ acc.id }}">{{ acc.name }}</a></li>
-                    {% endfor %}
-                </ul>
-            </div>
-        {% endif %}
+        {% include 'partials/_account_selector.html.twig' with {
+            accounts: accounts,
+            current: currentAccount,
+        } only %}
     </div>
     {% if canEdit %}
     <a href="{{ path('recurring_create', {account: currentAccount.id}) }}" class="btn btn-primary btn-sm">
