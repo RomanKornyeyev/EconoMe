@@ -97,11 +97,11 @@
                                         {% endif %}
                                         <span>{{ tpl.name }}</span>
                                     </div>
-                                    <div class="d-flex gap-1">
-                                        <a href="{{ path('category_template_edit', {id: tpl.id}) }}" class="btn btn-sm btn-outline-secondary py-0 px-1">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <a href="{{ path('category_template_edit', {id: tpl.id}) }}" class="btn btn-sm btn-outline-primary py-0 px-1">
                                             <i class="fa-solid fa-pen"></i>
                                         </a>
-                                        <form method="post" action="{{ path('category_template_delete', {id: tpl.id}) }}" class="d-inline"
+                                        <form method="post" action="{{ path('category_template_delete', {id: tpl.id}) }}" class="d-flex"
                                               data-controller="confirm"
                                               data-action="submit->confirm#submit"
                                               data-confirm-message-value="¿Eliminar la plantilla «{{ tpl.name }}»?"
@@ -134,11 +134,11 @@
                                         {% endif %}
                                         <span>{{ tpl.name }}</span>
                                     </div>
-                                    <div class="d-flex gap-1">
-                                        <a href="{{ path('category_template_edit', {id: tpl.id}) }}" class="btn btn-sm btn-outline-secondary py-0 px-1">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <a href="{{ path('category_template_edit', {id: tpl.id}) }}" class="btn btn-sm btn-outline-primary py-0 px-1">
                                             <i class="fa-solid fa-pen"></i>
                                         </a>
-                                        <form method="post" action="{{ path('category_template_delete', {id: tpl.id}) }}" class="d-inline"
+                                        <form method="post" action="{{ path('category_template_delete', {id: tpl.id}) }}" class="d-flex"
                                               data-controller="confirm"
                                               data-action="submit->confirm#submit"
                                               data-confirm-message-value="¿Eliminar la plantilla «{{ tpl.name }}»?"
@@ -196,11 +196,11 @@
                                         <span>{{ cat.name }}</span>
                                     </div>
                                     {% if is_granted('ACCOUNT_EDIT', currentAccount) %}
-                                        <div class="d-flex gap-1">
-                                            <a href="{{ path('category_edit', {id: cat.id}) }}" class="btn btn-sm btn-outline-secondary py-0 px-1">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <a href="{{ path('category_edit', {id: cat.id}) }}" class="btn btn-sm btn-outline-primary py-0 px-1">
                                                 <i class="fa-solid fa-pen"></i>
                                             </a>
-                                            <form method="post" action="{{ path('category_delete', {id: cat.id}) }}" class="d-inline"
+                                            <form method="post" action="{{ path('category_delete', {id: cat.id}) }}" class="d-flex"
                                                   data-controller="confirm"
                                                   data-action="submit->confirm#submit"
                                                   data-confirm-message-value="¿Eliminar la categoría «{{ cat.name }}»?"
@@ -235,11 +235,11 @@
                                         <span>{{ cat.name }}</span>
                                     </div>
                                     {% if is_granted('ACCOUNT_EDIT', currentAccount) %}
-                                        <div class="d-flex gap-1">
-                                            <a href="{{ path('category_edit', {id: cat.id}) }}" class="btn btn-sm btn-outline-secondary py-0 px-1">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <a href="{{ path('category_edit', {id: cat.id}) }}" class="btn btn-sm btn-outline-primary py-0 px-1">
                                                 <i class="fa-solid fa-pen"></i>
                                             </a>
-                                            <form method="post" action="{{ path('category_delete', {id: cat.id}) }}" class="d-inline"
+                                            <form method="post" action="{{ path('category_delete', {id: cat.id}) }}" class="d-flex"
                                                   data-controller="confirm"
                                                   data-action="submit->confirm#submit"
                                                   data-confirm-message-value="¿Eliminar la categoría «{{ cat.name }}»?"

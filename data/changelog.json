@@ -1,10 +1,12 @@
 [
     {
         "version": "v1.0.3",
-        "date": "2026-07-17",
-        "title": "Permisos visibles en las tablas",
+        "date": "2026-07-19",
+        "title": "Permisos visibles y mejor navegación",
         "changes": [
-            { "type": "fix", "text": "Los miembros con rol de solo lectura ya no ven las acciones de crear, editar o eliminar en movimientos y recurrentes." }
+            { "type": "fix", "text": "Los miembros con rol de solo lectura ya no ven las acciones de crear, editar o eliminar en movimientos y recurrentes." },
+            { "type": "improvement", "text": "Acceso directo al dashboard desde los detalles de cuenta y al registrar un movimiento." },
+            { "type": "fix", "text": "Arreglos menores de aspecto en los botones de categorías." }
         ]
     },
     {

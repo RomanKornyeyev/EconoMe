@@ -34,6 +34,9 @@
         </div>
     </div>
     <div class="d-flex gap-2">
+        <a href="{{ path('dashboard', {account: account.id}) }}" class="btn btn-sm btn-outline-primary">
+            <i class="fa-solid fa-chart-line me-1"></i>Dashboard
+        </a>
         <a href="{{ path('transaction_index', {account: account.id}) }}" class="btn btn-sm btn-primary"
            data-tour-step="6"
            data-tour-title="Empieza a registrar"

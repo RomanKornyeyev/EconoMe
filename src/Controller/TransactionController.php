@@ -139,9 +139,21 @@ class TransactionController extends AbstractController
                 $this->em->persist($transaction);
             }
             $this->em->flush();
-            $this->addFlash('success', $isNew ? 'Movimiento registrado.' : 'Movimiento actualizado.');
 
             $redirectUrl = $request->request->get('_redirect_url');
+            $dashboardUrl = $this->generateUrl('dashboard', ['account' => $account->getId()]);
+            // Sin CTA al dashboard si el movimiento se creó desde el propio dashboard
+            $backToDashboard = $redirectUrl && str_starts_with($redirectUrl, $this->generateUrl('dashboard'));
+
+            if ($isNew && !$backToDashboard) {
+                $this->addFlash('success_html', sprintf(
+                    'Movimiento registrado. <a href="%s" class="alert-link">Ver en el dashboard</a>.',
+                    $dashboardUrl
+                ));
+            } else {
+                $this->addFlash('success', $isNew ? 'Movimiento registrado.' : 'Movimiento actualizado.');
+            }
+
             if ($redirectUrl && str_starts_with($redirectUrl, '/')) {
                 return $this->redirect($redirectUrl);
             }
