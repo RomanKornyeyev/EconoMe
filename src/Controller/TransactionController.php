@@ -37,8 +37,7 @@ class TransactionController extends AbstractController
             return $this->render('transaction/no_account.html.twig');
         }
 
-        $accountId = $request->query->getInt('account', $accounts[0]->getId());
-        $account = $this->em->getRepository(Account::class)->find($accountId);
+        $account = $this->accountService->resolveCurrentAccount($request, $accounts);
         $this->denyAccessUnlessGranted('ACCOUNT_VIEW', $account);
 
         $dateFrom = null;

@@ -52,8 +52,7 @@ class CategoryController extends AbstractController
             ]);
         }
 
-        $accountId = $request->query->getInt('account', $accounts[0]->getId());
-        $account   = $this->em->getRepository(Account::class)->find($accountId);
+        $account = $this->accountService->resolveCurrentAccount($request, $accounts);
         $this->denyAccessUnlessGranted('ACCOUNT_VIEW', $account);
 
         $categories = $this->categoryRepo->findAllByAccount($account);

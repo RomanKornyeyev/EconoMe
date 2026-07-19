@@ -9,9 +9,12 @@ use App\Entity\User;
 use App\Repository\CategoryTemplateRepository;
 use App\Repository\TransactionRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 class AccountService
 {
+    private const SESSION_ACCOUNT_KEY = 'current_account_id';
+
     public function __construct(
         private EntityManagerInterface $em,
         private TransactionRepository $transactionRepository,
@@ -115,6 +118,62 @@ class AccountService
         $ownerMember->setRole(AccountMember::ROLE_EDITOR);
         $newOwnerMember->setRole(AccountMember::ROLE_OWNER);
         $this->em->flush();
+    }
+
+    /**
+     * Resuelve la cuenta "actual" para las vistas con selector de cuenta.
+     * Prioridad: ?account= explícito → última seleccionada (sesión) → primera cuenta.
+     *
+     * El valor de sesión solo se usa si la cuenta sigue entre las activas del
+     * usuario, de modo que un contexto obsoleto (expulsión, borrado, abandono)
+     * nunca provoque un 403; se descarta y se cae a la primera cuenta.
+     *
+     * Devuelve null solo si ?account= apunta a una cuenta fuera de la lista:
+     * en ese caso el controlador debe denegar, no elegir otra en silencio.
+     */
+    public function resolveCurrentAccount(Request $request, array $accounts): ?Account
+    {
+        if (empty($accounts)) {
+            return null;
+        }
+
+        $session = $request->getSession();
+
+        if ($requestedId = $request->query->getInt('account')) {
+            $account = $this->findAccountInList($accounts, $requestedId);
+            if ($account) {
+                $session->set(self::SESSION_ACCOUNT_KEY, $account->getId());
+            }
+            return $account;
+        }
+
+        if ($sessionId = $session->get(self::SESSION_ACCOUNT_KEY)) {
+            if ($account = $this->findAccountInList($accounts, (int) $sessionId)) {
+                return $account;
+            }
+            $session->remove(self::SESSION_ACCOUNT_KEY);
+        }
+
+        return $accounts[0];
+    }
+
+    /**
+     * Marca una cuenta como la última seleccionada (para vistas que reciben
+     * la cuenta por ruta en lugar de por query param, como account_show).
+     */
+    public function rememberCurrentAccount(Request $request, Account $account): void
+    {
+        $request->getSession()->set(self::SESSION_ACCOUNT_KEY, $account->getId());
+    }
+
+    private function findAccountInList(array $accounts, int $id): ?Account
+    {
+        foreach ($accounts as $account) {
+            if ($account->getId() === $id) {
+                return $account;
+            }
+        }
+        return null;
     }
 
     /**

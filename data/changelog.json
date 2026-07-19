@@ -6,6 +6,7 @@
         "changes": [
             { "type": "fix", "text": "Los miembros con rol de solo lectura ya no ven las acciones de crear, editar o eliminar en movimientos y recurrentes." },
             { "type": "improvement", "text": "Acceso directo al dashboard desde los detalles de cuenta y al registrar un movimiento." },
+            { "type": "improvement", "text": "Mejora de navegación: la cuenta seleccionada se mantiene al navegar entre el dashboard, movimientos, categorías y recurrentes." },
             { "type": "fix", "text": "Arreglos menores de aspecto en los botones de categorías." }
         ]
     },

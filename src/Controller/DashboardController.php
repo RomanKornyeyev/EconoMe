@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use App\Entity\Account;
 use App\Entity\Transaction;
 use App\Form\TransactionType;
 use App\Repository\TransactionRepository;
@@ -36,8 +35,10 @@ class DashboardController extends AbstractController
             ]);
         }
 
-        $accountId = $request->query->getInt('account', $accounts[0]->getId());
-        $account = $this->findAccountOrFail($accounts, $accountId);
+        $account = $accountService->resolveCurrentAccount($request, $accounts);
+        if (!$account) {
+            throw $this->createNotFoundException('Cuenta no encontrada');
+        }
         $this->denyAccessUnlessGranted('ACCOUNT_VIEW', $account);
 
         $year  = $request->query->getInt('year', (int)date('Y'));
@@ -128,15 +129,5 @@ class DashboardController extends AbstractController
             'categoryType'       => $categoryType,
             'transactionForm'    => $transactionForm,
         ]);
-    }
-
-    private function findAccountOrFail(array $accounts, int $id): Account
-    {
-        foreach ($accounts as $account) {
-            if ($account->getId() === $id) {
-                return $account;
-            }
-        }
-        throw $this->createNotFoundException('Cuenta no encontrada');
     }
 }

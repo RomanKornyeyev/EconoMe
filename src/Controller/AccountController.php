@@ -67,6 +67,7 @@ class AccountController extends AbstractController
 
     #[Route('/{id}', name: 'show', requirements: ['id' => '\d+'])]
     public function show(
+        Request $request,
         Account $account,
         AccountInvitationRepository $invitationRepository,
         CategoryRepository $categoryRepository,
@@ -74,6 +75,7 @@ class AccountController extends AbstractController
         TransactionRepository $transactionRepository,
     ): Response {
         $this->denyAccessUnlessGranted('ACCOUNT_VIEW', $account);
+        $this->accountService->rememberCurrentAccount($request, $account);
 
         $members = $account->getActiveMembers();
         $balance = $this->accountService->getBalance($account);
