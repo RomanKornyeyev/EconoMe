@@ -1,0 +1,100 @@
+{# Rejilla de cuentas en la papelera + modales de borrado permanente.
+   Recibe `deletedAccounts` (cuentas borradas de las que el usuario es owner). #}
+<div class="row g-3">
+        {% for account in deletedAccounts %}
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="card border h-100 bg-body-tertiary" style="opacity:.85">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                                 style="width:44px;height:44px;background-color:{{ account.color ?? '#6c757d' }}20;border:2px solid {{ account.color ?? '#6c757d' }}">
+                                <i class="fa-solid fa-wallet" style="color:{{ account.color ?? '#6c757d' }}"></i>
+                            </div>
+                            <div class="flex-grow-1 min-w-0">
+                                <h6 class="mb-1 text-truncate">{{ account.name }}</h6>
+                                <div class="d-flex flex-column align-items-start gap-1">
+                                    <span class="badge bg-body-secondary text-body-secondary">
+                                        <i class="fa-regular fa-clock me-1"></i>Eliminada el {{ account.deletedAt|date('d/m/Y') }} a las {{ account.deletedAt|date('H:i') }}
+                                    </span>
+                                    {% if account.canBePurged %}
+                                        <span class="badge bg-danger-subtle text-danger-emphasis">
+                                            <i class="fa-solid fa-trash me-1"></i>Borrado definitivo disponible
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-body-secondary text-body-secondary">
+                                            <i class="fa-solid fa-lock me-1"></i>Borrado definitivo: {{ account.purgeableAt|date('d/m/Y') }} a las {{ account.purgeableAt|date('H:i') }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0 d-flex gap-2">
+                        <form method="post" action="{{ path('account_restore', {id: account.id}) }}" class="flex-grow-1"
+                              data-controller="confirm"
+                              data-action="submit->confirm#submit"
+                              data-confirm-message-value="La cuenta «{{ account.name }}» volverá a estar activa. Si más adelante quieres eliminarla de forma permanente, tendrás que enviarla de nuevo a la papelera y esperar 24 horas."
+                              data-confirm-text-value="Restaurar"
+                              data-confirm-danger-value="false">
+                            <input type="hidden" name="_token" value="{{ csrf_token('restore' ~ account.id) }}">
+                            <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+                                <i class="fa-solid fa-rotate-left me-1"></i>Restaurar
+                            </button>
+                        </form>
+                        {% if account.canBePurged %}
+                            <button type="button" class="btn btn-sm btn-outline-danger px-4"
+                                    data-bs-toggle="modal" data-bs-target="#purgeModal{{ account.id }}"
+                                    title="Eliminar permanentemente" aria-label="Eliminar permanentemente">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        {% else %}
+                            {# El botón disabled no dispara eventos: el tooltip va en el span envolvente #}
+                            <span class="d-inline-block" tabindex="0" data-bs-toggle="tooltip"
+                                  data-bs-title="Borrado definitivo disponible el {{ account.purgeableAt|date('d/m/Y') }} a las {{ account.purgeableAt|date('H:i') }}">
+                                <button type="button" class="btn btn-sm btn-outline-secondary px-4" disabled style="pointer-events:none">
+                                    <i class="fa-solid fa-lock"></i>
+                                </button>
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {# Modal de borrado permanente con confirmación por nombre #}
+            {% if account.canBePurged %}
+                <div class="modal fade" id="purgeModal{{ account.id }}" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content bg-body-tertiary">
+                            <form method="post" action="{{ path('account_destroy', {id: account.id}) }}"
+                                  data-controller="confirm-match"
+                                  data-confirm-match-expected-value="{{ account.name }}">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Eliminar permanentemente</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body p-4">
+                                    <div class="alert alert-danger d-flex align-items-center gap-2 py-2">
+                                        <i class="fa-solid fa-triangle-exclamation"></i>
+                                        <span>Se borrarán la cuenta y todos sus movimientos. <strong>Esta acción no se puede deshacer.</strong></span>
+                                    </div>
+                                    <label class="form-label small text-muted">
+                                        Escribe <strong>{{ account.name }}</strong> para confirmar
+                                    </label>
+                                    <input type="text" name="confirm_name" class="form-control" autocomplete="off" required
+                                           data-confirm-match-target="input"
+                                           data-action="input->confirm-match#check">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('destroy' ~ account.id) }}">
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-danger" data-confirm-match-target="submit">
+                                        <i class="fa-solid fa-trash me-1"></i>Eliminar para siempre
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+</div>

@@ -37,8 +37,10 @@ class AccountInvitationRepository extends ServiceEntityRepository
     public function findPendingReceivedBy(User $user): array
     {
         return $this->createQueryBuilder('i')
+            ->join('i.account', 'a')
             ->where('i.invitee = :user')
             ->andWhere('i.status = :status')
+            ->andWhere('a.deletedAt IS NULL')
             ->setParameter('user', $user)
             ->setParameter('status', AccountInvitation::STATUS_PENDING)
             ->orderBy('i.createdAt', 'DESC')
@@ -87,8 +89,10 @@ class AccountInvitationRepository extends ServiceEntityRepository
     {
         return (int) $this->createQueryBuilder('i')
             ->select('COUNT(i.id)')
+            ->join('i.account', 'a')
             ->where('i.invitee = :user')
             ->andWhere('i.status = :status')
+            ->andWhere('a.deletedAt IS NULL')
             ->setParameter('user', $user)
             ->setParameter('status', AccountInvitation::STATUS_PENDING)
             ->getQuery()

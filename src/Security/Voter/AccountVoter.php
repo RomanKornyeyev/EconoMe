@@ -14,6 +14,7 @@ class AccountVoter extends Voter
     public const VIEW = 'ACCOUNT_VIEW';
     public const EDIT = 'ACCOUNT_EDIT';
     public const MANAGE = 'ACCOUNT_MANAGE';
+    public const MANAGE_TRASH = 'ACCOUNT_MANAGE_TRASH'; // restaurar / purgar (owner)
 
     public function __construct(
         private AccountService $accountService,
@@ -21,7 +22,7 @@ class AccountVoter extends Voter
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        return in_array($attribute, [self::VIEW, self::EDIT, self::MANAGE])
+        return in_array($attribute, [self::VIEW, self::EDIT, self::MANAGE, self::MANAGE_TRASH])
             && $subject instanceof Account;
     }
 
@@ -37,10 +38,17 @@ class AccountVoter extends Voter
             return false;
         }
 
+        // Cuenta en la papelera: solo el owner puede gestionarla (restaurar/purgar);
+        // el resto de accesos quedan bloqueados hasta que se restaure.
+        if ($subject->isDeleted()) {
+            return $attribute === self::MANAGE_TRASH && $member->isOwner();
+        }
+
         return match ($attribute) {
             self::VIEW => true, // cualquier miembro activo puede ver
             self::EDIT => $member->canCreateTransactions(), // owner o editor
             self::MANAGE => $member->canManageAccount(), // solo owner
+            self::MANAGE_TRASH => false, // no aplica a cuentas activas
             default => false,
         };
     }

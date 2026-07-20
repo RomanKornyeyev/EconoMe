@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Papelera{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ path('account_index') }}">Cuentas</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Papelera</li>
+    </ol>
+</nav>
+
+<div class="d-flex align-items-center gap-3 mb-4">
+    <div>
+        <h4 class="mb-0">Papelera</h4>
+    </div>
+</div>
+
+{% if deletedAccounts is empty %}
+    <div class="text-center py-5">
+        <i class="fa-solid fa-trash-can fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">La papelera está vacía</h5>
+        <p class="text-muted">Las cuentas que elimines aparecerán aquí y podrás recuperarlas.</p>
+        <a href="{{ path('account_index') }}" class="btn btn-outline-primary mt-2">
+            Volver a mis cuentas
+        </a>
+    </div>
+{% else %}
+    <div class="alert alert-info d-flex align-items-center gap-2 py-2 mb-4" role="alert">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>
+            Puedes restaurar estas cuentas cuando quieras.
+            El borrado permanente está disponible 24 horas después de mandar la cuenta a la papelera.
+        </span>
+    </div>
+    {% include 'account/_deleted_accounts.html.twig' %}
+{% endif %}
+{% endblock %}

@@ -37,6 +37,19 @@ class Account
     #[ORM\Column(type: "string", length: 7, nullable: true)]
     private ?string $color = null;
 
+    /**
+     * Marca de borrado lógico. Cuando no es null, la cuenta está en la papelera:
+     * queda oculta de las vistas normales pero es recuperable por su propietario.
+     */
+    #[ORM\Column(type: "datetime_immutable", nullable: true)]
+    private ?\DateTimeImmutable $deletedAt = null;
+
+    /**
+     * Periodo de enfriamiento antes de poder borrar una cuenta de forma
+     * permanente, para evitar borrados definitivos impulsivos.
+     */
+    public const PURGE_COOLDOWN = '+24 hours';
+
     #[ORM\OneToMany(targetEntity: AccountMember::class, mappedBy: "account", cascade: ["persist", "remove"])]
     private Collection $members;
 
@@ -111,6 +124,47 @@ class Account
     {
         $this->color = $color;
         return $this;
+    }
+
+    public function getDeletedAt(): ?\DateTimeImmutable
+    {
+        return $this->deletedAt;
+    }
+
+    public function isDeleted(): bool
+    {
+        return $this->deletedAt !== null;
+    }
+
+    public function softDelete(): self
+    {
+        $this->deletedAt = new \DateTimeImmutable();
+        return $this;
+    }
+
+    public function restore(): self
+    {
+        $this->deletedAt = null;
+        return $this;
+    }
+
+    /**
+     * Momento a partir del cual la cuenta puede borrarse permanentemente
+     * (fin del periodo de enfriamiento). Null si no está en la papelera.
+     */
+    public function purgeableAt(): ?\DateTimeImmutable
+    {
+        return $this->deletedAt?->modify(self::PURGE_COOLDOWN);
+    }
+
+    /**
+     * True si ya ha pasado el periodo de enfriamiento y la cuenta puede
+     * eliminarse de forma permanente.
+     */
+    public function canBePurged(): bool
+    {
+        $purgeableAt = $this->purgeableAt();
+        return $purgeableAt !== null && $purgeableAt <= new \DateTimeImmutable();
     }
 
     public function getMembers(): Collection

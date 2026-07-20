@@ -177,7 +177,8 @@ class AccountService
     }
 
     /**
-     * Devuelve las cuentas donde el usuario es miembro activo.
+     * Devuelve las cuentas donde el usuario es miembro activo,
+     * excluyendo las que están en la papelera (soft delete).
      */
     public function getActiveAccountsForUser(User $user): array
     {
@@ -186,7 +187,29 @@ class AccountService
             'leftAt' => null,
         ]);
 
-        return array_map(fn(AccountMember $m) => $m->getAccount(), $members);
+        return array_values(array_filter(
+            array_map(fn(AccountMember $m) => $m->getAccount(), $members),
+            fn(Account $a) => !$a->isDeleted(),
+        ));
+    }
+
+    /**
+     * Cuentas en la papelera de las que el usuario es propietario.
+     * Solo el owner puede ver y gestionar (restaurar/purgar) una cuenta borrada.
+     */
+    public function getDeletedAccountsOwnedByUser(User $user): array
+    {
+        $members = $this->em->getRepository(AccountMember::class)->findBy([
+            'user'   => $user,
+            'leftAt' => null,
+        ]);
+
+        // $members ya son las membresías activas del usuario: se filtra por owner
+        // sobre el propio member, sin volver a consultar por cada cuenta.
+        return array_values(array_map(
+            fn(AccountMember $m) => $m->getAccount(),
+            array_filter($members, fn(AccountMember $m) => $m->isOwner() && $m->getAccount()->isDeleted()),
+        ));
     }
 
     /**
@@ -248,13 +271,54 @@ class AccountService
     }
 
     /**
-     * Elimina una cuenta completa (solo el owner).
+     * Envía una cuenta a la papelera (soft delete). Recuperable por el owner.
      */
     public function deleteAccount(Account $account, User $owner): void
     {
         $ownerMember = $this->findActiveMember($account, $owner);
         if (!$ownerMember || !$ownerMember->isOwner()) {
             throw new \LogicException('Solo el propietario puede eliminar la cuenta.');
+        }
+
+        if ($account->isDeleted()) {
+            return;
+        }
+
+        $account->softDelete();
+        $this->em->flush();
+    }
+
+    /**
+     * Restaura una cuenta de la papelera (solo el owner).
+     */
+    public function restoreAccount(Account $account, User $owner): void
+    {
+        $ownerMember = $this->findActiveMember($account, $owner);
+        if (!$ownerMember || !$ownerMember->isOwner()) {
+            throw new \LogicException('Solo el propietario puede restaurar la cuenta.');
+        }
+
+        $account->restore();
+        $this->em->flush();
+    }
+
+    /**
+     * Elimina una cuenta de forma permanente (solo el owner).
+     * Requiere que esté en la papelera y que haya pasado el enfriamiento.
+     */
+    public function permanentlyDeleteAccount(Account $account, User $owner): void
+    {
+        $ownerMember = $this->findActiveMember($account, $owner);
+        if (!$ownerMember || !$ownerMember->isOwner()) {
+            throw new \LogicException('Solo el propietario puede eliminar la cuenta.');
+        }
+
+        if (!$account->isDeleted()) {
+            throw new \LogicException('La cuenta debe estar en la papelera antes de eliminarla permanentemente.');
+        }
+
+        if (!$account->canBePurged()) {
+            throw new \LogicException('Aún no puedes eliminar esta cuenta de forma permanente. Espera a que termine el periodo de seguridad.');
         }
 
         $this->em->remove($account);

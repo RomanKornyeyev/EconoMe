@@ -7,11 +7,18 @@
 
 <div {{ tour.attrs('accounts') }}>
 
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ path('account_index') }}">Cuentas</a></li>
+        <li class="breadcrumb-item active" aria-current="page"
+            {% if account.name|length > 30 %}title="{{ account.name }}"{% endif %}>
+            {{ account.name|length > 30 ? account.name|slice(0, 30)|trim ~ '…' : account.name }}
+        </li>
+    </ol>
+</nav>
+
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div class="d-flex align-items-center gap-3">
-        <a href="{{ path('account_index') }}" class="btn btn-sm btn-outline-secondary">
-            <i class="fa-solid fa-arrow-left"></i>
-        </a>
         <div class="d-flex align-items-center gap-2 flex-wrap">
             <h1 class="mb-0 h3">Detalles de la cuenta</h1>
             {% include 'partials/_account_selector.html.twig' with {
@@ -283,17 +290,16 @@
                 <div class="min-w-0">
                     <div class="fw-semibold">Eliminar la cuenta</div>
                     <small class="text-muted">
-                        Se borrarán la cuenta y todos sus movimientos.
-                        <span class="text-danger">Esta acción no se puede deshacer.</span>
+                        La cuenta se enviará a la papelera. Podrás recuperarla en cualquier momento o borrarla permanentemente tras 24 horas.
                     </small>
                 </div>
                 <form method="post" action="{{ path('account_delete', {id: account.id}) }}"
                       data-controller="confirm"
                       data-action="submit->confirm#submit"
-                      data-confirm-message-value="Se eliminará «{{ account.name }}» y todos sus datos de forma permanente. Esta acción no se puede deshacer."
-                      data-confirm-text-value="Eliminar cuenta">
+                      data-confirm-message-value="«{{ account.name }}» se enviará a la papelera. Sus movimientos se conservan y podrás restaurarla desde Cuentas > Papelera. Pasadas 24 horas, podrás borrarla de forma permanente."
+                      data-confirm-text-value="Enviar a la papelera">
                     <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ account.id) }}">
-                    <button type="submit" class="btn btn-sm btn-danger">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
                         <i class="fa-solid fa-trash me-1"></i>Eliminar
                     </button>
                 </form>

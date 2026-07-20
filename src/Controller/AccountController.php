@@ -36,10 +36,22 @@ class AccountController extends AbstractController
     {
         $accounts = $this->accountService->getActiveAccountsForUser($this->getUser());
         $pendingInvitations = $invitationRepository->findPendingReceivedBy($this->getUser());
+        $deletedCount = count($this->accountService->getDeletedAccountsOwnedByUser($this->getUser()));
 
         return $this->render('account/index.html.twig', [
             'accounts' => $accounts,
             'pendingInvitations' => $pendingInvitations,
+            'deletedCount' => $deletedCount,
+        ]);
+    }
+
+    #[Route('/trash', name: 'trash')]
+    public function trash(): Response
+    {
+        $deletedAccounts = $this->accountService->getDeletedAccountsOwnedByUser($this->getUser());
+
+        return $this->render('account/trash.html.twig', [
+            'deletedAccounts' => $deletedAccounts,
         ]);
     }
 
@@ -74,6 +86,20 @@ class AccountController extends AbstractController
         RecurringTransactionRepository $recurringRepository,
         TransactionRepository $transactionRepository,
     ): Response {
+        // Cuenta en la papelera: a un miembro se le explica la situación
+        // (al dueño con opción de restaurar); a un extraño, 404 sin filtrar nada.
+        if ($account->isDeleted()) {
+            $member = $this->accountService->findActiveMember($account, $this->getUser());
+            if (!$member) {
+                throw $this->createNotFoundException();
+            }
+
+            return $this->render('account/trashed.html.twig', [
+                'account' => $account,
+                'isOwner' => $member->isOwner(),
+            ], new Response(status: Response::HTTP_GONE));
+        }
+
         $this->denyAccessUnlessGranted('ACCOUNT_VIEW', $account);
         $this->accountService->rememberCurrentAccount($request, $account);
 
@@ -124,7 +150,51 @@ class AccountController extends AbstractController
 
         if ($this->isCsrfTokenValid('delete' . $account->getId(), $request->request->get('_token'))) {
             $this->accountService->deleteAccount($account, $this->getUser());
-            $this->addFlash('success', 'Cuenta eliminada.');
+            $this->addFlash('success', 'Cuenta enviada a la papelera. Podrás recuperarla desde Cuentas > Papelera.');
+        }
+
+        return $this->redirectToRoute('account_index');
+    }
+
+    #[Route('/{id}/restore', name: 'restore', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function restore(Account $account, Request $request): Response
+    {
+        $this->denyAccessUnlessGranted('ACCOUNT_MANAGE_TRASH', $account);
+
+        if ($this->isCsrfTokenValid('restore' . $account->getId(), $request->request->get('_token'))) {
+            try {
+                $this->accountService->restoreAccount($account, $this->getUser());
+                $this->addFlash('success', 'Cuenta «' . $account->getName() . '» restaurada.');
+            } catch (\LogicException $e) {
+                $this->addFlash('error', $e->getMessage());
+            }
+        }
+
+        return $this->redirectToRoute('account_index');
+    }
+
+    #[Route('/{id}/destroy', name: 'destroy', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function destroy(Account $account, Request $request): Response
+    {
+        $this->denyAccessUnlessGranted('ACCOUNT_MANAGE_TRASH', $account);
+
+        if (!$this->isCsrfTokenValid('destroy' . $account->getId(), $request->request->get('_token'))) {
+            return $this->redirectToRoute('account_index');
+        }
+
+        // Confirmación por nombre: el usuario debe teclear el nombre exacto.
+        $confirmName = trim((string) $request->request->get('confirm_name', ''));
+        if ($confirmName !== $account->getName()) {
+            $this->addFlash('error', 'El nombre no coincide. La cuenta no se ha eliminado.');
+            return $this->redirectToRoute('account_index');
+        }
+
+        try {
+            $name = $account->getName();
+            $this->accountService->permanentlyDeleteAccount($account, $this->getUser());
+            $this->addFlash('success', 'Cuenta «' . $name . '» eliminada de forma permanente.');
+        } catch (\LogicException $e) {
+            $this->addFlash('error', $e->getMessage());
         }
 
         return $this->redirectToRoute('account_index');

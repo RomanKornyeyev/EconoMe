@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Cuenta no disponible{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-center py-5">
+    <div class="text-center" style="max-width:32rem">
+        <i class="fa-solid fa-trash-can fa-3x text-muted mb-3"></i>
+
+        {% if isOwner %}
+            <h4 class="mb-2">Esta cuenta está en tu papelera</h4>
+            <p class="text-muted">
+                Enviaste «{{ account.name }}» a la papelera, por eso no puedes usarla ahora.
+                Puedes restaurarla para volver a utilizarla.
+            </p>
+            <div class="d-flex justify-content-center gap-2 mt-4">
+                <form method="post" action="{{ path('account_restore', {id: account.id}) }}"
+                      data-controller="confirm"
+                      data-action="submit->confirm#submit"
+                      data-confirm-message-value="La cuenta «{{ account.name }}» volverá a estar activa. Si más adelante quieres eliminarla de forma permanente, tendrás que enviarla de nuevo a la papelera y esperar 24 horas."
+                      data-confirm-text-value="Restaurar"
+                      data-confirm-danger-value="false">
+                    <input type="hidden" name="_token" value="{{ csrf_token('restore' ~ account.id) }}">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-rotate-left me-1"></i>Restaurar cuenta
+                    </button>
+                </form>
+                <a href="{{ path('account_trash') }}" class="btn btn-outline-secondary">
+                    Ir a la papelera
+                </a>
+            </div>
+        {% else %}
+            <h4 class="mb-2">Esta cuenta ya no está disponible</h4>
+            <p class="text-muted">
+                La cuenta <b>{{ account.name }}</b> ha sido marcada para su borrado por su propietario.
+                No podrás usarla a menos que la restaure.
+            </p>
+            <a href="{{ path('account_index') }}" class="btn btn-outline-primary mt-4">
+                Volver a mis cuentas
+            </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,5 +1,13 @@
 [
     {
+        "version": "v1.1.0",
+        "date": "2026-07-20",
+        "title": "Gestión de cuentas",
+        "changes": [
+            { "type": "feat", "text": "Al eliminar una cuenta ahora va a la papelera: se conservan sus movimientos y el propietario puede restaurarla. El borrado definitivo está disponible 24 horas después. Lo que ayuda a reducir el riesgo de pérdida de datos de forma accidental." }
+        ]
+    },
+    {
         "version": "v1.0.3",
         "date": "2026-07-19",
         "title": "Mejoras de experiencia y navegación",
