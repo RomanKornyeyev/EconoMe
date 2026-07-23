@@ -13,6 +13,9 @@
     </div>
     <div class="col-6">
         {{ form_row(form.category) }}
+        {% if suggest|default(false) %}
+            <div class="mt-1 small" data-category-suggest-target="hint" aria-live="polite"></div>
+        {% endif %}
     </div>
     <div class="col-6">
         {{ form_row(form.date, { attr: { class: 'flatpickr-date' } }) }}

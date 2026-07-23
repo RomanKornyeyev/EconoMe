@@ -17,17 +17,11 @@
 
 ## Requisitos
 
-> ℹ️ RECOMENDADO:
-> - Symfony CLI: 5.16.1
-> - Symfony: 8.0.3
-> - PHP: 8.4.3
-> - MySQL: 8.4
->
 > ℹ️ MÍNIMO
-> - Symfony CLI >= 5.10
-> - Symfony >= 7.0
-> - PHP >= 8.2
-> - MySQL: >= 8.0
+> - Symfony CLI >= 5.16.1
+> - Symfony >= 8.0.1
+> - PHP >= 8.2.1
+> - MySQL >= 8.0.3
 
 Dependencias del sistema (Linux/Debian):
 

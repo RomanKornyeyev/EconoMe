@@ -8,6 +8,7 @@ use App\Form\TransactionType;
 use App\Repository\CategoryRepository;
 use App\Repository\TransactionRepository;
 use App\Service\AccountService;
+use App\Service\CategorySuggester;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -136,6 +137,7 @@ class TransactionController extends AbstractController
         $form = $this->createForm(TransactionType::class, $transaction, [
             'currency' => $account->getCurrency(),
             'account'  => $account,
+            'suggest'  => $isNew, // sugerir categoría solo al crear
         ]);
         $form->handleRequest($request);
 
@@ -171,6 +173,35 @@ class TransactionController extends AbstractController
             'transaction' => $transaction,
             'account'     => $account,
             'isNew'       => $isNew,
+        ]);
+    }
+
+    /**
+     * Sugerencia de categoría para un movimiento nuevo, según el historial de
+     * la cuenta. Devuelve el chip HTML a inyectar (patrón AJAX de user-search),
+     * o 204 sin cuerpo cuando no hay nada que sugerir.
+     */
+    #[Route('/suggest-category', name: 'suggest_category', methods: ['GET'])]
+    public function suggestCategory(Request $request, CategorySuggester $suggester): Response
+    {
+        $account = $this->em->getRepository(Account::class)->find($request->query->getInt('account'));
+        if (!$account) {
+            return new Response('', Response::HTTP_NO_CONTENT);
+        }
+        // Solo quien puede crear movimientos en la cuenta recibe sugerencias:
+        // evita filtrar nombres/categorías de cuentas ajenas.
+        $this->denyAccessUnlessGranted('ACCOUNT_EDIT', $account);
+
+        $name = trim((string) $request->query->get('name', ''));
+        $type = (string) $request->query->get('type', Transaction::TYPE_EXPENSE);
+
+        $suggestion = $suggester->suggestFor($account, $name, $type);
+        if ($suggestion === null) {
+            return new Response('', Response::HTTP_NO_CONTENT);
+        }
+
+        return $this->render('transaction/_category_suggestion.html.twig', [
+            'suggestion' => $suggestion,
         ]);
     }
 

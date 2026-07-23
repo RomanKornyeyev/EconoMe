@@ -1,6 +1,7 @@
 import { startStimulusApp } from '@symfony/stimulus-bundle';
 import AvatarUploadController    from './controllers/avatar_upload_controller.js';
 import BulkSelectController      from './controllers/bulk_select_controller.js';
+import CategorySuggestController from './controllers/category_suggest_controller.js';
 import ColorPickerController     from './controllers/color_picker_controller.js';
 import ConfirmController         from './controllers/confirm_controller.js';
 import ConfirmMatchController    from './controllers/confirm_match_controller.js';
@@ -12,6 +13,7 @@ import UserSearchController      from './controllers/user_search_controller.js';
 const app = startStimulusApp();
 app.register('avatar-upload', AvatarUploadController);
 app.register('bulk-select',   BulkSelectController);
+app.register('category-suggest', CategorySuggestController);
 app.register('color-picker',  ColorPickerController);
 app.register('confirm',       ConfirmController);
 app.register('confirm-match', ConfirmMatchController);

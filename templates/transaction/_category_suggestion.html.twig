@@ -1,0 +1,19 @@
+{#
+    Chip de sugerencia de categoría inyectado por el controlador Stimulus
+    "category-suggest". El botón lleva la categoría propuesta en data-category-id;
+    al pulsarlo (o al autorrellenarse si el campo estaba vacío) el controlador
+    actualiza el <select> de categoría.
+#}
+<span class="d-inline-flex align-items-center gap-2 text-body-secondary">
+    <span><i class="fa-solid fa-wand-magic-sparkles me-1"></i>Sugerido:</span>
+    <button type="button"
+            class="btn btn-sm btn-outline-secondary py-0 px-2 d-inline-flex align-items-center gap-1"
+            data-action="category-suggest#apply"
+            data-category-id="{{ suggestion.category.id }}">
+        {% if suggestion.category.color %}
+            <span class="d-inline-block rounded-circle"
+                  style="width:.55rem;height:.55rem;background-color:{{ suggestion.category.color }}"></span>
+        {% endif %}
+        <span>{{ suggestion.category.name }}</span>
+    </button>
+</span>

@@ -9,6 +9,7 @@
 parameters:
     app.name: 'EconoMe'
     app.version: 'v1.1.0'
+    app.repository: 'https://github.com/RomanKornyeyev/EconoMe'
     user_profile_photo_dir: '%kernel.project_dir%/public/media/users/profile_photo'
 
 services:

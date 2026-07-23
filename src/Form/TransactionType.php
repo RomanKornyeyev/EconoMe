@@ -20,6 +20,28 @@ class TransactionType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        // Atributos Stimulus para la sugerencia de categoría (solo al insertar).
+        // El data-controller y el url-value van en el <form> desde la plantilla;
+        // aquí se marcan los campos que el controlador observa y actualiza.
+        $suggest = $options['suggest'];
+        $nameAttr = ['class' => 'form-control'];
+        $typeAttr = [];
+        $categoryAttr = [];
+        if ($suggest) {
+            $nameAttr += [
+                'data-category-suggest-target' => 'name',
+                'data-action' => 'input->category-suggest#request',
+            ];
+            $typeAttr += [
+                'data-category-suggest-target' => 'type',
+                'data-action' => 'change->category-suggest#request',
+            ];
+            $categoryAttr += [
+                'data-category-suggest-target' => 'category',
+                'data-action' => 'change->category-suggest#markTouched',
+            ];
+        }
+
         $builder
             ->add('type', ChoiceType::class, [
                 'label' => 'Tipo',
@@ -27,6 +49,7 @@ class TransactionType extends AbstractType
                     'Gasto' => Transaction::TYPE_EXPENSE,
                     'Ingreso' => Transaction::TYPE_INCOME,
                 ],
+                'attr' => $typeAttr,
             ])
             ->add('amount', MoneyType::class, [
                 'label' => 'Importe',
@@ -39,7 +62,7 @@ class TransactionType extends AbstractType
             ])
             ->add('name', TextType::class, [
                 'label' => 'Nombre',
-                'attr' => ['class' => 'form-control'],
+                'attr' => $nameAttr,
             ])
             ->add('category', EntityType::class, [
                 'label' => 'Categoría',
@@ -47,6 +70,7 @@ class TransactionType extends AbstractType
                 'choice_label' => 'name',
                 'required' => false,
                 'placeholder' => 'Sin categoría',
+                'attr' => $categoryAttr,
                 'query_builder' => function (CategoryRepository $repo) use ($options) {
                     return $repo->createQueryBuilder('c')
                         ->where('c.account = :account')
@@ -75,7 +99,10 @@ class TransactionType extends AbstractType
         $resolver->setDefaults([
             'data_class' => Transaction::class,
             'currency' => 'EUR',
+            // Activa la sugerencia automática de categoría (solo en inserción).
+            'suggest' => false,
         ]);
+        $resolver->setAllowedTypes('suggest', 'bool');
         $resolver->setRequired('account');
         $resolver->setAllowedTypes('account', Account::class);
     }

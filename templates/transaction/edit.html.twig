@@ -12,13 +12,20 @@
         </div>
 
         <div class="card border-0 shadow bg-body-tertiary">
-            {{ form_start(form, {attr: {class: 'needs-validation'}}) }}
+            {% set formAttr = {class: 'needs-validation'} %}
+            {% if isNew %}
+                {% set formAttr = formAttr|merge({
+                    'data-controller': 'category-suggest',
+                    'data-category-suggest-url-value': path('transaction_suggest_category', {account: account.id}),
+                }) %}
+            {% endif %}
+            {{ form_start(form, {attr: formAttr}) }}
                 <div class="card-header bg-transparent border-bottom py-3 px-4">
                     <h5 class="mb-0">{{ isNew ? 'Nuevo movimiento' : 'Editar movimiento' }}</h5>
                     <small class="text-muted">{{ account.name }}</small>
                 </div>
                 <div class="card-body p-4">
-                    {% include 'transaction/_form_transaction.html.twig' %}
+                    {% include 'transaction/_form_transaction.html.twig' with {suggest: isNew} %}
                 </div>
                 <div class="card-footer bg-transparent border-top d-flex gap-2 align-items-center py-3 {{ isNew ? 'justify-content-between' : 'justify-content-center' }}">
                     {% if isNew %}

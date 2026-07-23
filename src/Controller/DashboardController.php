@@ -104,6 +104,7 @@ class DashboardController extends AbstractController
         $transactionForm = $this->createForm(TransactionType::class, $transaction, [
             'currency' => $account->getCurrency(),
             'account'  => $account,
+            'suggest'  => true, // el modal siempre crea: sugerir categoría
             'action'   => $this->generateUrl('transaction_create', ['account' => $account->getId()]),
         ]);
 

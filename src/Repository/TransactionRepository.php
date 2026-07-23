@@ -217,6 +217,55 @@ class TransactionRepository extends ServiceEntityRepository
     }
 
     /**
+     * Categorías usadas históricamente en movimientos con un nombre dado,
+     * dentro de una cuenta y tipo (gasto/ingreso), ordenadas por frecuencia
+     * y, a igualdad, por uso más reciente.
+     *
+     * Es el motor de la sugerencia de categoría al insertar: "qué categoría
+     * sueles ponerle a los movimientos que se llaman así". Se agrupa por
+     * categoría y se ordena por COUNT desc (la más frecuente gana a un desliz
+     * puntual) y MAX(date) desc como desempate.
+     *
+     * La comparación del nombre es exacta a nivel SQL, pero la collation por
+     * defecto de MySQL (utf8mb4_..._ai_ci) la hace insensible a mayúsculas y
+     * acentos, así que "Mercadona" == "mercadóna" sin normalizar en PHP.
+     *
+     * Se excluyen los movimientos sin categoría: no tiene sentido sugerir
+     * "sin categoría".
+     *
+     * @return array<int, array{categoryId: int, cnt: int, lastDate: string}>
+     *         Filas ordenadas de mejor a peor candidata.
+     */
+    public function topCategoriesByName(
+        Account $account,
+        string $name,
+        string $type,
+        int $limit = 5,
+    ): array {
+        $rows = $this->createQueryBuilder('t')
+            ->select('IDENTITY(t.category) AS categoryId', 'COUNT(t.id) AS cnt', 'MAX(t.date) AS lastDate')
+            ->where('t.account = :account')
+            ->andWhere('t.type = :type')
+            ->andWhere('t.name = :name')
+            ->andWhere('t.category IS NOT NULL')
+            ->setParameter('account', $account)
+            ->setParameter('type', $type)
+            ->setParameter('name', $name)
+            ->groupBy('t.category')
+            ->orderBy('cnt', 'DESC')
+            ->addOrderBy('lastDate', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        return array_map(fn (array $r) => [
+            'categoryId' => (int) $r['categoryId'],
+            'cnt'        => (int) $r['cnt'],
+            'lastDate'   => (string) $r['lastDate'],
+        ], $rows);
+    }
+
+    /**
      * Meses distintos (1-12) en los que hay transacciones para una cuenta y año dados.
      */
     public function findMonthsWithTransactions(Account $account, int $year): array
