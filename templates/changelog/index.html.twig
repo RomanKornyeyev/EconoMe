@@ -45,14 +45,17 @@
 		'fix':         { label: 'Arreglo', class: 'text-bg-warning' }
 	} %}
 
+	{% set initial = 5 %}
+
 	<div class="row justify-content-center">
-		<div class="col-lg-8">
+		<div class="col-lg-8" data-controller="show-more" data-show-more-batch-value="{{ initial }}">
 			<h1 class="mb-1">Novedades</h1>
 			<p class="text-body-secondary mb-5">Historial de versiones de {{ app_name }}.</p>
 
 			<div class="timeline">
 				{% for release in releases %}
-					<div class="timeline-item">
+					{% set collapsible = loop.index0 >= initial %}
+					<div class="timeline-item{{ collapsible ? ' d-none' : '' }}"{{ collapsible ? ' data-show-more-target="item"' : '' }}>
 						<div class="d-flex flex-wrap align-items-center gap-2 mb-1">
 							<span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">{{ release.version }}</span>
 							{% if loop.first %}
@@ -77,6 +80,16 @@
 					<p class="text-body-secondary">Todavía no hay versiones publicadas.</p>
 				{% endfor %}
 			</div>
+
+			{% if releases|length > initial %}
+				<div class="text-center mt-4">
+					<button type="button" class="btn btn-outline-secondary"
+							data-show-more-target="button"
+							data-action="show-more#more">
+						<i class="fa-solid fa-chevron-down me-1"></i>Mostrar más
+					</button>
+				</div>
+			{% endif %}
 		</div>
 	</div>
 {% endblock %}

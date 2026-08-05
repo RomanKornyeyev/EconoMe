@@ -1,5 +1,13 @@
 [
     {
+        "version": "v1.2.0",
+        "date": "2026-08-05",
+        "title": "Sugerencia automática de categorías",
+        "changes": [
+            { "type": "feat", "text": "Al registrar un movimiento nuevo, la categoría se rellena sola según la que sueles usar en movimientos con ese mismo nombre. Puedes cambiarla a mano siempre que quieras." }
+        ]
+    },
+    {
         "version": "v1.1.0",
         "date": "2026-07-20",
         "title": "Gestión de cuentas",
