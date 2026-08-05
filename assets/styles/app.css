@@ -248,3 +248,29 @@ span.flatpickr-weekday { color: var(--bs-secondary-color); }
 .numInputWrapper span.arrowUp:after   { border-bottom-color: var(--bs-secondary-color); }
 .numInputWrapper span.arrowDown:after { border-top-color: var(--bs-secondary-color); }
 .numInputWrapper:hover { background: transparent; }
+
+/* ── Sugerencia de categoría ──────────────────────────────────────────────── */
+/* El contenedor del hint no ocupa espacio cuando no hay sugerencia. */
+[data-category-suggest-target="hint"]:empty {
+    display: none;
+}
+
+/* Badge de la categoría sugerida: informativo, borde verde, no clicable. */
+.cat-suggest-badge {
+    border: 1px solid var(--bs-success);
+    border-radius: 50rem;
+    padding: .05rem .5rem;
+    font-size: .8125rem;
+    color: var(--bs-body-color);
+}
+
+/* Resaltado breve del select al autorrellenarse: refuerza que el campo cambió
+   solo; se aplica una vez y se desvanece. */
+@keyframes catAutofillFlash {
+    from { box-shadow: 0 0 0 .25rem rgba(var(--bs-success-rgb), .35); }
+    to   { box-shadow: 0 0 0 .25rem rgba(var(--bs-success-rgb), 0); }
+}
+.cat-autofill-flash {
+    animation: catAutofillFlash .75s ease-out;
+    border-color: var(--bs-success);
+}

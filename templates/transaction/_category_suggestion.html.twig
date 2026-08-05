@@ -1,19 +1,33 @@
 {#
-    Chip de sugerencia de categoría inyectado por el controlador Stimulus
-    "category-suggest". El botón lleva la categoría propuesta en data-category-id;
-    al pulsarlo (o al autorrellenarse si el campo estaba vacío) el controlador
-    actualiza el <select> de categoría.
+    Sugerencia de categoría inyectada por el controlador Stimulus
+    "category-suggest".
+
+    Dos líneas (flex-column) para caber en la columna estrecha de categoría:
+      · Línea 1: el badge (borde verde, no clicable) con la categoría sugerida.
+      · Línea 2: "✓ Rellenada automáticamente", que aparece solo cuando esa
+        categoría es la que está puesta en el <select>. El controlador lo
+        muestra/oculta alternando d-none/d-inline-flex (el atributo hidden pierde
+        ante el !important de las utilidades de Bootstrap).
+
+    El cambio de categoría se hace con el propio campo, no desde aquí.
+    El id de la categoría propuesta viaja en data-category-id del contenedor.
 #}
-<span class="d-inline-flex align-items-center gap-2 text-body-secondary">
-    <span><i class="fa-solid fa-wand-magic-sparkles me-1"></i>Sugerido:</span>
+<span data-category-id="{{ suggestion.category.id }}"
+      class="d-flex flex-column align-items-start gap-1 text-body-secondary">
+    <span class="d-inline-flex align-items-center gap-2">
+        <span><i class="fa-solid fa-wand-magic-sparkles me-1"></i>Sugerido:</span>
+        <span class="cat-suggest-badge d-inline-flex align-items-center gap-1">
+            {% if suggestion.category.color %}
+                <span class="d-inline-block rounded-circle"
+                      style="width:.55rem;height:.55rem;background-color:{{ suggestion.category.color }}"></span>
+            {% endif %}
+            <span>{{ suggestion.category.name }}</span>
+        </span>
+    </span>
+    <span class="cat-suggest-selected text-success align-items-center gap-1 d-none">
+        <i class="fa-solid fa-check"></i>Autocompletado
+    </span>
     <button type="button"
-            class="btn btn-sm btn-outline-secondary py-0 px-2 d-inline-flex align-items-center gap-1"
-            data-action="category-suggest#apply"
-            data-category-id="{{ suggestion.category.id }}">
-        {% if suggestion.category.color %}
-            <span class="d-inline-block rounded-circle"
-                  style="width:.55rem;height:.55rem;background-color:{{ suggestion.category.color }}"></span>
-        {% endif %}
-        <span>{{ suggestion.category.name }}</span>
-    </button>
+            class="cat-suggest-apply btn btn-link btn-sm p-0 align-baseline d-none"
+            data-action="category-suggest#apply">Aplicar sugerencia</button>
 </span>

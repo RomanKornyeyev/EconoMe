@@ -38,7 +38,7 @@ class TransactionType extends AbstractType
             ];
             $categoryAttr += [
                 'data-category-suggest-target' => 'category',
-                'data-action' => 'change->category-suggest#markTouched',
+                'data-action' => 'change->category-suggest#onCategoryChange',
             ];
         }
 

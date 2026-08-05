@@ -104,3 +104,64 @@ php bin/console asset-map:compile
 ```bash
 php bin/console cache:clear
 ```
+
+### 4. Automatizar las transacciones recurrentes (cron)
+
+`app:generate-recurring-transactions` materializa las transacciones pendientes de las recurrentes activas (nómina, alquiler, suscripciones…). En producción debe ejecutarse una vez al día.
+
+Es idempotente y hace *catch-up*: la ventana arranca en `lastGeneratedAt` y deduplica por fecha, así que no duplica nada si se lanza dos veces y recupera los días perdidos si el servidor estuvo caído.
+
+*Los ejemplos asumen el proyecto en `/var/www/EconoMe` y PHP corriendo como `www-data`, que debe tener escritura en `var/`.*
+
+**Prueba el comando a mano** antes de programar nada. Debe devolver `[OK] Se generaron N transacciones.` con exit code 0:
+
+```bash
+sudo -u www-data /usr/bin/php /var/www/EconoMe/bin/console app:generate-recurring-transactions --env=prod --no-interaction
+```
+
+**Programa la tarea** a las 02:00:
+
+```bash
+sudo mkdir -p /var/log/econome && sudo chown www-data:www-data /var/log/econome
+
+sudo crontab -u www-data -l 2>/dev/null > /tmp/cron-econome
+cat >> /tmp/cron-econome <<'EOF'
+MAILTO=""
+0 2 * * * /usr/bin/flock -n /run/lock/econome-recurring.lock /usr/bin/php /var/www/EconoMe/bin/console app:generate-recurring-transactions --env=prod --no-interaction >> /var/log/econome/recurring.log 2>&1
+EOF
+sudo crontab -u www-data /tmp/cron-econome && rm /tmp/cron-econome
+```
+
+Rutas absolutas porque cron no hereda el `PATH` (no hace falta `cd`: Symfony resuelve el proyecto desde `bin/console`). `flock` evita solapamientos y `MAILTO=""` silencia los correos de cron — quítalo si prefieres recibir aviso, ya que el comando devuelve exit code `1` cuando alguna recurrente falla.
+
+**Comprueba que se ejecuta** sin esperar a las 02:00: baja la frecuencia, espera a que pase un minuto par (el log no existe hasta la primera ejecución) y revisa la salida.
+
+```bash
+sudo crontab -u www-data -l | sed 's|^0 2 \* \* \*|*/2 * * * *|' | sudo crontab -u www-data -
+tail -20 /var/log/econome/recurring.log
+```
+
+Ver `0 transacciones` es correcto: lo que se valida no es que genere algo, sino que cron encuentra el binario y llega a la base de datos. Si el log no aparece, `journalctl -u cron --since "10 min ago"`. Después **restaura el horario** y confirma que la línea vuelve a empezar por `0 2 * * *`:
+
+```bash
+sudo crontab -u www-data -l | sed 's|^\*/2 \* \* \* \*|0 2 * * *|' | sudo crontab -u www-data -
+sudo crontab -u www-data -l
+```
+
+**Rota el log** para que no crezca sin límite (semanal, 8 semanas de histórico):
+
+```bash
+sudo tee /etc/logrotate.d/econome > /dev/null <<'EOF'
+/var/log/econome/*.log {
+    weekly
+    rotate 8
+    compress
+    missingok
+    notifempty
+    create 0640 www-data www-data
+}
+EOF
+```
+
+*Cron dispara según la hora del sistema, pero el comando calcula las fechas con la zona horaria de PHP CLI. Comprueba que coinciden con `timedatectl` y `php -i | grep date.timezone`.*
+
