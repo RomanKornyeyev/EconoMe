@@ -120,7 +120,7 @@ class TransactionRepository extends ServiceEntityRepository
         string $type = Transaction::TYPE_EXPENSE
     ): array {
         return $this->createQueryBuilder('t')
-            ->select('c.name as categoryName', 'c.color as categoryColor', 'SUM(t.amount) as total')
+            ->select('c.id as categoryId', 'c.name as categoryName', 'c.color as categoryColor', 'SUM(t.amount) as total')
             ->leftJoin('t.category', 'c')
             ->where('t.account = :account')
             ->andWhere('t.type = :type')

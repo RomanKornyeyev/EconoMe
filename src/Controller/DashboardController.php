@@ -124,6 +124,8 @@ class DashboardController extends AbstractController
             'yearlyTotals'       => $yearlyTotals,
             'year'               => $year,
             'month'              => $month,
+            'from'               => $from,
+            'to'                 => $to,
             'periodLabel'        => $periodLabel,
             'availableYears'     => $availableYears,
             'availableMonths'    => $availableMonths,

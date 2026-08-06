@@ -31,11 +31,39 @@
 </div>
 
 {% if expensesByCategory is not empty %}
+{# Un enlace por sector: mismo período y tipo que el gráfico, filtrado por categoría.
+   Sin categoría (categoryId null) se traduce a category=-1, que transaction_index
+   interpreta como "movimientos sin categoría". #}
+{% set categoryLinks = [] %}
+{% for row in expensesByCategory %}
+    {% set categoryLinks = categoryLinks|merge([path('transaction_index', {
+        account:   currentAccount.id,
+        date_from: from|date('Y-m-d'),
+        date_to:   to|date('Y-m-d'),
+        type:      categoryType,
+        category:  row.categoryId ?? -1,
+    })]) %}
+{% endfor %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('doughnutChart').getContext('2d');
+    const canvas = document.getElementById('doughnutChart');
+    const ctx = canvas.getContext('2d');
+    const links = {{ categoryLinks|json_encode|raw }};
 
-    new Chart(ctx, {
+    // Sector cuyo tooltip ya estaba abierto justo antes del toque actual.
+    // En táctil hace de confirmación: el primer toque solo abre el tooltip y el
+    // segundo, sobre el mismo sector, navega. Así un toque accidental no saca
+    // al usuario del dashboard. Con ratón se navega al primer clic.
+    let armedIndex  = null;
+    let pointerType = 'mouse';
+
+    function goToCategory(index) {
+        if (links[index]) {
+            window.location.href = links[index];
+        }
+    }
+
+    const chart = new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: [{% for row in expensesByCategory %}'{{ row.categoryName ?? "Sin categoría" }}',{% endfor %}],
@@ -50,8 +78,29 @@ document.addEventListener('DOMContentLoaded', function() {
             maintainAspectRatio: true,
             aspectRatio: 1.2,
             cutout: '65%',
+            onHover: function(event, elements) {
+                canvas.style.cursor = elements.length ? 'pointer' : 'default';
+            },
+            onClick: function(event, elements) {
+                if (!elements.length) {
+                    return;
+                }
+                const index = elements[0].index;
+                if (pointerType === 'touch' && armedIndex !== index) {
+                    return; // primer toque: Chart.js ya ha abierto el tooltip
+                }
+                goToCategory(index);
+            },
             plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 8, padding: 10, font: { size: 11 } } },
+                legend: {
+                    position: 'bottom',
+                    labels: { boxWidth: 8, padding: 10, font: { size: 11 } },
+                    // La leyenda navega en lugar de ocultar el sector: es un
+                    // objetivo pequeño y explícito, no hace falta confirmar.
+                    onClick: function(event, legendItem) {
+                        goToCategory(legendItem.index);
+                    }
+                },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
@@ -76,6 +125,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    // pointerdown se dispara antes de que Chart.js procese el toque, así que aquí
+    // el tooltip todavía refleja el estado *previo*: si ya estaba abierto sobre
+    // este sector, el toque que viene es el segundo y puede navegar.
+    canvas.addEventListener('pointerdown', function(event) {
+        pointerType = event.pointerType || 'mouse';
+        const active = chart.tooltip ? chart.tooltip.getActiveElements() : [];
+        armedIndex = active.length ? active[0].index : null;
+    }, { passive: true });
 });
 </script>
 {% endif %}
