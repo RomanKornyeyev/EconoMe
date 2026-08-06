@@ -9,20 +9,18 @@ import { Controller } from '@hotwired/stimulus';
  * su value y se lanza un `change` que burbujea, de modo que los controladores
  * enganchados al campo (category-suggest) siguen funcionando sin cambios.
  *
- * Cada cambio de tipo repinta el segmento activo y cambia el signo. El color solo
- * vive en el segmentado: el bloque del importe se queda neutro, porque teñir de
- * rojo lo que se está tecleando cansa la vista. El signo es solo presentación —
- * el importe se guarda siempre positivo y es el tipo el que decide cómo se
- * muestra, igual que en los listados.
+ * Cada cambio de tipo repinta el segmento activo. El color vive solo ahí: el
+ * campo del importe se queda neutro, porque teñir lo que se está tecleando cansa
+ * la vista.
  *
- * Las clases de cada tipo viajan en su propio <option> (choice_attr en
- * TransactionType), para no repetir aquí la correspondencia.
+ * Las clases de cada tipo viajan en su propio <option> (choice_attr en el
+ * FormType), para no repetir aquí la correspondencia.
  *
  * Al abrir el formulario deja el foco en el importe, que es el campo por el que
  * se empieza siempre.
  */
 export default class extends Controller {
-  static targets = ['select', 'item', 'sign', 'amount'];
+  static targets = ['select', 'item', 'amount'];
 
   connect() {
     this.sync();
@@ -65,8 +63,6 @@ export default class extends Controller {
         item.classList.add(...this.#classes(option.dataset.btn));
       }
     }
-
-    this.signTarget.textContent = option.dataset.sign ?? '';
   }
 
   /**
