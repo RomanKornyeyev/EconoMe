@@ -1,9 +1,6 @@
 <div class="row g-3">
-    <div class="col-md-6">
-        {{ form_row(form.amount) }}
-    </div>
-    <div class="col-md-6">
-        {{ form_row(form.type) }}
+    <div class="col-md-12">
+        {% include 'partials/_amount_type.html.twig' with {amount: form.amount, type: form.type} only %}
     </div>
     <div class="col-md-12">
         {{ form_row(form.name) }}

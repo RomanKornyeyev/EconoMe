@@ -1,5 +1,21 @@
 {% extends 'bootstrap_5_layout.html.twig' %}
 
+{# Con {no_group: true} el importe se pinta sin su propio .input-group (solo input + moneda),
+   para poder componer un grupo a medida junto a otros campos. Sin la variable, comportamiento estándar. #}
+{% block money_widget -%}
+    {%- if no_group|default(false) -%}
+        {%- if not (money_pattern starts with '{{') -%}
+            <span class="input-group-text">{{ money_pattern|form_encode_currency }}</span>
+        {%- endif -%}
+        {{- block('form_widget_simple') -}}
+        {%- if not (money_pattern ends with '}}') -%}
+            <span class="input-group-text">{{ money_pattern|form_encode_currency }}</span>
+        {%- endif -%}
+    {%- else -%}
+        {{- parent() -}}
+    {%- endif -%}
+{%- endblock money_widget %}
+
 {# Sobrescribimos el bloque form_row para manejar form-floating solo en ciertos tipos de input #}
 {% block form_row %}
     {% if form.vars.block_prefixes[1] in ['text', 'email', 'password', 'number'] and 'color' not in form.vars.block_prefixes %}

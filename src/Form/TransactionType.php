@@ -50,6 +50,19 @@ class TransactionType extends AbstractType
                     'Ingreso' => Transaction::TYPE_INCOME,
                 ],
                 'attr' => $typeAttr,
+                // Signo y clases con las que el controlador amount-type pinta el
+                // segmento activo. El bloque del importe se queda neutro; el color
+                // solo distingue el ingreso, porque en tema oscuro un rojo a ese
+                // tamaño resulta agresivo y el gasto es además el tipo por defecto.
+                'choice_attr' => fn (string $type) => Transaction::TYPE_EXPENSE === $type
+                    ? [
+                        'data-sign' => '-',
+                        'data-btn' => 'bg-body-secondary text-body-emphasis',
+                    ]
+                    : [
+                        'data-sign' => '+',
+                        'data-btn' => 'bg-success-subtle text-success border-success-subtle',
+                    ],
             ])
             ->add('amount', MoneyType::class, [
                 'label' => 'Importe',

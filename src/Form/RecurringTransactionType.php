@@ -37,6 +37,18 @@ class RecurringTransactionType extends AbstractType
                     'Gasto' => RecurringTransaction::TYPE_EXPENSE,
                     'Ingreso' => RecurringTransaction::TYPE_INCOME,
                 ],
+                // Signo y clases con las que el controlador amount-type pinta el
+                // segmento activo. Igual que en TransactionType: el bloque del
+                // importe queda neutro y el color solo distingue el ingreso.
+                'choice_attr' => fn (string $type) => RecurringTransaction::TYPE_EXPENSE === $type
+                    ? [
+                        'data-sign' => '-',
+                        'data-btn' => 'bg-body-secondary text-body-emphasis',
+                    ]
+                    : [
+                        'data-sign' => '+',
+                        'data-btn' => 'bg-success-subtle text-success border-success-subtle',
+                    ],
             ])
             ->add('amount', MoneyType::class, [
                 'label' => 'Importe',

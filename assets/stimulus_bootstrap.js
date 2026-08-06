@@ -1,4 +1,5 @@
 import { startStimulusApp } from '@symfony/stimulus-bundle';
+import AmountTypeController      from './controllers/amount_type_controller.js';
 import AvatarUploadController    from './controllers/avatar_upload_controller.js';
 import BulkSelectController      from './controllers/bulk_select_controller.js';
 import CategorySuggestController from './controllers/category_suggest_controller.js';
@@ -12,6 +13,7 @@ import TxSummaryController       from './controllers/tx_summary_controller.js';
 import UserSearchController      from './controllers/user_search_controller.js';
 
 const app = startStimulusApp();
+app.register('amount-type',   AmountTypeController);
 app.register('avatar-upload', AvatarUploadController);
 app.register('bulk-select',   BulkSelectController);
 app.register('category-suggest', CategorySuggestController);

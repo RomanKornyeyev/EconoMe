@@ -1,0 +1,45 @@
+{# Importe y tipo (gasto/ingreso) de un movimiento, en un mismo bloque.
+
+   El tipo se elige con un control segmentado; el <select> real va oculto, sigue
+   siendo la fuente de verdad del formulario y conserva los atributos que le haya
+   puesto su FormType. El estado inicial —segmento activo y signo— se pinta aquí
+   en servidor para que no parpadee al cargar.
+
+   Espera dos vistas de campo:
+     · amount → MoneyType
+     · type   → ChoiceType con el choice_attr que declara data-sign y data-btn
+
+   Uso:
+     {% include 'partials/_amount_type.html.twig' with {amount: form.amount, type: form.type} only %}
+#}
+{%- set choices = type.vars.choices -%}
+{%- set current = choices|filter(c => c.value == type.vars.value)|first ?: choices|first -%}
+<div data-controller="amount-type">
+    <div class="btn-group w-100 mb-3" role="group" aria-label="{{ type.vars.label }}">
+        {% for choice in choices %}
+            {%- set isActive = choice.value == current.value -%}
+            <button type="button" class="btn btn-outline-secondary {{ isActive ? choice.attr['data-btn'] ~ ' fw-semibold' }}"
+                    data-amount-type-target="item" data-action="amount-type#choose"
+                    data-value="{{ choice.value }}" aria-pressed="{{ isActive ? 'true' : 'false' }}">{{ choice.label }}</button>
+        {% endfor %}
+    </div>
+    {{ form_widget(type, { attr: type.vars.attr|merge({
+        class: 'visually-hidden',
+        tabindex: '-1',
+        'aria-hidden': 'true',
+        'data-amount-type-target': 'select',
+        'data-action': (type.vars.attr['data-action']|default('') ~ ' change->amount-type#sync')|trim,
+    }) }) }}
+    <div class="mb-3">
+        {{ form_label(amount) }}
+        <div class="input-group input-group-lg">
+            <span class="input-group-text fw-semibold"
+                  data-amount-type-target="sign" aria-hidden="true">{{ current.attr['data-sign'] }}</span>
+            {{ form_widget(amount, { no_group: true, attr: amount.vars.attr|merge({
+                'data-amount-type-target': 'amount',
+            }) }) }}
+        </div>
+        {{ form_errors(amount) }}
+        {{ form_errors(type) }}
+    </div>
+</div>
