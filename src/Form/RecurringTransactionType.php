@@ -49,8 +49,8 @@ class RecurringTransactionType extends AbstractType
             ->add('amount', MoneyType::class, [
                 'label' => 'Importe',
                 'currency' => $options['currency'] ?? 'EUR',
+                // Sin placeholder: lo pone el tema para el flotante (ver TransactionType).
                 'attr' => [
-                    'placeholder' => '0,00',
                     'pattern' => '[0-9]+([.,][0-9]{1,2})?',
                     'inputmode' => 'decimal',
                 ],

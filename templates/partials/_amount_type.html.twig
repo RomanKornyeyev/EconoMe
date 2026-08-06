@@ -15,18 +15,26 @@
 #}
 {%- set choices = type.vars.choices -%}
 {%- set current = choices|filter(c => c.value == type.vars.value)|first ?: choices|first -%}
-<div class="row gx-3" data-controller="amount-type">
+{# g-3 y no gx-3: el gutter vertical solo se nota al apilarse en móvil, y ahí es lo
+   que suma al mb-3 del importe los mismos 32px que separan al resto de campos. En
+   escritorio no cambia nada, porque el margen negativo de .row lo compensa.
+
+   pt-3 y no mt-3: al ser el bloque sin etiquetas visibles, arranca más pegado al
+   borde superior que el resto de campos. Se compensa con padding porque un margen
+   pisaría el -1rem que el gutter le pone a .row (las utilidades llevan !important)
+   y desplazaría de más. #}
+<div class="row g-3 pt-3" data-controller="amount-type">
     <div class="col-md-8">
         {{ form_row(amount, { attr: amount.vars.attr|merge({
             'data-amount-type-target': 'amount',
         }) }) }}
     </div>
     <div class="col-md-4">
-        {# Etiqueta suelta y no un <label>: el campo real es el <select> oculto, y un
-           `for` apuntándole llevaría el foco a un control invisible al pulsarla.
-           El grupo de botones se identifica con aria-labelledby. #}
-        <div class="form-label" id="{{ type.vars.id }}_label">{{ type.vars.label }}</div>
-        <div class="btn-group w-100 mb-3" role="group" aria-labelledby="{{ type.vars.id }}_label">
+        {# Sin etiqueta visible: la del importe va dentro del campo (flotante), así que
+           una encima de los botones descuadraría la fila. El grupo conserva su nombre
+           accesible con aria-label, y .amount-type-group le iguala la altura al campo
+           (ver general.css). #}
+        <div class="btn-group w-100 mb-3 amount-type-group" role="group" aria-label="{{ type.vars.label }}">
             {% for choice in choices %}
                 {%- set isActive = choice.value == current.value -%}
                 <button type="button" class="btn btn-outline-secondary {{ isActive ? choice.attr['data-btn'] ~ ' fw-semibold' }}"

@@ -63,8 +63,10 @@ class TransactionType extends AbstractType
             ->add('amount', MoneyType::class, [
                 'label' => 'Importe',
                 'currency' => $options['currency'] ?? 'EUR',
+                // Sin placeholder: la etiqueta flotante ocupa su sitio cuando el
+                // campo está vacío, y el tema le pone el que necesita para que
+                // :placeholder-shown funcione.
                 'attr' => [
-                    'placeholder' => '0,00',
                     'pattern' => '[0-9]+([.,][0-9]{1,2})?',
                     'inputmode' => 'decimal',
                 ],

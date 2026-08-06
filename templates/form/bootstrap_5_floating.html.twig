@@ -1,8 +1,42 @@
 {% extends 'bootstrap_5_layout.html.twig' %}
 
+{# Los importes también con etiqueta flotante. Bootstrap admite .form-floating como
+   hijo de .input-group, así que el símbolo de la moneda sigue pegado al campo. La
+   etiqueta va dentro del .form-floating; por eso form_row no la pinta aparte. #}
+{% block money_widget -%}
+    {%- set prepend = not (money_pattern starts with '{{') -%}
+    {%- set append = not (money_pattern ends with '}}') -%}
+    {%- if prepend or append -%}
+        <div class="input-group">
+            {%- if prepend -%}
+                <span class="input-group-text">{{ money_pattern|form_encode_currency }}</span>
+            {%- endif -%}
+            <div class="form-floating">
+                {{- block('form_widget_simple') -}}
+                {{- form_label(form) -}}
+            </div>
+            {%- if append -%}
+                <span class="input-group-text">{{ money_pattern|form_encode_currency }}</span>
+            {%- endif -%}
+        </div>
+    {%- else -%}
+        <div class="form-floating">
+            {{- block('form_widget_simple') -}}
+            {{- form_label(form) -}}
+        </div>
+    {%- endif -%}
+{%- endblock money_widget %}
+
 {# Sobrescribimos el bloque form_row para manejar form-floating solo en ciertos tipos de input #}
 {% block form_row %}
-    {% if form.vars.block_prefixes[1] in ['text', 'email', 'password', 'number'] and 'color' not in form.vars.block_prefixes %}
+    {% if 'money' in form.vars.block_prefixes %}
+        {# El placeholder no se llega a ver (el flotante lo hace transparente), pero
+           hace falta para que :placeholder-shown decida cuándo baja la etiqueta. #}
+        <div class="mb-3">
+            {{ form_widget(form, { 'attr': {'placeholder': form.vars.label} }) }}
+            {{ form_errors(form) }}
+        </div>
+    {% elseif form.vars.block_prefixes[1] in ['text', 'email', 'password', 'number'] and 'color' not in form.vars.block_prefixes %}
         <div class="form-floating mb-3">
             {{ form_widget(form, { 'attr': {'placeholder': form.vars.label} }) }}
             {{ form_label(form) }}

@@ -161,3 +161,12 @@ input.flatpickr-input.form-control[readonly] {
     background-color: var(--bs-body-bg);
     color: var(--bs-body-color);
 }
+
+/* ========================= IMPORTE + TIPO (MOVIMIENTOS) =================== */
+/* Los botones de gasto/ingreso igualan la altura del campo de importe, que al
+   llevar etiqueta flotante es más alto que un botón normal. Va como min-height y
+   no con flex-grow porque en móvil las columnas se apilan y ya no hay altura de
+   fila que repartir. Misma expresión que usa Bootstrap en .form-floating. */
+.amount-type-group {
+    min-height: calc(3.5rem + calc(var(--bs-border-width) * 2));
+}
