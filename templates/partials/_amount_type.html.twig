@@ -8,13 +8,17 @@
 
    Espera dos vistas de campo:
      · amount → MoneyType
-     · type   → ChoiceType con el choice_attr que declara data-btn
+     · type   → ChoiceType con las dos opciones (gasto/ingreso)
 
    Uso, como hijo directo de una .row:
      {% include 'partials/_amount_type.html.twig' with {amount: form.amount, type: form.type} only %}
 #}
 {%- set choices = type.vars.choices -%}
 {%- set current = choices|filter(c => c.value == type.vars.value)|first ?: choices|first -%}
+{# Aspecto del segmento seleccionado. Igual para los dos tipos: el color no
+   distingue gasto de ingreso, solo marca cuál está elegido. Se declara aquí y el
+   controlador lo lee del data-attribute, para no tenerlo en dos sitios. #}
+{%- set activeClass = 'bg-body-secondary text-body-emphasis fw-semibold' -%}
 {# g-3 y no gx-3: el gutter vertical solo se nota al apilarse en móvil, y ahí es lo
    que suma al mb-3 del importe los mismos 32px que separan al resto de campos. En
    escritorio no cambia nada, porque el margen negativo de .row lo compensa.
@@ -23,7 +27,7 @@
    borde superior que el resto de campos. Se compensa con padding porque un margen
    pisaría el -1rem que el gutter le pone a .row (las utilidades llevan !important)
    y desplazaría de más. #}
-<div class="row g-3 pt-3" data-controller="amount-type">
+<div class="row g-3 pt-3" data-controller="amount-type" data-amount-type-active-class="{{ activeClass }}">
     <div class="col-md-8">
         {{ form_row(amount, { attr: amount.vars.attr|merge({
             'data-amount-type-target': 'amount',
@@ -37,7 +41,7 @@
         <div class="btn-group w-100 mb-3 amount-type-group" role="group" aria-label="{{ type.vars.label }}">
             {% for choice in choices %}
                 {%- set isActive = choice.value == current.value -%}
-                <button type="button" class="btn btn-outline-secondary {{ isActive ? choice.attr['data-btn'] ~ ' fw-semibold' }}"
+                <button type="button" class="btn btn-outline-secondary {{ isActive ? activeClass }}"
                         data-amount-type-target="item" data-action="amount-type#choose"
                         data-value="{{ choice.value }}" aria-pressed="{{ isActive ? 'true' : 'false' }}">{{ choice.label }}</button>
             {% endfor %}

@@ -9,18 +9,16 @@ import { Controller } from '@hotwired/stimulus';
  * su value y se lanza un `change` que burbujea, de modo que los controladores
  * enganchados al campo (category-suggest) siguen funcionando sin cambios.
  *
- * Cada cambio de tipo repinta el segmento activo. El color vive solo ahí: el
- * campo del importe se queda neutro, porque teñir lo que se está tecleando cansa
- * la vista.
- *
- * Las clases de cada tipo viajan en su propio <option> (choice_attr en el
- * FormType), para no repetir aquí la correspondencia.
+ * Cada cambio de tipo repinta el segmento activo, con las clases que declara
+ * `data-amount-type-active-class` para no repetirlas entre la plantilla —que pinta
+ * el estado inicial— y este controlador.
  *
  * Al abrir el formulario deja el foco en el importe, que es el campo por el que
  * se empieza siempre.
  */
 export default class extends Controller {
   static targets = ['select', 'item', 'amount'];
+  static classes = ['active'];
 
   connect() {
     this.sync();
@@ -48,19 +46,12 @@ export default class extends Controller {
 
   /** `change` del <select>: cubre tanto los segmentos como cambios externos. */
   sync() {
-    const option = this.selectTarget.selectedOptions[0];
-    if (!option) {
-      return;
-    }
-
-    const tints = this.#family('btn');
     for (const item of this.itemTargets) {
       const active = item.dataset.value === this.selectTarget.value;
-      item.classList.remove(...tints);
-      item.classList.toggle('fw-semibold', active);
+      item.classList.remove(...this.activeClasses);
       item.setAttribute('aria-pressed', String(active));
       if (active) {
-        item.classList.add(...this.#classes(option.dataset.btn));
+        item.classList.add(...this.activeClasses);
       }
     }
   }
@@ -74,14 +65,4 @@ export default class extends Controller {
     this.amountTarget.focus();
     this.amountTarget.select();
   };
-
-  /** Todas las clases que cualquier opción declara en `data-<key>`. */
-  #family(key) {
-    return [...this.selectTarget.options].flatMap((o) => this.#classes(o.dataset[key]));
-  }
-
-  /** classList sólo admite clases sueltas: parte la cadena y descarta vacíos. */
-  #classes(value) {
-    return (value ?? '').split(' ').filter(Boolean);
-  }
 }
