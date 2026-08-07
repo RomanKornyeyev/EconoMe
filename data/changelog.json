@@ -1,5 +1,16 @@
 [
     {
+        "version": "v1.2.1",
+        "date": "2026-08-06",
+        "title": "Mejora de experiencia general",
+        "changes": [
+            { "type": "improvement", "text": "El tipo de movimiento se elige ahora con dos botones junto al importe, en lugar de un desplegable." },
+            { "type": "improvement", "text": "Al crear/editar movimiento, se hace autofoco en el campo de importe." },
+            { "type": "improvement", "text": "El gráfico por categoría muestra el porcentaje que representa cada categoría sobre el total del período." },
+            { "type": "feat", "text": "Al pulsar una categoría del gráfico se abren sus movimientos, ya filtrados por período, tipo y categoría." }
+        ]
+    },
+    {
         "version": "v1.2.0",
         "date": "2026-08-05",
         "title": "Sugerencia automática de categorías",
