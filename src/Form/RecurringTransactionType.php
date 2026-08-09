@@ -50,9 +50,13 @@ class RecurringTransactionType extends AbstractType
             ->add('frequency', ChoiceType::class, [
                 'label' => 'Frecuencia',
                 'choices' => [
-                    'Diario' => RecurringTransaction::FREQ_DAILY,
+                    // Diario retirado de la oferta, no del dominio: las recurrentes
+                    // diarias ya existentes siguen validando y generando.
+                    // 'Diario' => RecurringTransaction::FREQ_DAILY,
                     'Semanal' => RecurringTransaction::FREQ_WEEKLY,
                     'Mensual' => RecurringTransaction::FREQ_MONTHLY,
+                    'Trimestral' => RecurringTransaction::FREQ_QUARTERLY,
+                    'Semestral' => RecurringTransaction::FREQ_SEMIANNUAL,
                     'Anual' => RecurringTransaction::FREQ_YEARLY,
                 ],
             ])

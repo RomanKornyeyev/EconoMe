@@ -274,3 +274,15 @@ span.flatpickr-weekday { color: var(--bs-secondary-color); }
     animation: catAutofillFlash .75s ease-out;
     border-color: var(--bs-success);
 }
+
+/* ── Ayuda plegable ───────────────────────────────────────────────────────── */
+/* El caret apunta hacia abajo con el panel abierto y hacia la derecha cerrado.
+   Bootstrap pone y quita la clase .collapsed en el disparador, así que el giro
+   no necesita JS propio. */
+.help-toggle .fa-caret-down {
+    transition: transform .15s ease;
+}
+
+.help-toggle.collapsed .fa-caret-down {
+    transform: rotate(-90deg);
+}

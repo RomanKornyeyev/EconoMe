@@ -46,13 +46,20 @@ class RecurringTransactionRepository extends ServiceEntityRepository
 
     /**
      * Recurrentes de una cuenta concreta.
+     *
+     * Orden: primero las vigentes (activas y sin fecha fin pasada), luego las
+     * pausadas o finalizadas; dentro de cada grupo, la de inicio más reciente
+     * arriba. endDate es inclusiva, igual que en RecurringTransaction::hasExpired.
      */
     public function findByAccount($account): array
     {
         return $this->createQueryBuilder('r')
+            ->addSelect('CASE WHEN r.isActive = true AND (r.endDate IS NULL OR r.endDate >= :today) THEN 1 ELSE 0 END AS HIDDEN isRunning')
             ->where('r.account = :account')
             ->setParameter('account', $account)
-            ->orderBy('r.isActive', 'DESC')
+            ->setParameter('today', new \DateTime('today'))
+            ->orderBy('isRunning', 'DESC')
+            ->addOrderBy('r.startDate', 'DESC')
             ->addOrderBy('r.name', 'ASC')
             ->getQuery()
             ->getResult();

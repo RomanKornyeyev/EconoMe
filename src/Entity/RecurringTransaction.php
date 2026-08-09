@@ -16,9 +16,16 @@ class RecurringTransaction
     public const TYPE_EXPENSE = 'expense';
     public const TYPE_INCOME = 'income';
 
+    /**
+     * Diaria sigue soportada por el dominio (materializador, validación y
+     * listados) aunque ya no se ofrezca en el formulario: las recurrentes
+     * diarias creadas antes deben seguir generando movimientos.
+     */
     public const FREQ_DAILY = 'daily';
     public const FREQ_WEEKLY = 'weekly';
     public const FREQ_MONTHLY = 'monthly';
+    public const FREQ_QUARTERLY = 'quarterly';
+    public const FREQ_SEMIANNUAL = 'semiannual';
     public const FREQ_YEARLY = 'yearly';
 
     #[ORM\Id]
@@ -55,7 +62,14 @@ class RecurringTransaction
     private string $type = self::TYPE_EXPENSE;
 
     #[ORM\Column(type: "string", length: 10)]
-    #[Assert\Choice(choices: [self::FREQ_DAILY, self::FREQ_WEEKLY, self::FREQ_MONTHLY, self::FREQ_YEARLY])]
+    #[Assert\Choice(choices: [
+        self::FREQ_DAILY,
+        self::FREQ_WEEKLY,
+        self::FREQ_MONTHLY,
+        self::FREQ_QUARTERLY,
+        self::FREQ_SEMIANNUAL,
+        self::FREQ_YEARLY,
+    ])]
     private string $frequency = self::FREQ_MONTHLY;
 
     /**
@@ -220,13 +234,17 @@ class RecurringTransaction
 
     /**
      * Comprueba si la suscripción ha expirado.
+     *
+     * endDate es inclusiva (ver RecurringMaterializer): el propio día de fin
+     * aún genera ocurrencia, así que solo expira a partir del día siguiente.
      */
     public function hasExpired(): bool
     {
         if ($this->isIndefinite()) {
             return false;
         }
-        return new \DateTime() > $this->endDate;
+
+        return new \DateTimeImmutable('today') > \DateTimeImmutable::createFromInterface($this->endDate)->setTime(0, 0);
     }
 
 }

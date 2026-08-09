@@ -78,10 +78,15 @@
             const weekday = date.toLocaleDateString('es-ES', { weekday: 'long' });
             const month = date.toLocaleDateString('es-ES', { month: 'long' });
 
+            const everyMonths = { monthly: 1, quarterly: 3, semiannual: 6 }[freq];
+
             if (freq === 'weekly') {
                 helpEl.textContent = `Se añadirá un nuevo movimiento cada semana, el ${weekday}.`;
-            } else if (freq === 'monthly') {
-                let text = `Se añadirá un nuevo movimiento el día ${d} de cada mes.`;
+            } else if (everyMonths) {
+                // El ciclo se ancla en el mes de inicio, no en el trimestre natural
+                let text = everyMonths === 1
+                    ? `Se añadirá un nuevo movimiento el día ${d} de cada mes.`
+                    : `Se añadirá un nuevo movimiento el día ${d} cada ${everyMonths} meses, empezando en ${month}.`;
                 if (d >= 29) text += ' En meses más cortos, el último día.';
                 helpEl.textContent = text;
             } else if (freq === 'yearly') {

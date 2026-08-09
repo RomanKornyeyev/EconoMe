@@ -62,10 +62,15 @@ class RecurringMaterializer
         }
 
         return match ($rec->getFrequency()) {
-            RecurringTransaction::FREQ_DAILY   => $this->dailyOccurrences($from, $to),
-            RecurringTransaction::FREQ_WEEKLY  => $this->weeklyOccurrences($from, $to, $start),
-            RecurringTransaction::FREQ_MONTHLY => $this->monthlyOccurrences($from, $to, (int) $start->format('j')),
-            RecurringTransaction::FREQ_YEARLY  => $this->yearlyOccurrences($from, $to, (int) $start->format('j'), (int) $start->format('n')),
+            // Diaria ya no se ofrece al crear, pero las recurrentes diarias
+            // existentes siguen generando: sin esta rama caerían en default
+            // y el comando programado dejaría de materializarlas en silencio.
+            RecurringTransaction::FREQ_DAILY      => $this->dailyOccurrences($from, $to),
+            RecurringTransaction::FREQ_WEEKLY     => $this->weeklyOccurrences($from, $to, $start),
+            RecurringTransaction::FREQ_MONTHLY    => $this->monthlyOccurrences($from, $to, $start, 1),
+            RecurringTransaction::FREQ_QUARTERLY  => $this->monthlyOccurrences($from, $to, $start, 3),
+            RecurringTransaction::FREQ_SEMIANNUAL => $this->monthlyOccurrences($from, $to, $start, 6),
+            RecurringTransaction::FREQ_YEARLY     => $this->yearlyOccurrences($from, $to, (int) $start->format('j'), (int) $start->format('n')),
             default => [],
         };
     }
@@ -262,20 +267,39 @@ class RecurringMaterializer
         return $dates;
     }
 
-    /** @return \DateTimeImmutable[] */
-    private function monthlyOccurrences(\DateTimeImmutable $from, \DateTimeImmutable $to, int $day): array
+    /**
+     * Serie de meses con paso $intervalMonths anclada en el mes de startDate:
+     * mensual = 1, trimestral = 3, semestral = 6.
+     *
+     * El ciclo es relativo a startDate, no al trimestre/semestre natural: una
+     * trimestral que empieza en febrero cae en feb, may, ago y nov.
+     *
+     * @return \DateTimeImmutable[]
+     */
+    private function monthlyOccurrences(\DateTimeImmutable $from, \DateTimeImmutable $to, \DateTimeImmutable $start, int $intervalMonths): array
     {
+        $day = (int) $start->format('j');
+
+        // Índice absoluto de mes (año·12 + mes): permite saltar directamente al
+        // primer mes en ciclo sin recorrer los intermedios que no tocan.
+        $anchor = (int) $start->format('Y') * 12 + (int) $start->format('n') - 1;
+        $index  = (int) $from->format('Y') * 12 + (int) $from->format('n') - 1;
+
+        // Retroceder al último mes en ciclo <= from: su ocurrencia puede caer
+        // antes de from dentro del mismo mes, y la descarta el filtro de abajo.
+        $index = $index > $anchor
+            ? $anchor + intdiv($index - $anchor, $intervalMonths) * $intervalMonths
+            : $anchor;
+
         $dates = [];
-        $month = new \DateTimeImmutable($from->format('Y-m-01'));
-        while (true) {
-            $occ = $this->clampToMonth((int) $month->format('Y'), (int) $month->format('n'), $day);
+        for (; ; $index += $intervalMonths) {
+            $occ = $this->clampToMonth(intdiv($index, 12), $index % 12 + 1, $day);
             if ($occ > $to) {
                 break;
             }
             if ($occ >= $from) {
                 $dates[] = $occ;
             }
-            $month = $month->modify('first day of next month');
         }
 
         return $dates;

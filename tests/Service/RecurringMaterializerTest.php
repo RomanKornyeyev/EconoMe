@@ -131,8 +131,79 @@ class RecurringMaterializerTest extends TestCase
         );
     }
 
+    // ── Trimestral / Semestral ───────────────────────────────────────────────
+
+    public function testQuarterlyAnchorsOnStartMonthNotCalendarQuarter(): void
+    {
+        // Inicio en febrero → feb, may, ago, nov (no el trimestre natural ene/abr/jul/oct)
+        $rec = $this->recurring(RecurringTransaction::FREQ_QUARTERLY, '2026-02-15');
+
+        $this->assertSame(
+            ['2026-02-15', '2026-05-15', '2026-08-15', '2026-11-15', '2027-02-15'],
+            $this->occurrences($rec, '2026-01-01', '2027-03-31'),
+        );
+    }
+
+    public function testQuarterlyWindowStartsMidSeries(): void
+    {
+        // Ventana que arranca en un mes fuera de ciclo: no adelanta la ocurrencia
+        $rec = $this->recurring(RecurringTransaction::FREQ_QUARTERLY, '2026-02-15');
+
+        $this->assertSame(
+            ['2026-05-15', '2026-08-15'],
+            $this->occurrences($rec, '2026-03-01', '2026-09-30'),
+        );
+    }
+
+    public function testQuarterlyDay31ClampsToLastDayOfMonth(): void
+    {
+        // 31/08 no existe en noviembre (30 días) ni en febrero
+        $rec = $this->recurring(RecurringTransaction::FREQ_QUARTERLY, '2026-08-31');
+
+        $this->assertSame(
+            ['2026-08-31', '2026-11-30', '2027-02-28', '2027-05-31'],
+            $this->occurrences($rec, '2026-01-01', '2027-06-30'),
+        );
+    }
+
+    public function testSemiannualRepeatsEverySixMonths(): void
+    {
+        $rec = $this->recurring(RecurringTransaction::FREQ_SEMIANNUAL, '2026-03-10');
+
+        $this->assertSame(
+            ['2026-03-10', '2026-09-10', '2027-03-10', '2027-09-10'],
+            $this->occurrences($rec, '2026-01-01', '2027-12-31'),
+        );
+    }
+
+    public function testSemiannualCrossesYearBoundary(): void
+    {
+        // Inicio en noviembre → la siguiente cae en mayo del año siguiente
+        $rec = $this->recurring(RecurringTransaction::FREQ_SEMIANNUAL, '2026-11-30');
+
+        $this->assertSame(
+            ['2026-11-30', '2027-05-30'],
+            $this->occurrences($rec, '2026-01-01', '2027-06-30'),
+        );
+    }
+
+    public function testSemiannualEndDateClipsOccurrences(): void
+    {
+        $rec = $this->recurring(RecurringTransaction::FREQ_SEMIANNUAL, '2026-01-15', '2026-08-01');
+
+        $this->assertSame(
+            ['2026-01-15', '2026-07-15'],
+            $this->occurrences($rec, '2026-01-01', '2027-12-31'),
+        );
+    }
+
     // ── Diaria ───────────────────────────────────────────────────────────────
 
+    /**
+     * Diaria ya no se ofrece en el formulario, pero el dominio debe seguir
+     * materializándola: las recurrentes diarias creadas antes siguen vivas y el
+     * comando programado las procesa en cada ejecución.
+     */
     public function testDailyGeneratesEveryDay(): void
     {
         $rec = $this->recurring(RecurringTransaction::FREQ_DAILY, '2026-07-01');

@@ -1,8 +1,9 @@
-{% set freqMap = {daily: 'Diario', weekly: 'Semanal', monthly: 'Mensual', yearly: 'Anual'} %}
+{# 'daily' se mantiene: ya no se puede elegir, pero las recurrentes diarias antiguas siguen listándose #}
+{% set freqMap = {daily: 'Diario', weekly: 'Semanal', monthly: 'Mensual', quarterly: 'Trimestral', semiannual: 'Semestral', yearly: 'Anual'} %}
 {% set canEdit = canEdit ?? is_granted('ACCOUNT_EDIT', currentAccount) %}
 <div class="p-3 d-flex flex-column gap-2">
     {% for recurring in recurrings %}
-    <div class="bg-body-secondary rounded-3 p-3 {{ not recurring.isActive ? 'opacity-75' : '' }}">
+    <div class="bg-body-secondary rounded-3 p-3 {{ not recurring.isActive or recurring.hasExpired ? 'opacity-75' : '' }}">
         <div class="d-flex justify-content-between align-items-center mb-1">
             <span class="fw-semibold small">
                 {{ recurring.name }}
@@ -66,10 +67,12 @@
                         {{ recurring.category.name }}
                     </span>
                 {% endif %}
-                {% if recurring.isActive %}
-                    <span class="badge bg-success-subtle text-success">Activa</span>
+                {% if recurring.hasExpired %}
+                    <span class="badge bg-primary-subtle text-primary">Finalizado</span>
+                {% elseif recurring.isActive %}
+                    <span class="badge bg-success-subtle text-success">Activo</span>
                 {% else %}
-                    <span class="badge bg-secondary-subtle text-secondary">Inactiva</span>
+                    <span class="badge bg-secondary-subtle text-secondary">Inactivo</span>
                 {% endif %}
             </div>
         </div>

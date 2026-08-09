@@ -1,5 +1,16 @@
 [
     {
+        "version": "v1.3.0",
+        "date": "2026-08-09",
+        "title": "Nuevas frecuencias en movimientos recurrentes",
+        "changes": [
+            { "type": "feat", "text": "Los movimientos recurrentes admiten dos frecuencias nuevas: trimestral y semestral. El ciclo se cuenta desde la fecha de inicio, así que uno trimestral que empieza en febrero se repite en mayo, agosto y noviembre." },
+            { "type": "improvement", "text": "La frecuencia diaria ya no se ofrece al crear un movimiento recurrente. Los que ya tuvieras con esa frecuencia siguen generando movimientos con normalidad." },
+            { "type": "improvement", "text": "Mejoras menores en movimientos recurrentes (listado y creación)." },
+            { "type": "fix", "text": "Los movimientos recurrentes a los que ya se les ha pasado la fecha de fin se muestran como «Finalizado». Antes seguían apareciendo como activos aunque ya no generasen nada." }
+        ]
+    },
+    {
         "version": "v1.2.1",
         "date": "2026-08-06",
         "title": "Mejora de experiencia general",

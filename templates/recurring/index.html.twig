@@ -29,6 +29,27 @@
     {% endif %}
 </div>
 
+<div class="mb-3">
+    <a class="help-toggle collapsed small text-decoration-none d-inline-flex align-items-center gap-1"
+       data-bs-toggle="collapse" href="#recurringHelp" role="button"
+       aria-expanded="false" aria-controls="recurringHelp">
+        <i class="fa-solid fa-caret-down"></i>¿Cómo funcionan los movimientos recurrentes?
+    </a>
+    <div class="collapse" id="recurringHelp">
+        <div class="card card-body bg-body-tertiary mt-2 small text-body-secondary">
+            <p class="mb-2">
+                Cada vez que llega una fecha del calendario, el movimiento se añade
+                automáticamente a tus movimientos, sin que tengas que hacer nada.
+            </p>
+            <ul class="mb-0 ps-3">
+                <li>Si la fecha de inicio ya ha pasado, también se generan los movimientos anteriores.</li>
+                <li>Pausar una recurrente detiene la generación. Al reactivarla se retoma desde ese momento, sin crear los movimientos del periodo en pausa.</li>
+                <li>Al pasar la fecha de fin deja de generar y se marca como finalizada. Ese último día todavía genera su movimiento.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
 {% if recurrings is empty %}
     <div class="text-center py-5">
         <i class="fa-solid fa-rotate fa-3x text-muted mb-3"></i>
