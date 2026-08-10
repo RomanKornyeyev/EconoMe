@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Account;
 use App\Entity\Transaction;
 use App\Form\TransactionType;
+use App\Pagination\PageSize;
 use App\Repository\CategoryRepository;
 use App\Repository\TransactionRepository;
 use App\Service\AccountService;
@@ -21,6 +22,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/transaction', name: 'transaction_')]
 class TransactionController extends AbstractController
 {
+    /** Listado completo: se asume que se viene a revisar movimientos en bloque. */
+    private const PER_PAGE_DEFAULT = 25;
+
     public function __construct(
         private AccountService $accountService,
         private TransactionRepository $transactionRepo,
@@ -85,6 +89,8 @@ class TransactionController extends AbstractController
             $sortField = 'date';
         }
 
+        $perPage = PageSize::fromRequest($request, self::PER_PAGE_DEFAULT);
+
         $query = $this->transactionRepo->findByFiltersQuery(
             $account, $dateFrom, $dateTo, $type, $categoryId, $noCategory, $search, $sortField, $sortDir, $amountFrom, $amountTo
         );
@@ -92,7 +98,7 @@ class TransactionController extends AbstractController
         $pagination = $paginator->paginate(
             $query,
             $request->query->getInt('page', 1),
-            15
+            $perPage
         );
 
         return $this->render('transaction/index.html.twig', [
@@ -109,6 +115,8 @@ class TransactionController extends AbstractController
             'currentAmountTo'    => $amountTo,
             'sortField'          => $sortField,
             'sortDir'            => $sortDir,
+            'perPage'            => $perPage,
+            'perPageOptions'     => PageSize::OPTIONS,
         ]);
     }
 

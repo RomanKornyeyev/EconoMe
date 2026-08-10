@@ -145,9 +145,13 @@
     </div>
 </div>
 
-<div class="mt-3 d-flex justify-content-center">
-    {{ knp_pagination_render(transactions) }}
-</div>
+{% include 'partials/_pagination_bar.html.twig' with {
+    pagination: transactions,
+    perPageOptions: perPageOptions,
+    anchor: 'table_transactions',
+    itemLabel: 'movimiento',
+    itemLabelPlural: 'movimientos',
+} only %}
 
 {% include 'transaction/_modal_create.html.twig' %}
 {% include 'transaction/_modal_summary.html.twig' %}

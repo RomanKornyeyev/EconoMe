@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Transaction;
 use App\Form\TransactionType;
+use App\Pagination\PageSize;
 use App\Repository\TransactionRepository;
 use App\Repository\RecurringTransactionRepository;
 use App\Service\AccountService;
@@ -17,6 +18,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_USER')]
 class DashboardController extends AbstractController
 {
+    /** Aquí la lista convive con los gráficos: se empieza corto. */
+    private const PER_PAGE_DEFAULT = 10;
+
     #[Route('/dashboard', name: 'dashboard')]
     public function index(
         Request $request,
@@ -97,7 +101,7 @@ class DashboardController extends AbstractController
         $pagination = $paginator->paginate(
             $transactionRepo->findByFiltersQuery($account, $from, $to, null, null, false, null, $sortField, $sortDir),
             $request->query->getInt('page', 1),
-            10
+            PageSize::fromRequest($request, self::PER_PAGE_DEFAULT)
         );
 
         $transaction = new Transaction($account, $user);
@@ -118,6 +122,7 @@ class DashboardController extends AbstractController
             'periodExpense'      => $periodExpense,
             'activeRecurrings'   => $activeRecurrings,
             'transactions'       => $pagination,
+            'perPageOptions'     => PageSize::OPTIONS,
             'sortField'          => $sortField,
             'sortDir'            => $sortDir,
             'expensesByCategory' => $expensesByCategory,

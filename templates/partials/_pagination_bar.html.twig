@@ -1,0 +1,81 @@
+{#
+    Barra inferior de un listado paginado: registros por página, rango visible
+    dentro del total y paginador.
+
+    Variables:
+    - pagination:       objeto de KnpPaginator (obligatorio)
+    - perPageOptions:   tamaños de página seleccionables. Si no se pasa, no se
+                        pinta el selector: listados de tamaño fijo (el widget de
+                        últimos movimientos del dashboard) usan solo el resto.
+    - anchor:           id del listado al que volver al cambiar de tamaño, sin
+                        almohadilla; sin él la página salta arriba del todo.
+    - itemLabel /
+      itemLabelPlural:  nombre de lo que se lista, para el texto del rango.
+#}
+{% set options     = perPageOptions ?? null %}
+{% set anchorHash  = (anchor ?? null) ? '#' ~ anchor : '' %}
+{% set label       = itemLabel ?? 'registro' %}
+{% set labelPlural = itemLabelPlural ?? 'registros' %}
+
+{# El rango lo calcula KnpPaginator: firstItemNumber/lastItemNumber ya cuentan
+   los elementos realmente devueltos, así que la última página y las que se
+   piden fuera de rango salen bien sin hacer cuentas aquí. #}
+{% set data    = pagination.getPaginationData() %}
+{% set shown   = data.currentItemCount|default(0) %}
+{% set total   = pagination.getTotalItemCount() %}
+{% set perPage = pagination.getItemNumberPerPage() %}
+
+{# align-items-start: el <ul> del paginador arrastra su margen inferior, así que
+   centrar la fila dejaría el resto caído respecto a él. #}
+<div class="mt-3 d-flex flex-wrap justify-content-between align-items-start gap-3">
+    <div class="d-flex align-items-center gap-2">
+        {% if options %}
+            {# Cada opción es el enlace a su vista, conservando filtros y orden;
+               se vuelve a la página 1 porque la actual puede quedar fuera de
+               rango al ampliar el tamaño.
+
+               Se monta como un paginador de un solo ítem, no como un botón
+               suelto: Bootstrap declara las variables --bs-pagination-* dentro
+               de la regla .pagination, así que .page-link solo se pinta bajo ese
+               contenedor. De paso, al ser primer y último .page-item a la vez,
+               hereda el redondeo de ambos extremos y queda idéntico a los
+               botones de al lado. #}
+            <ul class="pagination mb-0">
+                <li class="page-item dropdown">
+                    <button type="button" class="page-link dropdown-toggle"
+                            data-bs-toggle="dropdown" aria-expanded="false"
+                            aria-label="Registros por página">
+                        {{ perPage }}
+                    </button>
+                    <ul class="dropdown-menu">
+                        {% for option in options %}
+                            <li>
+                                <a class="dropdown-item {{ option == perPage ? 'active' : '' }}"
+                                   href="?{{ app.request.query.all|merge({'perPage': option, 'page': 1})|url_encode }}{{ anchorHash }}">
+                                    {{ option }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            </ul>
+            <span class="text-muted small">{{ labelPlural|capitalize }} por página</span>
+            <span class="text-muted small">&nbsp;&nbsp;·&nbsp;&nbsp;</span>
+        {% endif %}
+
+        {# py-2 iguala el desplazamiento vertical del texto de .page-link
+           (borde + padding), que es contra lo que se alinea. #}
+        <span class="text-muted small py-2">
+            {% if shown == 0 %}
+                Sin {{ labelPlural }}
+            {% else %}
+                Mostrando {{ data.firstItemNumber|number_format(0, ',', '.') }} a
+                {{ data.lastItemNumber|number_format(0, ',', '.') }}
+                de {{ total|number_format(0, ',', '.') }}
+                {{ total == 1 ? label : labelPlural }}
+            {% endif %}
+        </span>
+    </div>
+
+    {{ knp_pagination_render(pagination) }}
+</div>

@@ -1,5 +1,14 @@
 [
     {
+        "version": "v1.3.1",
+        "date": "2026-08-10",
+        "title": "Mejora de la experiencia de usuario (listados)",
+        "changes": [
+            { "type": "feat", "text": "Se puede elegir el número de registros que se muestran por página en los listados de movimientos." },
+            { "type": "improvement", "text": "Bajo cada listado se muestra más información, por ejemplo «Mostrando 1 a 25 de 320 movimientos»." }
+        ]
+    },
+    {
         "version": "v1.3.0",
         "date": "2026-08-09",
         "title": "Nuevas frecuencias en movimientos recurrentes",
