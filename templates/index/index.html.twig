@@ -6,26 +6,142 @@
 {% block content %}
 	<style>
 		/* estilos en línea, juzgadme */
-		.animate-bounce {
-			animation: bounce 1.5s infinite;
+		/* ---------- HERO ---------- */
+		.landing-page .hero {
+			position: relative;
+			overflow: hidden;
+			padding-bottom: 2rem;
 		}
-		@keyframes bounce {
-			0%,
-			20%,
-			50%,
-			80%,
-			100% {
-				transform: translateY(0);
+		@media (min-width: 992px) {
+			.landing-page .hero {
+				/* se come el padding del .container para que la captura sangre por la derecha */
+				margin-right: calc(var(--bs-gutter-x) * -.5);
+				padding-top: 2rem;
+				padding-bottom: 4rem;
 			}
-			40% {
-				transform: translateY(8px);
-			}
-			60% {
-				transform: translateY(4px);
-			}
+		}
+		.landing-page .hero-glow {
+			position: absolute;
+			top: -30%;
+			right: -8%;
+			width: 65%;
+			aspect-ratio: 1;
+			border-radius: 50%;
+			background: radial-gradient(circle, rgba(var(--bs-primary-rgb), .16), transparent 65%);
+			pointer-events: none;
+		}
+		[data-bs-theme="light"] .landing-page .hero-glow {
+			opacity: .5;
 		}
 		.landing-page .hero-badge {
-			letter-spacing: .05em;
+			display: inline-flex;
+			align-items: center;
+			gap: .5rem;
+			padding: .45rem 1rem;
+			font-size: .8125rem;
+			font-weight: 500;
+			color: var(--bs-primary);
+			background-color: rgba(var(--bs-primary-rgb), .08);
+			border: 1px solid rgba(var(--bs-primary-rgb), .35);
+			border-radius: 50rem;
+		}
+		.landing-page .hero-badge::before {
+			content: "";
+			width: .5rem;
+			height: .5rem;
+			border-radius: 50%;
+			background-color: var(--bs-primary);
+		}
+		.landing-page .hero-title {
+			font-size: clamp(2.15rem, 5vw, 3.5rem);
+			line-height: 1.06;
+			letter-spacing: -.02em;
+		}
+		.landing-page .hero-lead {
+			max-width: 34rem;
+			font-size: 1.0625rem;
+			line-height: 1.6;
+		}
+		.landing-page .hero-cta {
+			box-shadow: 0 .5rem 1.5rem rgba(var(--bs-primary-rgb), .4);
+		}
+		.landing-page .hero-checks {
+			font-size: .875rem;
+			column-gap: 1.5rem;
+			row-gap: .5rem;
+		}
+		/* marco tipo ventana de navegador alrededor de la captura */
+		.landing-page .hero-shot {
+			position: relative;
+			overflow: hidden;
+			background-color: var(--bs-body-bg);
+			border: 1px solid var(--bs-border-color);
+			border-radius: .875rem;
+			box-shadow: 0 1.25rem 3rem rgba(0, 0, 0, .28);
+		}
+		@media (min-width: 992px) {
+			.landing-page .hero-shot {
+				width: 140%;
+				border-right: 0;
+				border-top-right-radius: 0;
+				border-bottom-right-radius: 0;
+			}
+		}
+		.landing-page .hero-shot-bar {
+			display: flex;
+			align-items: center;
+			gap: .375rem;
+			padding: .6rem .9rem;
+			background-color: var(--bs-tertiary-bg);
+			border-bottom: 1px solid var(--bs-border-color);
+		}
+		.landing-page .hero-shot-dot {
+			width: .625rem;
+			height: .625rem;
+			border-radius: 50%;
+			background-color: var(--bs-secondary-bg);
+		}
+		.landing-page .hero-shot-url {
+			margin-left: .75rem;
+			font-family: var(--bs-font-monospace);
+			font-size: .75rem;
+			color: var(--bs-secondary-color);
+		}
+		/* la captura va de fondo para que solo se descargue la variante del tema activo */
+		.landing-page .hero-shot-media {
+			aspect-ratio: 1524 / 890;
+			background-image: url("{{ asset('images/econome_hero_pc_light.jpg') }}");
+			background-size: cover;
+			background-position: top left;
+		}
+		[data-bs-theme="dark"] .landing-page .hero-shot-media {
+			background-image: url("{{ asset('images/econome_hero_pc_dark.jpg') }}");
+		}
+		@media (max-width: 991.98px) {
+			.landing-page .hero-shot-media {
+				max-height: 26rem;
+			}
+			/* la captura se corta abajo, difuminada contra el fondo */
+			.landing-page .hero-shot::after {
+				content: "";
+				position: absolute;
+				right: 0;
+				bottom: 0;
+				left: 0;
+				height: 4rem;
+				background: linear-gradient(to bottom, transparent, var(--bs-body-bg));
+				pointer-events: none;
+			}
+		}
+		@media (max-width: 575.98px) {
+			.landing-page .hero-shot-media {
+				aspect-ratio: 400 / 728;
+				background-image: url("{{ asset('images/econome_hero_mobile_light.jpg') }}");
+				background-position: top center;
+			}
+			[data-bs-theme="dark"] .landing-page .hero-shot-media {
+				background-image: url("{{ asset('images/econome_hero_mobile_dark.png') }}");
+			}
 		}
 		.landing-page .feature-card {
 			transition: transform .2s ease, box-shadow .2s ease;
@@ -50,29 +166,56 @@
 		class="landing-page">
 
 		{# SECCIÓN 1: HERO #}
-		<section class="d-flex flex-column justify-content-center align-items-center text-center py-5" style="min-height: 83vh;">
-			<div class="container">
-				<h1 class="display-3 fw-bold mb-3">Ahorra más. Estrésate menos.</h1>
-				<p class="lead mb-4 mx-auto" style="max-width: 640px;">Toma el control de tu economía personal de forma simple y visual.</p>
-				{% if is_logged %}
-					<div class="d-flex justify-content-center gap-3 flex-wrap">
-						<a href="{{ path('dashboard') }}" class="btn btn-primary btn-lg">
-							Ir a mi dashboard
-						</a>
-						<a href="{{ path('transaction_index') }}" class="btn btn-outline-primary btn-lg">Mis movimientos</a>
+		<section class="hero">
+			<div class="hero-glow" aria-hidden="true"></div>
+			<div class="row align-items-center g-4 g-lg-5 position-relative">
+
+				{# Columna de texto #}
+				<div class="col-12 col-lg-5 text-center text-lg-start">
+					<span class="hero-badge">Personal o compartido con quien quieras</span>
+
+					<h1 class="hero-title fw-bold mt-4 mb-3">
+						Sabes cuánto ganas.<br>
+						<span class="text-primary">¿Sabes en qué se va?</span>
+					</h1>
+
+					<p class="hero-lead text-body-secondary mb-4 mx-auto mx-lg-0">
+						Anota un gasto en cinco segundos y deja que {{ app_name }} te enseñe, mes a mes, a dónde va cada euro. Sin conectar tu banco.
+					</p>
+
+					{% if is_logged %}
+						<div class="d-grid d-sm-flex flex-wrap gap-3 justify-content-sm-center justify-content-lg-start">
+							<a href="{{ path('dashboard') }}" class="btn btn-primary btn-lg hero-cta">Ir a mi dashboard</a>
+							<a href="{{ path('transaction_index') }}" class="btn btn-outline-secondary btn-lg">Mis movimientos</a>
+						</div>
+					{% else %}
+						<div class="d-grid d-sm-flex flex-wrap gap-3 justify-content-sm-center justify-content-lg-start">
+							<a href="{{ path('app_register') }}" class="btn btn-primary btn-lg hero-cta">Crear cuenta gratis</a>
+							{# TODO: no existe ruta de demo todavía; de momento lleva a las funcionalidades #}
+							<a href="#funcionalidades" class="btn btn-outline-secondary btn-lg">Ver demo con datos de ejemplo</a>
+						</div>
+					{% endif %}
+
+					<div class="hero-checks d-flex flex-wrap justify-content-center justify-content-lg-start text-body-secondary mt-3">
+						<span><i class="fa-solid fa-check me-1"></i>Gratis, sin tarjeta</span>
+						<span><i class="fa-solid fa-check me-1"></i>Sin acceso a tu banco</span>
+						<span><i class="fa-solid fa-check me-1"></i>Claro y oscuro</span>
 					</div>
-				{% else %}
-					<div class="d-flex justify-content-center gap-3 flex-wrap">
-						<a href="{{ path('app_register') }}" class="btn btn-primary btn-lg">Crear cuenta gratis</a>
-						<a href="{{ path('app_login') }}" class="btn btn-outline-primary btn-lg">Iniciar sesión</a>
+				</div>
+
+				{# Columna de la captura #}
+				<div class="col-12 col-lg-7">
+					<div class="hero-shot">
+						<div class="hero-shot-bar">
+							<span class="hero-shot-dot"></span>
+							<span class="hero-shot-dot"></span>
+							<span class="hero-shot-dot"></span>
+							<span class="hero-shot-url d-none d-sm-inline">econome.app/dashboard</span>
+						</div>
+						<div class="hero-shot-media" role="img" aria-label="Dashboard de {{ app_name }} con el balance, los ingresos y gastos del mes y los gráficos por categoría"></div>
 					</div>
-					<p class="text-body-secondary small mt-3 mb-0">Sin tarjeta. Sin permanencia. Solo tus números claros.</p>
-				{% endif %}
-			</div>
-			<div class="mt-5 d-flex flex-column justify-content-center">
-				<a href="#funcionalidades" class="text-body" aria-label="Ver funcionalidades">
-					<i class="fa-solid fa-chevron-down fa-2x animate-bounce"></i>
-				</a>
+				</div>
+
 			</div>
 		</section>
 
