@@ -7,17 +7,42 @@
 	<style>
 		/* estilos en línea, juzgadme */
 		/* ---------- HERO ---------- */
+		/* La captura se sale del .container hasta el borde de la ventana (ver .hero-shot).
+		   Hace falta recortar a nivel de viewport porque los 100vw incluyen la barra de scroll.
+		   Tiene que ser "clip" y no "hidden": "hidden" crearía un contenedor de scroll y
+		   rompería el sticky-top del header. */
+		html {
+			overflow-x: clip;
+		}
 		.landing-page .hero {
 			position: relative;
-			overflow: hidden;
 			padding-bottom: 2rem;
 		}
 		@media (min-width: 992px) {
 			.landing-page .hero {
-				/* se come el padding del .container para que la captura sangre por la derecha */
-				margin-right: calc(var(--bs-gutter-x) * -.5);
-				padding-top: 2rem;
 				padding-bottom: 4rem;
+			}
+		}
+		/* Rejilla propia en vez de .row/.col de Bootstrap: así el bloque que se escapa es
+		   hijo directo del .container, que SÍ está centrado en el viewport. Solo en ese caso
+		   "50%" (que resuelve contra el bloque contenedor) menos "50vw" deja el borde derecho
+		   clavado en el borde de la ventana. Dentro de una columna el 50% resuelve contra la
+		   columna, que está descentrada, y el cálculo se va largo. */
+		.landing-page .hero-grid {
+			display: grid;
+			gap: 2.5rem;
+		}
+		@media (min-width: 992px) {
+			/* La columna de texto se mide por su contenido (tope 34rem, el mismo ancho de
+			   lectura que .hero-lead) en vez de por una fracción; el 42% solo la frena en
+			   pantallas pequeñas. Todo lo que sobra se lo queda la captura, que así arranca
+			   siempre alrededor del 46% del ancho en lugar de irse a la derecha en cuanto
+			   la pantalla crece. */
+			.landing-page .hero-grid {
+				grid-template-columns: minmax(0, min(34rem, 42%)) minmax(0, 1fr);
+				align-items: center;
+				column-gap: 2rem;
+				margin-right: calc(50% - 50vw);
 			}
 		}
 		.landing-page .hero-glow {
@@ -52,8 +77,15 @@
 			border-radius: 50%;
 			background-color: var(--bs-primary);
 		}
+		/* El titular se dimensiona contra el ancho de SU columna, no del viewport:
+		   es lo único que garantiza que "¿Sabes en qué se va?" quepa en una línea
+		   en todos los breakpoints y el titular quede siempre a dos líneas. */
+		.landing-page .hero-copy {
+			container-type: inline-size;
+		}
 		.landing-page .hero-title {
-			font-size: clamp(2.15rem, 5vw, 3.5rem);
+			font-size: clamp(2.15rem, 5vw, 3.5rem); /* respaldo sin container queries */
+			font-size: min(9.6cqi, 3.25rem);
 			line-height: 1.06;
 			letter-spacing: -.02em;
 		}
@@ -80,8 +112,8 @@
 			box-shadow: 0 1.25rem 3rem rgba(0, 0, 0, .28);
 		}
 		@media (min-width: 992px) {
+			/* la captura llena la segunda columna, que ya muere en el borde de la ventana */
 			.landing-page .hero-shot {
-				width: 140%;
 				border-right: 0;
 				border-top-right-radius: 0;
 				border-bottom-right-radius: 0;
@@ -116,6 +148,17 @@
 		}
 		[data-bs-theme="dark"] .landing-page .hero-shot-media {
 			background-image: url("{{ asset('images/econome_hero_pc_dark.jpg') }}");
+		}
+		@media (min-width: 992px) {
+			/* Al ser "cover" y tener el marco una proporción MÁS ESTRECHA que la captura,
+			   la imagen se escala por altura y sobra por la derecha: de ahí el corte.
+			   La fracción visible es exactamente proporcion_del_marco / proporcion_de_la_imagen,
+			   así que este número es el único que gobierna cuánto se corta:
+			   1.55 / 1.71 = ~91% visible. Subirlo corta menos (y encoge el marco). */
+			.landing-page .hero-shot-media {
+				aspect-ratio: 1.55;
+				max-height: min(78vh, 42rem);
+			}
 		}
 		@media (max-width: 991.98px) {
 			.landing-page .hero-shot-media {
@@ -168,13 +211,13 @@
 		{# SECCIÓN 1: HERO #}
 		<section class="hero">
 			<div class="hero-glow" aria-hidden="true"></div>
-			<div class="row align-items-center g-4 g-lg-5 position-relative">
+			<div class="hero-grid position-relative">
 
 				{# Columna de texto #}
-				<div class="col-12 col-lg-5 text-center text-lg-start">
+				<div class="hero-copy text-center text-lg-start">
 					<span class="hero-badge">Personal o compartido con quien quieras</span>
 
-					<h1 class="hero-title fw-bold mt-4 mb-3">
+					<h1 class="hero-title fw-bold mt-3 mb-3">
 						Sabes cuánto ganas.<br>
 						<span class="text-primary">¿Sabes en qué se va?</span>
 					</h1>
@@ -204,16 +247,14 @@
 				</div>
 
 				{# Columna de la captura #}
-				<div class="col-12 col-lg-7">
-					<div class="hero-shot">
-						<div class="hero-shot-bar">
-							<span class="hero-shot-dot"></span>
-							<span class="hero-shot-dot"></span>
-							<span class="hero-shot-dot"></span>
-							<span class="hero-shot-url d-none d-sm-inline">econome.app/dashboard</span>
-						</div>
-						<div class="hero-shot-media" role="img" aria-label="Dashboard de {{ app_name }} con el balance, los ingresos y gastos del mes y los gráficos por categoría"></div>
+				<div class="hero-shot">
+					<div class="hero-shot-bar">
+						<span class="hero-shot-dot"></span>
+						<span class="hero-shot-dot"></span>
+						<span class="hero-shot-dot"></span>
+						<span class="hero-shot-url d-none d-sm-inline">econome.app/dashboard</span>
 					</div>
+					<div class="hero-shot-media" role="img" aria-label="Dashboard de {{ app_name }} con el balance, los ingresos y gastos del mes y los gráficos por categoría"></div>
 				</div>
 
 			</div>
