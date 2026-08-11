@@ -178,8 +178,13 @@
 			}
 		}
 		@media (max-width: 991.98px) {
+			/* height, NO max-height. Un max-height sobre una caja con aspect-ratio y ancho
+			   automático no se limita a recortar el alto: la restricción se transmite por la
+			   proporción y encoge TAMBIÉN el ancho, así que la caja deja de llenar el marco y
+			   la captura queda pegada a la izquierda con hueco a la derecha. Con un height fijo
+			   el ancho sigue siendo el del marco y "cover" recorta como toca. */
 			.landing-page .hero-shot-media {
-				max-height: 26rem;
+				height: 26rem;
 			}
 			/* la captura se corta abajo, difuminada contra el fondo */
 			.landing-page .hero-shot::after {
@@ -194,8 +199,11 @@
 			}
 		}
 		@media (max-width: 575.98px) {
+			/* En móvil el marco se adapta al alto de la captura (height:auto + aspect-ratio),
+			   así que se ve entera y sin recorte: es vertical y ya cabe de sobra a lo ancho. */
 			.landing-page .hero-shot-media {
-				aspect-ratio: 400 / 728;
+				aspect-ratio: 400 / 704;
+				height: auto;
 				background-image: url("{{ asset('images/econome_hero_mobile_light.jpg') }}");
 				background-position: top center;
 			}
