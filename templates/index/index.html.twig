@@ -41,7 +41,7 @@
 			.landing-page .hero-grid {
 				grid-template-columns: minmax(0, min(34rem, 42%)) minmax(0, 1fr);
 				align-items: center;
-				column-gap: 2rem;
+				column-gap: 1.5rem;
 				margin-right: calc(50% - 50vw);
 			}
 		}
@@ -112,8 +112,19 @@
 			box-shadow: 0 1.25rem 3rem rgba(0, 0, 0, .28);
 		}
 		@media (min-width: 992px) {
-			/* la captura llena la segunda columna, que ya muere en el borde de la ventana */
+			/* La captura llena la segunda columna, que ya muere en el borde de la ventana.
+			   Su borde izquierdo es siempre ventana - ancho, así que para acercarla al texto
+			   hay que ensancharla; el alto se compensa subiendo el aspect-ratio del marco.
+			   El max-width solo es un tope de cordura para monitores muy anchos: en el rango
+			   normal no llega a morder. Se pega a la derecha con justify-self:end, porque el
+			   borde derecho tiene que seguir clavado en el borde de la ventana. OJO: aquí NO
+			   vale margin-left:auto — en un grid item los márgenes automáticos anulan el
+			   estirado y la caja pasa a medirse por su contenido (se quedaba del ancho de la
+			   barra con la URL). Por eso el width:100%, que deja el ancho definido. */
 			.landing-page .hero-shot {
+				width: 100%;
+				max-width: 72rem;
+				justify-self: end;
 				border-right: 0;
 				border-top-right-radius: 0;
 				border-bottom-right-radius: 0;
@@ -141,7 +152,7 @@
 		}
 		/* la captura va de fondo para que solo se descargue la variante del tema activo */
 		.landing-page .hero-shot-media {
-			aspect-ratio: 1524 / 890;
+			aspect-ratio: 1532 / 879;
 			background-image: url("{{ asset('images/econome_hero_pc_light.jpg') }}");
 			background-size: cover;
 			background-position: top left;
@@ -152,9 +163,15 @@
 		@media (min-width: 992px) {
 			/* Al ser "cover" y tener el marco una proporción MÁS ESTRECHA que la captura,
 			   la imagen se escala por altura y sobra por la derecha: de ahí el corte.
-			   La fracción visible es exactamente proporcion_del_marco / proporcion_de_la_imagen,
-			   así que este número es el único que gobierna cuánto se corta:
-			   1.55 / 1.71 = ~91% visible. Subirlo corta menos (y encoge el marco). */
+			     fraccion_visible = proporcion_del_marco / proporcion_de_la_captura
+			     alto_del_marco   = ancho_del_marco / proporcion_del_marco
+			   Las capturas son 1534x876 (1.751) oscura y 1532x879 (1.743) clara, así que
+			   1.55 deja ~88% visible en los dos temas.
+			   TOPE: 1.74 (la clara, la más estrecha de las dos). Por encima, el marco
+			   sería MÁS ancho de proporción que la captura y "cover" cambiaría de eje:
+			   se vería el ancho entero y cortaría por abajo. Para bajar más el marco sin
+			   perder el corte lateral hay que recortarle alto a las capturas, no subir
+			   este número. */
 			.landing-page .hero-shot-media {
 				aspect-ratio: 1.55;
 				max-height: min(78vh, 42rem);
@@ -215,7 +232,7 @@
 
 				{# Columna de texto #}
 				<div class="hero-copy text-center text-lg-start">
-					<span class="hero-badge">Personal o compartido con quien quieras</span>
+					{# <span class="hero-badge">Personal o compartido con quien quieras</span> #}
 
 					<h1 class="hero-title fw-bold mt-3 mb-3">
 						Sabes cuánto ganas.<br>
@@ -234,15 +251,14 @@
 					{% else %}
 						<div class="d-grid d-sm-flex flex-wrap gap-3 justify-content-sm-center justify-content-lg-start">
 							<a href="{{ path('app_register') }}" class="btn btn-primary btn-lg hero-cta">Crear cuenta gratis</a>
-							{# TODO: no existe ruta de demo todavía; de momento lleva a las funcionalidades #}
-							<a href="#funcionalidades" class="btn btn-outline-secondary btn-lg">Ver demo con datos de ejemplo</a>
+							<a href="{{ path('app_login') }}" class="btn btn-outline-secondary btn-lg">Iniciar sesión</a>
 						</div>
 					{% endif %}
 
 					<div class="hero-checks d-flex flex-wrap justify-content-center justify-content-lg-start text-body-secondary mt-3">
 						<span><i class="fa-solid fa-check me-1"></i>Gratis, sin tarjeta</span>
 						<span><i class="fa-solid fa-check me-1"></i>Sin acceso a tu banco</span>
-						<span><i class="fa-solid fa-check me-1"></i>Claro y oscuro</span>
+						<span><i class="fa-solid fa-check me-1"></i>Personal y compartido</span>
 					</div>
 				</div>
 
@@ -252,7 +268,7 @@
 						<span class="hero-shot-dot"></span>
 						<span class="hero-shot-dot"></span>
 						<span class="hero-shot-dot"></span>
-						<span class="hero-shot-url d-none d-sm-inline">econome.app/dashboard</span>
+						<span class="hero-shot-url d-none d-sm-inline">econome.es/dashboard</span>
 					</div>
 					<div class="hero-shot-media" role="img" aria-label="Dashboard de {{ app_name }} con el balance, los ingresos y gastos del mes y los gráficos por categoría"></div>
 				</div>
