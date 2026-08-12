@@ -211,6 +211,28 @@
 				background-image: url("{{ asset('images/econome_hero_mobile_dark.png') }}");
 			}
 		}
+		/* ---------- SECCIONES ---------- */
+		.landing-page .section-eyebrow {
+			display: block;
+			font-size: .72rem;
+			font-weight: 600;
+			letter-spacing: .12em;
+			text-transform: uppercase;
+		}
+		.landing-page .section-title {
+			font-size: clamp(1.75rem, 3.4vw, 2.5rem);
+			line-height: 1.12;
+			letter-spacing: -.025em;
+			text-wrap: balance;
+		}
+		.landing-page .section-title-sm {
+			font-size: clamp(1.5rem, 2.6vw, 2.125rem);
+		}
+		.landing-page .section-head,
+		.landing-page .section-lead,
+		.landing-page .cta-copy {
+			max-width: 40rem;
+		}
 		.landing-page .feature-card {
 			transition: transform .2s ease, box-shadow .2s ease;
 		}
@@ -218,9 +240,83 @@
 			transform: translateY(-4px);
 			box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .1) !important;
 		}
-		.landing-page .step-circle {
-			width: 3.5rem;
-			height: 3.5rem;
+		.landing-page .feature-icon {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 2.625rem;
+			height: 2.625rem;
+			font-size: 1.15rem;
+		}
+		/* mini-maquetas dentro de las tarjetas: puro adorno */
+		.landing-page .feature-mock {
+			padding: .7rem .8rem;
+			background-color: var(--bs-body-bg);
+			border: 1px solid var(--bs-border-color);
+			border-radius: .55rem;
+		}
+		.landing-page .feature-dot {
+			width: .45rem;
+			height: .45rem;
+			border-radius: 50%;
+		}
+		.landing-page .feature-key {
+			width: .5rem;
+			height: .5rem;
+			border-radius: .15rem;
+		}
+		.landing-page .feature-donut {
+			width: 5.5rem;
+			height: 5.5rem;
+			border-radius: 50%;
+			background:
+				radial-gradient(closest-side, var(--bs-body-bg) 58%, transparent 59%),
+				conic-gradient(var(--bs-success) 0 38%, var(--bs-primary) 38% 60%, var(--bs-danger) 60% 78%, var(--bs-warning) 78% 90%, var(--bs-info) 90% 100%);
+		}
+		.landing-page .feature-avatar {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 1.75rem;
+			height: 1.75rem;
+			font-size: .7rem;
+			font-weight: 700;
+			border: 2px solid var(--bs-body-bg);
+		}
+		.landing-page .feature-avatar + .feature-avatar {
+			margin-left: -.55rem;
+		}
+		/* separadores de la banda de confianza: apilados abajo, en fila a los lados */
+		.landing-page .trust-cell:not(:last-child) {
+			border-bottom: 1px solid var(--bs-border-color);
+		}
+		@media (min-width: 992px) {
+			.landing-page .trust-cell:not(:last-child) {
+				border-bottom: 0;
+				border-inline-end: 1px solid var(--bs-border-color);
+			}
+		}
+		.landing-page .step-num {
+			width: 2.25rem;
+			height: 2.25rem;
+		}
+		.landing-page .step-line {
+			width: 1px;
+			margin: .5rem 0;
+			background-color: var(--bs-border-color);
+		}
+		.landing-page .faq-accordion .accordion-item {
+			overflow: hidden;
+		}
+		.landing-page .cta-glow {
+			position: absolute;
+			top: -45%;
+			right: -12%;
+			width: 30rem;
+			aspect-ratio: 1;
+			border-radius: 50%;
+			background: radial-gradient(circle, rgba(var(--bs-primary-rgb), .35), transparent 70%);
+			pointer-events: none;
 		}
 		/* para que las anclas no queden ocultas tras el header sticky */
 		.landing-page section[id] {
@@ -285,198 +381,288 @@
 		</section>
 
 		{# SECCIÓN 2: FUNCIONALIDADES #}
-		<section id="funcionalidades" class="py-5 bg-body text-body border-bottom">
-			<div class="container">
-				<h2 class="text-center fw-bold mb-2">¿Qué puedes hacer con {{ app_name }}?</h2>
-				<p class="text-center text-body-secondary mb-5">Todo lo que necesitas para tu día a día financiero, sin complicaciones.</p>
-				<div class="row text-center g-4">
-					<div class="col-md-6 col-lg-4">
-						<div class="card feature-card shadow-sm h-100">
-							<div class="card-body text-center">
-								<i class="fa-solid fa-arrow-right-arrow-left fa-3x text-primary mb-3"></i>
-								<h5 class="card-title">Registra tus movimientos</h5>
-								<p class="card-text">Anota ingresos y gastos en segundos, desde el móvil o el ordenador, y filtra por fechas, categorías o cuentas.</p>
+		<section id="funcionalidades" class="py-5">
+			<div class="section-head mb-5">
+				<span class="section-eyebrow text-primary">Funcionalidades</span>
+				<h2 class="section-title fw-bold mt-3 mb-3">Anotar es rápido. Entender es lo que cambia el mes.</h2>
+				<p class="section-lead text-body-secondary mb-0">
+					Tres cosas hacen el trabajo pesado: registrar en segundos, ver a dónde va el dinero, y compartir la cuenta con quien la comparte contigo de verdad.
+				</p>
+			</div>
+
+			<div class="row g-4">
+				{# Registrar #}
+				<div class="col-md-6 col-lg-4">
+					<div class="card feature-card h-100">
+						<div class="card-body p-4">
+							<span class="feature-icon rounded-3 bg-primary-subtle border border-primary-subtle text-primary">
+								<i class="fa-solid fa-right-left"></i>
+							</span>
+							<h3 class="h5 fw-bold mt-3 mb-2">Registra en cinco segundos</h3>
+							<p class="card-text text-body-secondary mb-0">Importe, categoría, listo. Desde el móvil en la cola del súper o desde el ordenador al final del día.</p>
+						</div>
+						<div class="card-footer bg-body-tertiary p-4 d-flex flex-column gap-2">
+							<div class="feature-mock d-flex align-items-center justify-content-between">
+								<span class="d-flex align-items-center gap-2 fw-semibold small">
+									<span class="feature-dot bg-success"></span>Mercadona
+								</span>
+								<span class="fw-bold small text-danger font-monospace">−204,18 €</span>
+							</div>
+							<div class="feature-mock d-flex align-items-center justify-content-between">
+								<span class="d-flex align-items-center gap-2 fw-semibold small">
+									<span class="feature-dot bg-primary"></span>Nómina
+								</span>
+								<span class="fw-bold small text-success font-monospace">+1.800,00 €</span>
 							</div>
 						</div>
 					</div>
-					<div class="col-md-6 col-lg-4">
-						<div class="card feature-card shadow-sm h-100">
-							<div class="card-body text-center">
-								<i class="fa-solid fa-chart-pie fa-3x text-success mb-3"></i>
-								<h5 class="card-title">Dashboard con gráficos</h5>
-								<p class="card-text">Visualiza en qué se te va el dinero con gráficos por categoría y evolución de tus ingresos y gastos.</p>
+				</div>
+
+				{# Ver #}
+				<div class="col-md-6 col-lg-4">
+					<div class="card feature-card h-100">
+						<div class="card-body p-4">
+							<span class="feature-icon rounded-3 bg-success-subtle border border-success-subtle text-success">
+								<i class="fa-solid fa-chart-pie"></i>
+							</span>
+							<h3 class="h5 fw-bold mt-3 mb-2">Mira dónde se va</h3>
+							<p class="card-text text-body-secondary mb-0">Balance, ingresos y gastos por categoría, mes a mes. El gráfico suele contar algo que no esperabas.</p>
+						</div>
+						<div class="card-footer bg-body-tertiary p-4 d-flex align-items-center gap-3">
+							<span class="feature-donut flex-shrink-0" aria-hidden="true"></span>
+							<span class="d-flex flex-column gap-2 small text-body-secondary">
+								<span class="d-flex align-items-center gap-2"><span class="feature-key bg-success"></span>Alquiler 38%</span>
+								<span class="d-flex align-items-center gap-2"><span class="feature-key bg-primary"></span>Alimentación 22%</span>
+								<span class="d-flex align-items-center gap-2"><span class="feature-key bg-danger"></span>Transporte 18%</span>
+							</span>
+						</div>
+					</div>
+				</div>
+
+				{# Compartir #}
+				<div class="col-md-6 col-lg-4">
+					<div class="card feature-card h-100">
+						<div class="card-body p-4">
+							<span class="feature-icon rounded-3 bg-info-subtle border border-info-subtle text-info">
+								<i class="fa-solid fa-users"></i>
+							</span>
+							<h3 class="h5 fw-bold mt-3 mb-2">Comparte la cuenta</h3>
+							<p class="card-text text-body-secondary mb-0">Pareja, piso o viaje: una cuenta conjunta donde los dos anotáis y los dos veis lo mismo. Sin hojas de cálculo.</p>
+						</div>
+						<div class="card-footer bg-body-tertiary p-4">
+							<div class="feature-mock d-flex align-items-center justify-content-between">
+								<span>
+									<span class="d-block fw-semibold small">Cuenta conjunta</span>
+									<span class="d-block text-body-secondary" style="font-size:.75rem">2 personas · 8 recurrentes</span>
+								</span>
+								<span class="d-flex">
+									<span class="feature-avatar rounded-circle bg-primary text-white">R</span>
+									<span class="feature-avatar rounded-circle bg-info text-white">L</span>
+								</span>
 							</div>
 						</div>
 					</div>
-					<div class="col-md-6 col-lg-4">
-						<div class="card feature-card shadow-sm h-100">
-							<div class="card-body text-center">
-								<i class="fa-solid fa-users fa-3x text-info mb-3"></i>
-								<h5 class="card-title">Cuentas compartidas</h5>
-								<p class="card-text">Invita a tus amigos, pareja o compañeros de piso a una cuenta y gestionad los gastos comunes juntos.</p>
-							</div>
-						</div>
+				</div>
+			</div>
+
+			{# Fila de apoyo #}
+			<div class="row g-3 mt-1">
+				<div class="col-md-4">
+					<div class="d-flex gap-3 p-3 bg-body-tertiary border rounded-3 h-100">
+						<i class="fa-solid fa-rotate text-warning mt-1"></i>
+						<span>
+							<span class="d-block fw-bold small">Recurrentes automáticos</span>
+							<span class="d-block small text-body-secondary mt-1">Nómina, alquiler, suscripciones: se registran solos.</span>
+						</span>
 					</div>
-					<div class="col-md-6 col-lg-4">
-						<div class="card feature-card shadow-sm h-100">
-							<div class="card-body text-center">
-								<i class="fa-solid fa-rotate fa-3x text-warning mb-3"></i>
-								<h5 class="card-title">Movimientos recurrentes</h5>
-								<p class="card-text">Nómina, alquiler, suscripciones… configúralos una vez y {{ app_name }} los registra por ti automáticamente.</p>
-							</div>
-						</div>
+				</div>
+				<div class="col-md-4">
+					<div class="d-flex gap-3 p-3 bg-body-tertiary border rounded-3 h-100">
+						<i class="fa-solid fa-tags text-danger mt-1"></i>
+						<span>
+							<span class="d-block fw-bold small">Categorías a tu medida</span>
+							<span class="d-block small text-body-secondary mt-1">Empieza con las plantillas o crea las tuyas.</span>
+						</span>
 					</div>
-					<div class="col-md-6 col-lg-4">
-						<div class="card feature-card shadow-sm h-100">
-							<div class="card-body text-center">
-								<i class="fa-solid fa-tags fa-3x text-danger mb-3"></i>
-								<h5 class="card-title">Categorías a tu medida</h5>
-								<p class="card-text">Usa las plantillas incluidas o crea tus propias categorías para organizar tus finanzas como tú piensas.</p>
-							</div>
-						</div>
-					</div>
-					<div class="col-md-6 col-lg-4">
-						<div class="card feature-card shadow-sm h-100">
-							<div class="card-body text-center">
-								<i class="fa-solid fa-circle-half-stroke fa-3x text-secondary mb-3"></i>
-								<h5 class="card-title">Claro u oscuro, tú eliges</h5>
-								<p class="card-text">Diseño adaptado a móvil, tablet y escritorio, con modo claro y oscuro para que lo uses como más te guste.</p>
-							</div>
-						</div>
+				</div>
+				<div class="col-md-4">
+					<div class="d-flex gap-3 p-3 bg-body-tertiary border rounded-3 h-100">
+						<i class="fa-solid fa-circle-half-stroke text-body-secondary mt-1"></i>
+						<span>
+							<span class="d-block fw-bold small">Claro u oscuro</span>
+							<span class="d-block small text-body-secondary mt-1">Móvil, tablet y escritorio. Sin instalar nada.</span>
+						</span>
 					</div>
 				</div>
 			</div>
 		</section>
 
 		{# SECCIÓN 3: CÓMO FUNCIONA #}
-		<section class="py-5 bg-body text-body border-bottom">
-			<div class="container">
-				<h2 class="text-center fw-bold mb-5">Empieza en 3 pasos</h2>
-				<div class="row text-center g-4">
-					<div class="col-md-4">
-						<div class="step-circle rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3 fs-4 fw-bold">1</div>
-						<h5>Crea tu cuenta</h5>
-						<p class="text-body-secondary">Regístrate gratis con tu email y confirma tu cuenta en un clic.</p>
+		<section id="como-funciona" class="py-5">
+			<div class="bg-body-tertiary border rounded-4 p-4 p-lg-5">
+				<div class="row g-4 g-lg-5">
+					<div class="col-lg-5 col-xl-4">
+						<span class="section-eyebrow text-primary">Cómo empiezas</span>
+						<h2 class="section-title section-title-sm fw-bold mt-3 mb-3">Del registro al primer gráfico, en una tarde</h2>
+						<p class="text-body-secondary">No hay onboarding de diez pantallas ni hay que conectar el banco. Tres pasos y ya estás dentro.</p>
+						{% if is_logged %}
+							<a href="{{ path('dashboard') }}" class="btn btn-primary hero-cta mt-2">Ir a mi dashboard</a>
+						{% else %}
+							<a href="{{ path('app_register') }}" class="btn btn-primary hero-cta mt-2">Crear cuenta gratis</a>
+						{% endif %}
 					</div>
-					<div class="col-md-4">
-						<div class="step-circle rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3 fs-4 fw-bold">2</div>
-						<h5>Configura tus cuentas y categorías</h5>
-						<p class="text-body-secondary">Crea tus cuentas (personal, compartida…) y elige las categorías que usarás.</p>
+
+					<div class="col-lg-7 col-xl-8">
+						<ol class="step-list list-unstyled m-0">
+							<li class="step d-flex gap-3">
+								<span class="d-flex flex-column align-items-center flex-shrink-0">
+									<span class="step-num rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold">1</span>
+									<span class="step-line flex-grow-1"></span>
+								</span>
+								<span class="pb-4">
+									<span class="d-block h6 fw-bold mb-1">Crea tu cuenta</span>
+									<span class="d-block text-body-secondary">Email y contraseña. Confirmas en un clic y ya tienes tu dashboard vacío esperando.</span>
+								</span>
+							</li>
+							<li class="step d-flex gap-3">
+								<span class="d-flex flex-column align-items-center flex-shrink-0">
+									<span class="step-num rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold">2</span>
+									<span class="step-line flex-grow-1"></span>
+								</span>
+								<span class="pb-4">
+									<span class="d-block h6 fw-bold mb-1">Elige cuentas y categorías</span>
+									<span class="d-block text-body-secondary">Una personal, una conjunta, las que necesites. Las categorías vienen con plantillas: cámbialas cuando quieras.</span>
+								</span>
+							</li>
+							<li class="step d-flex gap-3">
+								<span class="d-flex flex-column align-items-center flex-shrink-0">
+									<span class="step-num rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold">3</span>
+								</span>
+								<span>
+									<span class="d-block h6 fw-bold mb-1">Anota y deja que cuente</span>
+									<span class="d-block text-body-secondary">Cada movimiento alimenta los gráficos. A la segunda semana ya ves el patrón.</span>
+								</span>
+							</li>
+						</ol>
 					</div>
-					<div class="col-md-4">
-						<div class="step-circle rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3 fs-4 fw-bold">3</div>
-						<h5>Registra y analiza</h5>
-						<p class="text-body-secondary">Anota tus movimientos y deja que el dashboard te cuente el resto.</p>
-					</div>
-				</div>
-				<div class="text-center mt-4">
-					{% if is_logged %}
-						<a href="{{ path('account_index') }}" class="btn btn-primary btn-lg">Gestionar mis cuentas</a>
-					{% else %}
-						<a href="{{ path('app_register') }}" class="btn btn-primary btn-lg">Empezar ahora</a>
-					{% endif %}
 				</div>
 			</div>
 		</section>
 
-		{# SECCIÓN 4: CONFIANZA/TECNOLOGÍA #}
-		<section class="py-5 bg-body text-body">
-			<div class="container">
-				<h3 class="text-center fw-bold mb-4">Tecnología y confianza</h3>
-				<div class="row text-center g-4">
-					<div class="col-md-4">
-						<div class="card feature-card shadow-sm h-100">
-							<div class="card-body text-center">
-								<i class="fa-solid fa-lock fa-3x text-danger mb-3"></i>
-								<h5 class="card-title">Autenticación segura</h5>
-								<p class="card-text">Contraseñas cifradas, tokens únicos y protección CSRF. Solo tú accedes a tus datos.</p>
-							</div>
-						</div>
-					</div>
-					<div class="col-md-4">
-						<div class="card feature-card shadow-sm h-100">
-							<div class="card-body text-center">
-								<i class="fa-solid fa-cloud fa-3x text-info mb-3"></i>
-								<h5 class="card-title">Siempre disponible</h5>
-								<p class="card-text">Tus datos en la nube: accede desde cualquier dispositivo sin perder nada por el camino.</p>
-							</div>
-						</div>
-					</div>
-					<div class="col-md-4">
-						<div class="card feature-card shadow-sm h-100">
-							<div class="card-body text-center">
-								<i class="fa-solid fa-mobile-screen fa-3x text-success mb-3"></i>
-								<h5 class="card-title">100% responsive</h5>
-								<p class="card-text">La misma experiencia en el móvil que en el escritorio, sin instalar nada.</p>
-							</div>
-						</div>
-					</div>
+		{# SECCIÓN 4: CONFIANZA #}
+		<section class="pb-5">
+			<div class="row row-cols-1 row-cols-lg-4 g-0 bg-body-tertiary border rounded-3 overflow-hidden">
+				<div class="col trust-cell p-4">
+					<span class="d-flex align-items-center gap-2 fw-bold small">
+						<i class="fa-solid fa-building-columns text-success"></i>Sin conectar tu banco
+					</span>
+					<span class="d-block small text-body-secondary mt-2">{{ app_name }} nunca pide tus credenciales bancarias.</span>
+				</div>
+				<div class="col trust-cell p-4">
+					<span class="d-flex align-items-center gap-2 fw-bold small">
+						<i class="fa-solid fa-shield-halved text-primary"></i>Acceso cifrado
+					</span>
+					<span class="d-block small text-body-secondary mt-2">Contraseñas cifradas, tokens únicos y protección CSRF.</span>
+				</div>
+				<div class="col trust-cell p-4">
+					<span class="d-flex align-items-center gap-2 fw-bold small">
+						<i class="fa-solid fa-wallet text-warning"></i>Gratis, sin límites
+					</span>
+					<span class="d-block small text-body-secondary mt-2">Sin plan de pago ni tope de movimientos.</span>
+				</div>
+				<div class="col trust-cell p-4">
+					<span class="d-flex align-items-center gap-2 fw-bold small">
+						<i class="fa-solid fa-code text-info"></i>Código abierto
+					</span>
+					<span class="d-block small text-body-secondary mt-2">
+						Mira exactamente qué hace la app en
+						<a href="{{ app_repository }}" target="_blank" rel="noopener noreferrer">el repositorio</a>.
+					</span>
 				</div>
 			</div>
 		</section>
 
 		{# SECCIÓN 5: FAQS #}
-		<section id="faq" class="py-5 bg-body text-body border-top">
-			<div class="container">
-				<h3 class="text-center fw-bold mb-4">Preguntas frecuentes</h3>
-				<div class="accordion mx-auto" id="faqAccordion" style="max-width: 800px;">
-					<div class="accordion-item">
-						<h2 class="accordion-header" id="faq1">
-							<button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse1">
-								¿{{ app_name }} es gratuita?
-							</button>
-						</h2>
-						<div id="faqCollapse1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-							<div class="accordion-body fw-light">
-								Sí, puedes usar todas las funciones sin coste: movimientos, cuentas compartidas, recurrentes, gráficos… todo incluido.
+		<section id="faq" class="py-5">
+			<div class="row g-4 g-lg-5">
+				<div class="col-lg-4">
+					<span class="section-eyebrow text-primary">Dudas</span>
+					<h2 class="section-title section-title-sm fw-bold mt-3 mb-3">Preguntas frecuentes</h2>
+					<p class="text-body-secondary mb-0">Lo que más se pregunta antes de crear una cuenta.</p>
+				</div>
+
+				<div class="col-lg-8">
+					<div class="accordion accordion-flush faq-accordion" id="faqAccordion">
+						<div class="accordion-item mb-2 border rounded-3">
+							<h3 class="accordion-header">
+								<button class="accordion-button fw-bold rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse1" aria-expanded="true" aria-controls="faqCollapse1">
+									¿{{ app_name }} es gratis de verdad?
+								</button>
+							</h3>
+							<div id="faqCollapse1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+								<div class="accordion-body text-body-secondary">
+									Sí. No hay plan de pago, ni tarjeta, ni límite de movimientos. Es un proyecto personal y todas las funciones están disponibles desde el primer día.
+								</div>
 							</div>
 						</div>
-					</div>
-					<div class="accordion-item">
-						<h2 class="accordion-header" id="faq2">
-							<button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse2">
-								¿Mis datos están seguros?
-							</button>
-						</h2>
-						<div id="faqCollapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-							<div class="accordion-body fw-light">
-								Absolutamente. Usamos cifrado de contraseñas, tokens únicos y protección CSRF. Solo tú (y las personas que invites a tus cuentas compartidas) accedéis a tu información.
+						<div class="accordion-item mb-2 border rounded-3">
+							<h3 class="accordion-header">
+								<button class="accordion-button collapsed fw-bold rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse2" aria-expanded="false" aria-controls="faqCollapse2">
+									¿Tenéis acceso a mi banco?
+								</button>
+							</h3>
+							<div id="faqCollapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+								<div class="accordion-body text-body-secondary">
+									No, y no es una opción que exista. {{ app_name }} no se conecta con ninguna entidad ni te pide credenciales bancarias: los movimientos los anotas tú, y por eso la app solo sabe lo que tú le cuentas.
+								</div>
 							</div>
 						</div>
-					</div>
-					<div class="accordion-item">
-						<h2 class="accordion-header" id="faq3">
-							<button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse3">
-								¿Cómo funcionan las cuentas compartidas?
-							</button>
-						</h2>
-						<div id="faqCollapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-							<div class="accordion-body fw-light">
-								Añade a otros usuarios como amigos, invítalos a una cuenta y todos podréis registrar y consultar los movimientos de esa cuenta. Ideal para parejas, pisos compartidos o viajes en grupo.
+						<div class="accordion-item mb-2 border rounded-3">
+							<h3 class="accordion-header">
+								<button class="accordion-button collapsed fw-bold rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse3" aria-expanded="false" aria-controls="faqCollapse3">
+									¿Cómo funcionan las cuentas compartidas?
+								</button>
+							</h3>
+							<div id="faqCollapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+								<div class="accordion-body text-body-secondary">
+									Añades a otra persona como amiga, la invitas a una cuenta y a partir de ahí los dos registráis y consultáis los mismos movimientos. Va bien para parejas, pisos compartidos o un viaje en grupo.
+								</div>
 							</div>
 						</div>
-					</div>
-					<div class="accordion-item">
-						<h2 class="accordion-header" id="faq4">
-							<button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse4">
-								¿Qué son los movimientos recurrentes?
-							</button>
-						</h2>
-						<div id="faqCollapse4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-							<div class="accordion-body fw-light">
-								Son ingresos o gastos que se repiten (nómina, alquiler, suscripciones…). Los configuras una vez con su periodicidad y {{ app_name }} los va registrando automáticamente por ti.
+						<div class="accordion-item mb-2 border rounded-3">
+							<h3 class="accordion-header">
+								<button class="accordion-button collapsed fw-bold rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse4" aria-expanded="false" aria-controls="faqCollapse4">
+									¿Qué pasa si me olvido de anotar una semana?
+								</button>
+							</h3>
+							<div id="faqCollapse4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+								<div class="accordion-body text-body-secondary">
+									No pasa nada: puedes añadir movimientos con fecha pasada cuando te acuerdes. Y lo que se repite todos los meses (nómina, alquiler, suscripciones) puedes dejarlo como recurrente para que se registre solo aunque tú no entres.
+								</div>
 							</div>
 						</div>
-					</div>
-					<div class="accordion-item">
-						<h2 class="accordion-header" id="faq5">
-							<button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse5">
-								¿Necesito ser experto en finanzas para usar la app?
-							</button>
-						</h2>
-						<div id="faqCollapse5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-							<div class="accordion-body fw-light">
-								Para nada. {{ app_name }} está diseñada para cualquier persona que quiera controlar sus finanzas de forma clara y sin complicaciones. Además, un tutorial guiado te acompaña en tus primeros pasos.
+						<div class="accordion-item mb-2 border rounded-3">
+							<h3 class="accordion-header">
+								<button class="accordion-button collapsed fw-bold rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse5" aria-expanded="false" aria-controls="faqCollapse5">
+									¿Necesito saber de finanzas para usarla?
+								</button>
+							</h3>
+							<div id="faqCollapse5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+								<div class="accordion-body text-body-secondary">
+									Para nada. Si sabes cuánto te has gastado, ya sabes bastante. Un tutorial guiado te acompaña en los primeros pasos y el resto es anotar y mirar los gráficos.
+								</div>
+							</div>
+						</div>
+						<div class="accordion-item mb-2 border rounded-3">
+							<h3 class="accordion-header">
+								<button class="accordion-button collapsed fw-bold rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse6" aria-expanded="false" aria-controls="faqCollapse6">
+									¿Qué son los movimientos recurrentes?
+								</button>
+							</h3>
+							<div id="faqCollapse6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+								<div class="accordion-body text-body-secondary">
+									Ingresos o gastos que se repiten cada mes. Los configuras una vez con su periodicidad y {{ app_name }} los va registrando por ti, así no tienes que acordarte del alquiler ni de las suscripciones.
+								</div>
 							</div>
 						</div>
 					</div>
@@ -485,20 +671,33 @@
 		</section>
 
 		{# SECCIÓN 6: LLAMADO A LA ACCIÓN #}
-		<section class="py-5 bg-body text-body border-top">
-			<div class="container text-center">
-				{% if is_logged %}
-					<h2 class="fw-bold mb-3">Tus finanzas te esperan</h2>
-					<p class="mb-4">Sigue donde lo dejaste: revisa tu dashboard o registra tu último movimiento.</p>
-					<div class="d-flex justify-content-center gap-3 flex-wrap">
-						<a href="{{ path('dashboard') }}" class="btn btn-primary btn-lg">Ir a mi dashboard</a>
-						<a href="{{ path('transaction_index') }}" class="btn btn-outline-primary btn-lg">Mis movimientos</a>
-					</div>
-				{% else %}
-					<h2 class="fw-bold mb-3">Empieza hoy, gratis</h2>
-					<p class="mb-4">Da el primer paso hacia una vida financiera más organizada y sin estrés.</p>
-					<a href="{{ path('app_register') }}" class="btn btn-primary btn-lg">Crear cuenta gratis</a>
-				{% endif %}
+		<section class="pb-5">
+			<div class="cta-panel position-relative overflow-hidden bg-primary-subtle border border-primary-subtle rounded-4 p-4 p-lg-5">
+				<span class="cta-glow" aria-hidden="true"></span>
+				<div class="cta-copy position-relative">
+					{% if is_logged %}
+						<h2 class="section-title fw-bold mb-3">Tus finanzas te esperan donde las dejaste</h2>
+						<p class="text-body-secondary mb-4">Revisa el dashboard del mes o anota ese movimiento que tienes pendiente desde ayer.</p>
+						<div class="d-flex align-items-center flex-wrap gap-3">
+							<a href="{{ path('dashboard') }}" class="btn btn-primary btn-lg hero-cta">Ir a mi dashboard</a>
+							<span class="text-body-secondary">o</span>
+							<span class="text-body-secondary"><a href="{{ path('transaction_index') }}">añadir movimiento</a></span>
+						</div>
+					{% else %}
+						<h2 class="section-title fw-bold mb-3">El próximo mes puedes saber en qué se fue</h2>
+						<p class="text-body-secondary mb-4">Crea la cuenta, anota tres gastos y mira el gráfico. Sin tarjeta y sin conectar el banco.</p>
+						<div class="d-flex align-items-center flex-wrap gap-3">
+							<a href="{{ path('app_register') }}" class="btn btn-primary btn-lg hero-cta">Crear cuenta gratis</a>
+							<span class="text-body-secondary">o</span>
+							<span class="text-body-secondary"><a href="{{ path('app_login') }}">iniciar sesión</a></span>
+						</div>
+						<div class="hero-checks d-flex flex-wrap text-body-secondary mt-4">
+							<span><i class="fa-solid fa-check me-1"></i>Gratis, sin tarjeta</span>
+							<span><i class="fa-solid fa-check me-1"></i>Sin acceso a tu banco</span>
+							<span><i class="fa-solid fa-check me-1"></i>Código abierto</span>
+						</div>
+					{% endif %}
+				</div>
 			</div>
 		</section>
 
