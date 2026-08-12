@@ -1,11 +1,28 @@
 [
     {
+        "version": "v1.3.2",
+        "date": "2026-08-12",
+        "title": "Rediseño de la página de inicio",
+        "changes": [
+            {
+                "type": "improvement",
+                "text": "La página de inicio estrena diseño."
+            }
+        ]
+    },
+    {
         "version": "v1.3.1",
         "date": "2026-08-10",
         "title": "Mejora de la experiencia de usuario (listados)",
         "changes": [
-            { "type": "feat", "text": "Se puede elegir el número de registros que se muestran por página en los listados de movimientos." },
-            { "type": "improvement", "text": "Bajo cada listado se muestra más información, por ejemplo «Mostrando 1 a 25 de 320 movimientos»." }
+            {
+                "type": "feat",
+                "text": "Se puede elegir el número de registros que se muestran por página en los listados de movimientos."
+            },
+            {
+                "type": "improvement",
+                "text": "Bajo cada listado se muestra más información, por ejemplo «Mostrando 1 a 25 de 320 movimientos»."
+            }
         ]
     },
     {
@@ -13,10 +30,22 @@
         "date": "2026-08-09",
         "title": "Nuevas frecuencias en movimientos recurrentes",
         "changes": [
-            { "type": "feat", "text": "Los movimientos recurrentes admiten dos frecuencias nuevas: trimestral y semestral. El ciclo se cuenta desde la fecha de inicio, así que uno trimestral que empieza en febrero se repite en mayo, agosto y noviembre." },
-            { "type": "improvement", "text": "La frecuencia diaria ya no se ofrece al crear un movimiento recurrente. Los que ya tuvieras con esa frecuencia siguen generando movimientos con normalidad." },
-            { "type": "improvement", "text": "Mejoras menores en movimientos recurrentes (listado y creación)." },
-            { "type": "fix", "text": "Los movimientos recurrentes a los que ya se les ha pasado la fecha de fin se muestran como «Finalizado». Antes seguían apareciendo como activos aunque ya no generasen nada." }
+            {
+                "type": "feat",
+                "text": "Los movimientos recurrentes admiten dos frecuencias nuevas: trimestral y semestral. El ciclo se cuenta desde la fecha de inicio, así que uno trimestral que empieza en febrero se repite en mayo, agosto y noviembre."
+            },
+            {
+                "type": "improvement",
+                "text": "La frecuencia diaria ya no se ofrece al crear un movimiento recurrente. Los que ya tuvieras con esa frecuencia siguen generando movimientos con normalidad."
+            },
+            {
+                "type": "improvement",
+                "text": "Mejoras menores en movimientos recurrentes (listado y creación)."
+            },
+            {
+                "type": "fix",
+                "text": "Los movimientos recurrentes a los que ya se les ha pasado la fecha de fin se muestran como «Finalizado». Antes seguían apareciendo como activos aunque ya no generasen nada."
+            }
         ]
     },
     {
@@ -24,10 +53,22 @@
         "date": "2026-08-06",
         "title": "Mejora de experiencia general",
         "changes": [
-            { "type": "improvement", "text": "El tipo de movimiento se elige ahora con dos botones junto al importe, en lugar de un desplegable." },
-            { "type": "improvement", "text": "Al crear/editar movimiento, se hace autofoco en el campo de importe." },
-            { "type": "improvement", "text": "El gráfico por categoría muestra el porcentaje que representa cada categoría sobre el total del período." },
-            { "type": "feat", "text": "Al pulsar una categoría del gráfico se abren sus movimientos, ya filtrados por período, tipo y categoría." }
+            {
+                "type": "improvement",
+                "text": "El tipo de movimiento se elige ahora con dos botones junto al importe, en lugar de un desplegable."
+            },
+            {
+                "type": "improvement",
+                "text": "Al crear/editar movimiento, se hace autofoco en el campo de importe."
+            },
+            {
+                "type": "improvement",
+                "text": "El gráfico por categoría muestra el porcentaje que representa cada categoría sobre el total del período."
+            },
+            {
+                "type": "feat",
+                "text": "Al pulsar una categoría del gráfico se abren sus movimientos, ya filtrados por período, tipo y categoría."
+            }
         ]
     },
     {
@@ -35,7 +76,10 @@
         "date": "2026-08-05",
         "title": "Sugerencia automática de categorías",
         "changes": [
-            { "type": "feat", "text": "Al registrar un movimiento nuevo, la categoría se rellena sola según la que sueles usar en movimientos con ese mismo nombre. Puedes cambiarla a mano siempre que quieras." }
+            {
+                "type": "feat",
+                "text": "Al registrar un movimiento nuevo, la categoría se rellena sola según la que sueles usar en movimientos con ese mismo nombre. Puedes cambiarla a mano siempre que quieras."
+            }
         ]
     },
     {
@@ -43,7 +87,10 @@
         "date": "2026-07-20",
         "title": "Gestión de cuentas",
         "changes": [
-            { "type": "feat", "text": "Al eliminar una cuenta ahora va a la papelera: se conservan sus movimientos y el propietario puede restaurarla. El borrado definitivo está disponible 24 horas después. Lo que ayuda a reducir el riesgo de pérdida de datos de forma accidental." }
+            {
+                "type": "feat",
+                "text": "Al eliminar una cuenta ahora va a la papelera: se conservan sus movimientos y el propietario puede restaurarla. El borrado definitivo está disponible 24 horas después. Lo que ayuda a reducir el riesgo de pérdida de datos de forma accidental."
+            }
         ]
     },
     {
@@ -51,12 +98,30 @@
         "date": "2026-07-19",
         "title": "Mejoras de experiencia y navegación",
         "changes": [
-            { "type": "fix", "text": "Los miembros con rol de solo lectura ya no ven las acciones editar en movimientos y recurrentes." },
-            { "type": "improvement", "text": "Acceso directo al dashboard desde los detalles de cuenta y al registrar un movimiento." },
-            { "type": "improvement", "text": "Mejora de navegación: la cuenta seleccionada se mantiene al navegar entre las páginas." },
-            { "type": "improvement", "text": "Selector de cuenta ahora ofrece posibilidad de añadir nuevas cuentas." },
-            { "type": "fix", "text": "Arreglos menores de aspecto en los botones de categorías." },
-            { "type": "fix", "text": "El filtro de categoría se limpia al cambiar de cuenta en movimientos." }
+            {
+                "type": "fix",
+                "text": "Los miembros con rol de solo lectura ya no ven las acciones editar en movimientos y recurrentes."
+            },
+            {
+                "type": "improvement",
+                "text": "Acceso directo al dashboard desde los detalles de cuenta y al registrar un movimiento."
+            },
+            {
+                "type": "improvement",
+                "text": "Mejora de navegación: la cuenta seleccionada se mantiene al navegar entre las páginas."
+            },
+            {
+                "type": "improvement",
+                "text": "Selector de cuenta ahora ofrece posibilidad de añadir nuevas cuentas."
+            },
+            {
+                "type": "fix",
+                "text": "Arreglos menores de aspecto en los botones de categorías."
+            },
+            {
+                "type": "fix",
+                "text": "El filtro de categoría se limpia al cambiar de cuenta en movimientos."
+            }
         ]
     },
     {
@@ -64,10 +129,22 @@
         "date": "2026-07-16",
         "title": "Filtros mejorados y página de novedades",
         "changes": [
-            { "type": "feat", "text": "Nueva página de novedades con el historial de versiones." },
-            { "type": "improvement", "text": "Filtros de movimientos mejorados: nombre y descripción fusionados. Fechas unificadas en rango." },
-            { "type": "improvement", "text": "Mejor navegación en la tabla de movimientos (paginación y ordenación)." },
-            { "type": "improvement", "text": "Versiones de librerías fijadas para mayor estabilidad." }
+            {
+                "type": "feat",
+                "text": "Nueva página de novedades con el historial de versiones."
+            },
+            {
+                "type": "improvement",
+                "text": "Filtros de movimientos mejorados: nombre y descripción fusionados. Fechas unificadas en rango."
+            },
+            {
+                "type": "improvement",
+                "text": "Mejor navegación en la tabla de movimientos (paginación y ordenación)."
+            },
+            {
+                "type": "improvement",
+                "text": "Versiones de librerías fijadas para mayor estabilidad."
+            }
         ]
     },
     {
@@ -75,9 +152,18 @@
         "date": "2026-07-15",
         "title": "Mejoras de usabilidad y errores amigables",
         "changes": [
-            { "type": "improvement", "text": "Grandes mejoras en la tabla de movimientos y nuevo botón de ver detalle." },
-            { "type": "improvement", "text": "Mensajes más amigables cuando la sesión expira y los enlaces de confirmación no son válidos." },
-            { "type": "feat", "text": "Páginas de error personalizadas (403, 404, 500...)." }            
+            {
+                "type": "improvement",
+                "text": "Grandes mejoras en la tabla de movimientos y nuevo botón de ver detalle."
+            },
+            {
+                "type": "improvement",
+                "text": "Mensajes más amigables cuando la sesión expira y los enlaces de confirmación no son válidos."
+            },
+            {
+                "type": "feat",
+                "text": "Páginas de error personalizadas (403, 404, 500...)."
+            }
         ]
     },
     {
@@ -85,11 +171,26 @@
         "date": "2026-07-13",
         "title": "Primera versión estable",
         "changes": [
-            { "type": "feat", "text": "Lanzamiento inicial: cuentas, movimientos, categorías y movimientos recurrentes." },
-            { "type": "feat", "text": "Dashboard con resumen y gráficas." },
-            { "type": "feat", "text": "Sistema de amistades y perfil de usuario." },
-            { "type": "improvement", "text": "Mejora de los colores base de las categorías." },
-            { "type": "fix", "text": "Corregido un bug con las fechas en los movimientos." }
+            {
+                "type": "feat",
+                "text": "Lanzamiento inicial: cuentas, movimientos, categorías y movimientos recurrentes."
+            },
+            {
+                "type": "feat",
+                "text": "Dashboard con resumen y gráficas."
+            },
+            {
+                "type": "feat",
+                "text": "Sistema de amistades y perfil de usuario."
+            },
+            {
+                "type": "improvement",
+                "text": "Mejora de los colores base de las categorías."
+            },
+            {
+                "type": "fix",
+                "text": "Corregido un bug con las fechas en los movimientos."
+            }
         ]
     }
 ]
