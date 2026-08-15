@@ -1,0 +1,14 @@
+{#
+	Flatpickr: CSS + JS + locale es.
+
+	Se incluye desde el bloque `page_assets` de las paginas que pintan un campo
+	de fecha, no desde base.html.twig. Son tres peticiones y el JS va sin defer,
+	asi que en las otras ~90 plantillas solo costaria descarga y parseo.
+
+	El JS va sin defer a proposito: los formularios llaman a `flatpickr()` desde
+	un <script> normal en el body, que se ejecuta antes de DOMContentLoaded.
+	El locale tiene que ir despues del core.
+#}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/es.js"></script>

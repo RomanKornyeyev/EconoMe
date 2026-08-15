@@ -2,6 +2,12 @@
 
 {% block title %}Dashboard{% endblock %}
 
+{# Chart.js por los graficos; flatpickr por el modal de nuevo movimiento. #}
+{% block page_assets %}
+    {% include 'partials/assets/_chartjs.html.twig' %}
+    {% include 'partials/assets/_flatpickr.html.twig' %}
+{% endblock %}
+
 {% block content %}
 {% if not hasAccounts %}
     {% include 'partials/_no_account.html.twig' with {message: 'Crea tu primera cuenta para empezar a visualizar las métricas.'} %}

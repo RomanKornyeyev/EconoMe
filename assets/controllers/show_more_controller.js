@@ -14,6 +14,7 @@ import { Controller } from '@hotwired/stimulus';
  *     <button data-show-more-target="button" data-action="show-more#more">Mostrar más</button>
  *   </div>
  */
+/* stimulusFetch: 'lazy' */
 export default class extends Controller {
   static targets = ['item', 'button'];
   static values  = { batch: { type: Number, default: 5 } };

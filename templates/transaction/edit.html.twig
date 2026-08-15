@@ -2,6 +2,11 @@
 
 {% block title %}{{ isNew ? 'Nuevo movimiento' : 'Editar movimiento' }}{% endblock %}
 
+{# Flatpickr por el campo de fecha de _form_transaction. #}
+{% block page_assets %}
+    {% include 'partials/assets/_flatpickr.html.twig' %}
+{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-12 col-md-8 col-lg-6">

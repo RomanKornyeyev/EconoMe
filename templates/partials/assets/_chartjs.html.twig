@@ -1,0 +1,10 @@
+{#
+	Chart.js.
+
+	Se incluye desde el bloque `page_assets` de las paginas que pintan un
+	grafico, no desde base.html.twig: son ~200 KB que el resto de la app no usa.
+
+	Sin defer a proposito: los partials de grafico llaman a `new Chart(...)`
+	desde un <script> normal en el body.
+#}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1"></script>

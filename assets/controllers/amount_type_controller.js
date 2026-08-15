@@ -16,6 +16,7 @@ import { Controller } from '@hotwired/stimulus';
  * Al abrir el formulario deja el foco en el importe, que es el campo por el que
  * se empieza siempre.
  */
+/* stimulusFetch: 'lazy' */
 export default class extends Controller {
   static targets = ['select', 'item', 'amount'];
   static classes = ['active'];

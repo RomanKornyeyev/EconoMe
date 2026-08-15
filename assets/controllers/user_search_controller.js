@@ -15,6 +15,7 @@ import { Controller } from '@hotwired/stimulus';
  * El servidor devuelve HTML puro que se inyecta en el target "results".
  * Stimulus conecta automáticamente los data-controller="friendship" del nuevo HTML.
  */
+/* stimulusFetch: 'lazy' */
 export default class extends Controller {
   static targets = ['input', 'results'];
   static values  = { url: String };

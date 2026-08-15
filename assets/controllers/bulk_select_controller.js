@@ -20,6 +20,7 @@ import { Controller } from '@hotwired/stimulus';
  *   singleDeleteToken   — input hidden _token del form individual
  *   singleDeleteName    — texto con el nombre del movimiento en el modal individual
  */
+/* stimulusFetch: 'lazy' */
 export default class extends Controller {
     static targets = [
         'checkbox',

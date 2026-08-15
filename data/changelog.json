@@ -1,5 +1,20 @@
 [
     {
+        "version": "v1.3.3",
+        "date": "2026-08-15",
+        "title": "Optimización de la carga de la web",
+        "changes": [
+            {
+                "type": "improvement",
+                "text": "Las páginas cargan más rápido."
+            },
+            {
+                "type": "fix",
+                "text": "Corregido un parpadeo muy poco común en claro al cambiar de página cuando se usa el tema oscuro."
+            }
+        ]
+    },
+    {
         "version": "v1.3.2",
         "date": "2026-08-12",
         "title": "Rediseño de la página de inicio",

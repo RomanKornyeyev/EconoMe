@@ -17,7 +17,20 @@
 		{# LIBRARIES FIRST #}
 		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 		<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
-		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+
+		{#
+			LIBRERIAS QUE SOLO USAN ALGUNAS PAGINAS (flatpickr, chart.js).
+			Ver templates/partials/assets/.
+
+			Este bloque va aqui, en medio del CSS, y no al final del <head>, por
+			dos motivos que conviene no romper al reordenar:
+			  - general.css retematiza flatpickr entero para el modo claro/oscuro,
+			    asi que el CSS de la libreria tiene que cargar ANTES.
+			  - sus <script> van sin defer y las plantillas los llaman desde el
+			    body, asi que tienen que estar listos antes de llegar ahi.
+		#}
+		{% block page_assets %}{% endblock %}
+
 		{# CUSTOM CSS / OVERRIDES #}
 		<link href="{{ asset('css/general.css') }}" rel="stylesheet">
 		<link href="{{ asset('css/form.css') }}" rel="stylesheet">
@@ -25,13 +38,16 @@
 		{% block stylesheets %}{% endblock %}
 
 		<!-- Scripts -->
-		<script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-		<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1"></script>
-		<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13"></script>
-		<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/es.js"></script>
+		{#
+			El tema tiene que quedar aplicado antes del primer pintado, o se ve un
+			fogonazo de tema claro en cada navegacion. Por eso va sin defer y por
+			delante del resto: cualquier script bloqueante que se cuele antes
+			retrasa el momento en que se escribe data-bs-theme.
+		#}
+		<script src="{{ asset('js/color_mode.js') }}"></script>
 
-		<!-- IMPORTANTE QUE SEA SIN DEFER -->
-		<script defer src="{{ asset('js/color_mode.js') }}"></script>
+		<script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 		<script defer src="{{ asset('js/flashes_animation.js') }}"></script>
 		<script defer src="{{ asset('js/tooltips.js') }}"></script>
 		<script defer src="{{ asset('js/popovers.js') }}"></script>

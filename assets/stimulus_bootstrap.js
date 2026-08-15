@@ -1,27 +1,16 @@
 import { startStimulusApp } from '@symfony/stimulus-bundle';
-import AmountTypeController      from './controllers/amount_type_controller.js';
-import AvatarUploadController    from './controllers/avatar_upload_controller.js';
-import BulkSelectController      from './controllers/bulk_select_controller.js';
-import CategorySuggestController from './controllers/category_suggest_controller.js';
-import ColorPickerController     from './controllers/color_picker_controller.js';
-import ConfirmController         from './controllers/confirm_controller.js';
-import ConfirmMatchController    from './controllers/confirm_match_controller.js';
-import FriendshipController      from './controllers/friendship_controller.js';
-import ShowMoreController        from './controllers/show_more_controller.js';
-import TourController            from './controllers/tour_controller.js';
-import TxSummaryController       from './controllers/tx_summary_controller.js';
-import UserSearchController      from './controllers/user_search_controller.js';
 
-const app = startStimulusApp();
-app.register('amount-type',   AmountTypeController);
-app.register('avatar-upload', AvatarUploadController);
-app.register('bulk-select',   BulkSelectController);
-app.register('category-suggest', CategorySuggestController);
-app.register('color-picker',  ColorPickerController);
-app.register('confirm',       ConfirmController);
-app.register('confirm-match', ConfirmMatchController);
-app.register('friendship',    FriendshipController);
-app.register('show-more',     ShowMoreController);
-app.register('tour',          TourController);
-app.register('tx-summary',    TxSummaryController);
-app.register('user-search',   UserSearchController);
+/**
+ * Arranca Stimulus.
+ *
+ * No hace falta importar ni registrar nada a mano: StimulusBundle descubre
+ * solo todo `assets/controllers/*_controller.js` y deriva el nombre del
+ * fichero (`amount_type_controller.js` -> `amount-type`).
+ *
+ * Los controladores marcados con `stimulusFetch: 'lazy'` sobre la clase no se
+ * descargan hasta que aparece su `data-controller` en el DOM. Se dejan en
+ * carga normal los que interceptan un envío o bloquean una acción destructiva
+ * (confirm, confirm-match, friendship), donde llegar tarde significaría dejar
+ * pasar el submit sin su comprobación.
+ */
+startStimulusApp();

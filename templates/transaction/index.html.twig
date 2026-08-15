@@ -2,6 +2,11 @@
 
 {% block title %}Movimientos{% endblock %}
 
+{# Flatpickr por el filtro de rango de fechas. #}
+{% block page_assets %}
+    {% include 'partials/assets/_flatpickr.html.twig' %}
+{% endblock %}
+
 {% block content %}
 {% import 'partials/macros/_tour.html.twig' as tour %}
 {% set canEdit = is_granted('ACCOUNT_EDIT', currentAccount) %}

@@ -17,6 +17,7 @@ import { Controller } from '@hotwired/stimulus';
  *
  * Sigue el patrón de user-search: fetch con debounce e inyección de HTML.
  */
+/* stimulusFetch: 'lazy' */
 export default class extends Controller {
   static targets = ['name', 'type', 'category', 'hint'];
   static values  = { url: String };

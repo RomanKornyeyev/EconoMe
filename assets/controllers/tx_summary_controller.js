@@ -16,6 +16,7 @@ import { Controller } from '@hotwired/stimulus';
  * Uso en un disparador explícito (botón/If de dropdown):
  *   data-action="click->tx-summary#show"
  */
+/* stimulusFetch: 'lazy' */
 export default class extends Controller {
   static values = { url: String };
 

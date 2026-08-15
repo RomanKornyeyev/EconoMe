@@ -14,6 +14,7 @@ import { Controller } from '@hotwired/stimulus';
  * La paleta se puede sobreescribir con:
  *   'row_attr' => ['data-color-picker-palette-value' => '["#ff0000", ...]']
  */
+/* stimulusFetch: 'lazy' */
 export default class extends Controller {
   static targets = ['input'];
   static values = {

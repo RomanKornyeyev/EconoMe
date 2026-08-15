@@ -25,6 +25,7 @@ import 'driver.js/dist/driver.css';
  * Relanzado manual: cualquier elemento dentro del scope con
  *   data-action="click->tour#restart"
  */
+/* stimulusFetch: 'lazy' */
 export default class extends Controller {
   static values = {
     name: String,
