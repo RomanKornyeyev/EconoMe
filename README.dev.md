@@ -6,9 +6,119 @@ Formato changelog: lo más reciente arriba.
 
 ---
 
-## v1.3.3 — Optimización de carga
+## v1.4.0 — Registrar y editar movimientos, mucho más rápido
 
-Antes casi todo el JS se descargaba en todas las páginas. Ahora cada página carga solo lo suyo.
+Esta versión junta dos trabajos que salieron seguidos: exprimir el flujo de meter
+movimientos, y aligerar lo que descarga cada página.
+
+Registrar un extracto entero eran N ciclos de abrir modal → rellenar → guardar → **redirect** → reabrir. El coste no estaba en teclear, sino en la ceremonia entre movimiento y movimiento. Este es el "Nivel 0" de `claude/bulk-transaction-entry.md`: exprimir el flujo actual sin tocar el modelo de datos ni meter todavía un importador.
+
+En paralelo, antes casi todo el JS se descargaba en todas las páginas. Ahora cada
+página carga solo lo suyo — lo que además hizo posible el resto: sin controllers
+bajo demanda, cada pantalla se habría llevado el peso del modal.
+
+### Alta encadenada (`tx_quick_add_controller.js`)
+
+El modal ya no se cierra al guardar. `TransactionController::edit()` detecta XHR en el alta y responde JSON en vez de redirigir:
+
+- válido → `200 {ok: true, item}` con la confirmación ya renderizada para la franja «Registrado»;
+- inválido → `422 {ok: false, body}` con **solo el cuerpo** del formulario re-renderizado.
+
+Que vuelva solo el cuerpo y no el `<form>` entero es deliberado: el `_token` vive en el `form_start`/`form_end` del modal, así sobrevive al re-render y el siguiente envío sigue siendo válido.
+
+El envío sin JS no cambia: sigue redirigiendo con su flash, y es lo que usa el formulario de página completa.
+
+Al cerrar el modal habiendo añadido algo se recarga la página **una vez**, en lugar de una por movimiento, para que listado y KPIs de detrás no queden obsoletos.
+
+**El acuse de recibo es una franja de una línea que se repinta, no una lista que crece.** La primera versión apilaba cada alta; con 5 movimientos el modal ya no cabía en pantalla. Ahora la altura es constante y el contador («N en esta tanda») cubre lo que aportaba la lista. Lo que hace visible el guardado es el pulso `.tx-added-pulse`, no el texto, que cambia poco entre un alta y la siguiente. Dentro de la franja solo se recorta el nombre: con conceptos de banco largos, el importe es justo lo que no puede desaparecer.
+
+> Es de los pocos controllers **eager**: intercepta un envío.
+
+### Editar también en el modal
+
+Crear abría un modal, editar mandaba a otra pantalla. Mismo formulario, dos
+experiencias distintas. Ahora las dos van por el modal.
+
+`TransactionController::edit()` pasa a servir dos clientes según la petición sea
+XHR o no. En XHR responde JSON: un `GET` devuelve el cuerpo del formulario más lo
+que el modal necesita para reetiquetarse (`action`, `account`), y el `POST` la
+confirmación. En navegación normal sigue renderizando `transaction/edit.html.twig`.
+
+Solo se sustituye el **cuerpo**, nunca el `<form>`. El `_token` vive en el
+`form_start`/`form_end` del modal y sobrevive al cambio de modo, porque el id del
+token es el nombre del formulario (`transaction`) y es el mismo creando y editando.
+
+Editando se ocultan encadenar, el enlace a recurrentes y la pista de teclado: son
+piezas de "meter una tanda", y editar es una acción única.
+
+### El modal abre primero y carga después
+
+Esperar al `fetch` para abrir dejaba ~1 s de nada tras el clic, que se lee como
+que la aplicación se ha colgado. Ahora se abre al instante con un hueco de carga
+(`.tx-form-loading`, con la altura aproximada del formulario para que no dé un
+salto) y el cuerpo se inyecta al llegar. Mismo patrón que `tx_summary_controller.js`.
+
+Abrir antes de tener los datos introduce tres carreras, y las tres están cerradas:
+
+- **Enviar mientras carga.** El cuerpo aún es un spinner, así que un envío mandaría
+  un movimiento vacío. `#loading` corta el envío.
+- **Enviar al sitio equivocado.** La `action` se fija **antes** del `fetch`: la URL
+  del enlace es la misma a la que hay que enviar, así que el formulario nunca
+  apunta a crear mientras se edita.
+- **Respuesta tardía.** Si cierras y reabres para crear, la respuesta en vuelo
+  pisaría el formulario de alta. Cada apertura lleva número (`#loadSeq`) y las
+  respuestas obsoletas se descartan.
+
+### El controlador se mudó del `<form>` al `.modal-content`
+
+`tx-quick-add` gobierna también el título y el nombre de cuenta de la cabecera, que
+están **fuera** del formulario. Montado en el `<form>` esos targets no existían.
+Ahora cuelga del `.modal-content` y el formulario es su target `form`; los
+`data-action` siguen en el `<form>` porque Stimulus los resuelve contra el ancestro.
+
+*`category-suggest` se queda en el `<form>`: todos sus targets están dentro.*
+
+### La vista de página completa queda en desuso, no borrada
+
+Nada enlaza ya a `transaction/edit.html.twig`, pero sigue viva: cubre las URLs
+guardadas, el uso sin JavaScript y el fallback si el AJAX falla —los «Editar» son
+`<a href>` de verdad y el modal solo los intercepta—. Está marcada como tal en la
+plantilla y en el docblock del controlador. **Al tocar el formulario hay que mirar
+las dos ramas.**
+
+*Los movimientos recurrentes mantienen su flujo de página completa.*
+
+### Flatpickr, de `<script>` suelto a controller
+
+`_form_transaction.html.twig` inicializaba flatpickr con un `<script>` inline. Eso corre una vez y no ve el HTML inyectado —el problema que ya avisaba la nota permanente de abajo—, así que tras un error de validación el calendario quedaba muerto. Ahora es `date_picker_controller.js`, montado sobre el input, y Stimulus lo reconecta solo.
+
+Expone `setDate()` porque con `altInput` escribir en el input original no repinta lo que el usuario ve; quien quiera cambiar la fecha desde fuera tiene que pasar por el controller.
+
+*El formulario de recurrentes sigue con su `<script>` inline: allí no hay re-render por AJAX y su init está acoplado a la previsualización de frecuencia.*
+
+### Fecha pegajosa
+
+`TransactionDraftFactory` construye el borrador aplicando la última fecha usada en esa cuenta, guardada en sesión (`tx.last_date.<accountId>`). Existe como servicio porque el borrador se construye en tres sitios: listado, dashboard y formulario de página completa.
+
+El alcance es la sesión a propósito: es un apaño para la tanda que estás metiendo, no una preferencia. Mañana lo correcto vuelve a ser hoy.
+
+### Duplicar
+
+Los disparadores llevan los datos en `data-tx-*` (macro `partials/macros/_tx_duplicate.html.twig`) y `tx-quick-add` los escucha **por delegación en `document`**, no con `data-action`: viven fuera del controller (tabla, tarjetas de móvil) e incluso en HTML inyectado después (el modal de resumen), donde Stimulus no tendría a quién enganchar.
+
+El importe va con coma decimal y sin separador de miles: es lo que espera el `MoneyType` con locale `es` y lo único que acepta el `pattern` del campo.
+
+**La fecha se copia como todo lo demás.** La primera versión la dejaba en la pegajosa de sesión, con el argumento de que duplicar sirve para registrar una ocurrencia nueva. Se descartó al probarlo: hacía que el resultado dependiera de un estado invisible —el mismo clic sobre la misma fila daba un formulario distinto según lo que hubieras hecho antes—. Copiándola, duplicar es función de la fila que ves. El campo se resalta con `cat-autofill-flash` para que la fecha copiada no pase inadvertida al guardar.
+
+### Acciones en bloque: categorizar
+
+`#bulkForm` pasa a servir para las dos acciones; `bulk_select_controller.js` reescribe `action` y `_token` antes de enviar (cada ruta tiene su propio token). Así no hay dos juegos de checkboxes que mantener sincronizados.
+
+Las categorías están tipadas, así que una selección mixta no puede recibir todas la misma: los movimientos cuyo tipo no casa **se omiten y se cuentan** en el flash. Colarlas descuadraría los gráficos; omitirlas en silencio sería mentir.
+
+### El modal de alta, también en Movimientos
+
+Era la página donde uno se sienta a meter un extracto y era la única que mandaba al formulario de página completa. Salió casi gratis porque el dashboard y el listado ya compartían los mismos partials.
 
 ### Stimulus: controllers bajo demanda
 

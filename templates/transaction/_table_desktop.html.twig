@@ -1,3 +1,4 @@
+{% import 'partials/macros/_tx_duplicate.html.twig' as dup %}
 {% set q = app.request.query.all %}
 {% set sf = sortField ?? app.request.query.get('sortBy', 'date') %}
 {% set sd = sortDir ?? app.request.query.get('sortDir', 'desc') %}
@@ -12,11 +13,20 @@
 {% endmacro %}
 
 {% if canEdit %}
-	{# Form bulk delete: fuera de la tabla para evitar anidamiento. Checkboxes se asocian via form="bulkForm". #}
+	{# Form de acciones en bloque: fuera de la tabla para evitar anidamiento. Los
+	   checkboxes se asocian via form="bulkForm". Un único form para eliminar y
+	   categorizar; el controller reescribe action y _token antes de enviar, así
+	   no hay dos juegos de checkboxes que mantener sincronizados. #}
 	<form id="bulkForm" data-bulk-select-target="bulkForm"
-	      method="post" action="{{ path('transaction_bulk_delete') }}">
-		<input type="hidden" name="_token" value="{{ csrf_token('bulk_delete') }}">
+	      method="post" action="{{ path('transaction_bulk_delete') }}"
+	      data-delete-url="{{ path('transaction_bulk_delete') }}"
+	      data-delete-token="{{ csrf_token('bulk_delete') }}"
+	      data-categorize-url="{{ path('transaction_bulk_categorize') }}"
+	      data-categorize-token="{{ csrf_token('bulk_categorize') }}">
+		<input type="hidden" name="_token" value="{{ csrf_token('bulk_delete') }}"
+		       data-bulk-select-target="bulkToken">
 		<input type="hidden" name="_redirect_url" value="{{ app.request.requestUri }}">
+		<input type="hidden" name="category" data-bulk-select-target="bulkCategory">
 	</form>
 
 	{# Form single delete: action y token se inyectan dinámicamente desde el controller. #}
@@ -108,11 +118,19 @@
 							<i class="fa-solid fa-eye fa-sm"></i>
 						</button>
 						{% if canEdit %}
-							<a href="{{ path('transaction_edit', {id: tx.id}) }}"
+							{# Enlace de verdad, no botón: tx-quick-add lo intercepta para abrir el
+							   modal, y si no hay JS navega a la vista de página completa. #}
+							<a href="{{ path('transaction_edit', {id: tx.id}) }}" data-tx-edit
 							   class="btn btn-sm btn-outline-primary py-0 px-1"
 							   data-bs-toggle="tooltip" data-bs-title="Editar" aria-label="Editar">
 								<i class="fa-solid fa-pen fa-sm"></i>
 							</a>
+							<button type="button"
+							        class="btn btn-sm btn-outline-primary py-0 px-1"
+							        data-bs-toggle="tooltip" data-bs-title="Duplicar" aria-label="Duplicar"
+							        {{ dup.attrs(tx) }}>
+								<i class="fa-solid fa-copy fa-sm"></i>
+							</button>
 							<button type="button"
 							        class="btn btn-sm btn-outline-danger py-0 px-1"
 							        data-bs-toggle="tooltip" data-bs-title="Eliminar" aria-label="Eliminar"
@@ -150,6 +168,49 @@
 				<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
 				<button type="button" class="btn btn-danger" data-action="bulk-select#submitBulk">
 					<i class="fa-solid fa-trash fa-xs me-1"></i>Eliminar
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+{# Modal — categorizar en bloque #}
+<div class="modal fade" id="bulkCategorizeModal" tabindex="-1" aria-labelledby="bulkCategorizeModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header border-0 pb-0">
+				<h5 class="modal-title" id="bulkCategorizeModalLabel">Categorizar movimientos</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+			</div>
+			<div class="modal-body">
+				<p class="text-muted small">
+					Se aplicará a <strong data-bulk-select-target="categorizeCount"></strong>.
+				</p>
+				<select class="form-select" data-bulk-select-target="categorySelect" aria-label="Categoría">
+					<option value="">Sin categoría</option>
+					<optgroup label="Gastos">
+						{% for cat in categories|filter(c => c.type == 'expense') %}
+							<option value="{{ cat.id }}">{{ cat.name }}</option>
+						{% endfor %}
+					</optgroup>
+					<optgroup label="Ingresos">
+						{% for cat in categories|filter(c => c.type == 'income') %}
+							<option value="{{ cat.id }}">{{ cat.name }}</option>
+						{% endfor %}
+					</optgroup>
+				</select>
+				{# Las categorías están tipadas, así que la selección puede mezclar gastos
+				   e ingresos y no todos encajar. El servidor omite los que no casan y lo
+				   dice en el flash; avisarlo aquí evita la sorpresa. #}
+				<p class="text-muted mt-2 mb-0" style="font-size:12px">
+					<i class="fa-solid fa-circle-info me-1"></i>Los movimientos cuyo tipo (ingreso/gasto) no
+					corresponda a la categoría elegida se dejarán como están.
+				</p>
+			</div>
+			<div class="modal-footer border-0 pt-0">
+				<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+				<button type="button" class="btn btn-primary" data-action="bulk-select#submitCategorize">
+					<i class="fa-solid fa-tag fa-xs me-1"></i>Aplicar
 				</button>
 			</div>
 		</div>

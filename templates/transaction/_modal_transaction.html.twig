@@ -1,0 +1,96 @@
+{#
+  Modal de alta y edición de movimientos. Incluido en el dashboard y en el
+  listado; ambos construyen `transactionForm` apuntando a `transaction_create`.
+
+  Tiene dos modos, que gobierna tx_quick_add_controller.js:
+
+    · alta (el que se renderiza aquí) — encadenado: intercepta el envío, lo manda
+      por fetch y deja el modal abierto para el siguiente movimiento.
+    · edición — al pulsar «Editar» se pide el formulario del movimiento por AJAX,
+      se sustituye el cuerpo y se reapunta la `action`. Se ocultan las piezas que
+      solo tienen sentido creando: encadenar, el enlace a recurrentes y la pista
+      de teclado.
+
+  Los elementos que cambian entre modos llevan target para que el controlador no
+  tenga que conocer selectores CSS de esta plantilla.
+
+  Sin JS el formulario se envía de forma normal y el controller redirige como
+  siempre; «Editar» es un enlace de verdad a la vista de página completa.
+
+  Variables:
+    - transactionForm: FormView de TransactionType (con `action` ya puesta)
+    - currentAccount:  Account
+    - redirectUrl:     string (adónde volver en el envío sin JS)
+#}
+<div class="modal fade" id="transactionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered tx-quick-add-dialog">
+        {# tx-quick-add cuelga del modal-content y no del <form>: gobierna también
+           el título y el nombre de cuenta de la cabecera, que quedan fuera del
+           formulario. El propio form es un target suyo. #}
+        <div class="modal-content bg-body-tertiary" data-controller="tx-quick-add">
+            <div class="modal-header">
+                {# La cuenta de destino, igual que en el formulario de página completa:
+                   con varias cuentas abiertas es el dato que evita registrar el
+                   movimiento en la equivocada. #}
+                <div>
+                    <h5 class="modal-title" data-tx-quick-add-target="title">Nuevo movimiento</h5>
+                    <small class="text-muted" data-tx-quick-add-target="accountName">{{ currentAccount.name }}</small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            {{ form_start(transactionForm, {attr: {
+                class: 'needs-validation',
+                'data-controller': 'category-suggest',
+                'data-category-suggest-url-value': path('transaction_suggest_category', {account: currentAccount.id}),
+                'data-tx-quick-add-target': 'form',
+                'data-action': 'submit->tx-quick-add#submit keydown->tx-quick-add#onKeydown',
+            }}) }}
+                <input type="hidden" name="_redirect_url" value="{{ redirectUrl }}">
+                <div class="modal-body p-4" data-tx-quick-add-target="body">
+                    {% include 'transaction/_form_transaction.html.twig' with {form: transactionForm, suggest: true} %}
+                </div>
+
+                {# Confirmación del último guardado. Una sola línea a propósito: listar
+                   la tanda entera hacía crecer el modal sin techo (con 5 movimientos
+                   ya no cabía en pantalla). Aquí la altura es constante, y el contador
+                   cubre lo que aportaba la lista: saber cuántos llevas. #}
+                <div class="px-4 pb-3 d-none" data-tx-quick-add-target="addedPanel">
+                    <div class="tx-added-bar d-flex align-items-center gap-2 rounded-3 px-3 py-2"
+                         data-tx-quick-add-target="addedBar" role="status" aria-live="polite">
+                        <i class="fa-solid fa-circle-check flex-shrink-0"></i>
+                        {# d-flex + overflow-hidden para que el recorte se lo coma el
+                           nombre y no el importe: con conceptos de banco largos, la
+                           cifra es justo lo que no puede desaparecer. #}
+                        <span class="small d-flex align-items-baseline gap-1 overflow-hidden"
+                              data-tx-quick-add-target="addedLast"></span>
+                        <span class="small ms-auto text-nowrap opacity-75"
+                              data-tx-quick-add-target="addedCounter">
+                            <span data-tx-quick-add-target="addedCount">0</span> en esta tanda
+                        </span>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="{{ path('recurring_create', {account: currentAccount.id}) }}"
+                       class="me-auto small text-decoration-none"
+                       data-tx-quick-add-target="recurringLink">
+                        <i class="fa-solid fa-rotate me-1"></i>Añadir movimiento recurrente
+                    </a>
+                    <button type="submit" class="btn btn-outline-primary"
+                            data-tx-quick-add-target="saveButton">Guardar</button>
+                    {# Encadenar es la acción primaria: si estás en este modal metiendo una
+                       tanda, seguir es lo que quieres casi siempre. «Guardar» queda para el
+                       último de la tanda, que es el que cierra. #}
+                    <button type="submit" class="btn btn-primary"
+                            data-tx-quick-add-chain data-tx-quick-add-target="chainButton">
+                        Guardar y añadir otro
+                    </button>
+                </div>
+                <div class="px-3 pb-3 text-end text-muted" style="font-size:11px"
+                     data-tx-quick-add-target="hint">
+                    <kbd>Enter</kbd> guarda y sigue · <kbd>N</kbd> abre esta ventana
+                </div>
+            {{ form_end(transactionForm) }}
+        </div>
+    </div>
+</div>

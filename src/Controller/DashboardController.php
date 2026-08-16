@@ -5,9 +5,11 @@ namespace App\Controller;
 use App\Entity\Transaction;
 use App\Form\TransactionType;
 use App\Pagination\PageSize;
+use App\Repository\CategoryRepository;
 use App\Repository\TransactionRepository;
 use App\Repository\RecurringTransactionRepository;
 use App\Service\AccountService;
+use App\Service\TransactionDraftFactory;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -28,6 +30,8 @@ class DashboardController extends AbstractController
         TransactionRepository $transactionRepo,
         RecurringTransactionRepository $recurringRepo,
         PaginatorInterface $paginator,
+        TransactionDraftFactory $draftFactory,
+        CategoryRepository $categoryRepo,
     ): Response {
         $user = $this->getUser();
 
@@ -104,7 +108,7 @@ class DashboardController extends AbstractController
             PageSize::fromRequest($request, self::PER_PAGE_DEFAULT)
         );
 
-        $transaction = new Transaction($account, $user);
+        $transaction = $draftFactory->create($account, $user);
         $transactionForm = $this->createForm(TransactionType::class, $transaction, [
             'currency' => $account->getCurrency(),
             'account'  => $account,
@@ -122,6 +126,8 @@ class DashboardController extends AbstractController
             'periodExpense'      => $periodExpense,
             'activeRecurrings'   => $activeRecurrings,
             'transactions'       => $pagination,
+            // Para el desplegable de «Categorizar» de la barra de acciones en bloque
+            'categories'         => $categoryRepo->findAllByAccount($account),
             'perPageOptions'     => PageSize::OPTIONS,
             'sortField'          => $sortField,
             'sortDir'            => $sortDir,

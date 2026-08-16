@@ -1,3 +1,4 @@
+{% import 'partials/macros/_tx_duplicate.html.twig' as dup %}
 {% set canEdit = canEdit ?? is_granted('ACCOUNT_EDIT', currentAccount) %}
 <div class="p-3 d-flex flex-column gap-2">
     {% for tx in transactions %}
@@ -30,9 +31,14 @@
                         </li>
                         {% if canEdit %}
                         <li>
-                            <a class="dropdown-item" href="{{ path('transaction_edit', {id: tx.id}) }}">
+                            <a class="dropdown-item" href="{{ path('transaction_edit', {id: tx.id}) }}" data-tx-edit>
                                 <i class="fa-solid fa-pen fa-sm me-2 text-muted"></i>Editar
                             </a>
+                        </li>
+                        <li>
+                            <button class="dropdown-item" type="button" {{ dup.attrs(tx) }}>
+                                <i class="fa-solid fa-copy fa-sm me-2 text-muted"></i>Duplicar
+                            </button>
                         </li>
                         <li>
                             <button class="dropdown-item text-danger"

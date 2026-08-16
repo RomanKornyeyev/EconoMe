@@ -275,6 +275,50 @@ span.flatpickr-weekday { color: var(--bs-secondary-color); }
     border-color: var(--bs-success);
 }
 
+/* ── Alta rápida de movimientos ───────────────────────────────────────────── */
+/* Más ancho que los 500px por defecto de Bootstrap, para que el formulario
+   respire igual que en la página completa de crear movimiento. Por debajo de
+   este ancho manda el margen del propio .modal-dialog, así que no hace falta
+   media query. */
+.tx-quick-add-dialog {
+    max-width: 630px;
+}
+
+/* Hueco mientras se trae el formulario de edición. La altura aproxima la del
+   formulario ya montado para que el modal no encoja al abrirse y vuelva a
+   crecer al llegar el contenido. */
+.tx-form-loading {
+    min-height: 21rem;
+}
+
+/* Franja de confirmación del alta encadenada. Altura fija de una línea: se
+   repinta en cada guardado en lugar de crecer con la tanda. */
+.tx-added-bar {
+    background-color: rgba(var(--bs-success-rgb), .12);
+    border: 1px solid rgba(var(--bs-success-rgb), .35);
+    color: var(--bs-body-color);
+}
+
+.tx-added-bar .fa-circle-check {
+    color: var(--bs-success);
+}
+
+/* El texto cambia poco entre un alta y la siguiente, así que lo que hace de
+   acuse de recibo es el pulso, no el contenido. */
+@keyframes txAddedPulse {
+    0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(var(--bs-success-rgb), .5); }
+    35%  { transform: scale(1.02); box-shadow: 0 0 0 .35rem rgba(var(--bs-success-rgb), .25); }
+    100% { transform: scale(1);    box-shadow: 0 0 0 .5rem rgba(var(--bs-success-rgb), 0); }
+}
+
+.tx-added-pulse {
+    animation: txAddedPulse .6s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tx-added-pulse { animation: none; }
+}
+
 /* ── Ayuda plegable ───────────────────────────────────────────────────────── */
 /* El caret apunta hacia abajo con el panel abierto y hacia la derecha cerrado.
    Bootstrap pone y quita la clase .collapsed en el disparador, así que el giro

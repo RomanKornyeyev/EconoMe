@@ -1,0 +1,23 @@
+{#
+  Confirmación de un movimiento recién registrado. La devuelve
+  TransactionController::edit() como JSON cuando la petición es XHR, y
+  tx_quick_add_controller.js la pinta en la franja «Registrado» del modal.
+
+  Es una sola línea porque la franja tiene altura fija: el modal no puede crecer
+  con cada alta de la tanda.
+
+  Se emiten varios elementos hermanos, no un bloque de texto: el contenedor es un
+  flex y solo el nombre debe encogerse (`min-width:0` es lo que permite que
+  `text-truncate` funcione dentro de un flex). El importe y la fecha van con
+  text-nowrap para que sobrevivan a un concepto de banco largo.
+
+  Variables:
+    - tx:      Transaction (ya persistida)
+    - updated: bool — false al crear, true al editar
+#}
+<span class="text-truncate" style="min-width:0">{{ updated|default(false) ? 'Actualizado' : 'Registrado' }} <strong>{{ tx.name }}</strong></span>
+{%- if tx.category %}
+    <span class="d-inline-block rounded-circle flex-shrink-0" style="width:6px;height:6px;background:{{ tx.category.color }}"></span>
+{%- endif %}
+<span class="fw-semibold text-nowrap">{{ tx.isExpense() ? '-' : '+' }}{{ tx.amount|number_format(2, ',', '.') }}</span>
+<span class="text-nowrap opacity-75">· {{ tx.date|date('d/m') }}</span>

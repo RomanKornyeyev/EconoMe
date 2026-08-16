@@ -15,31 +15,6 @@
         {% endif %}
     </div>
     <div class="col-md-6">
-        {{ form_row(form.date, { attr: { class: 'flatpickr-date' } }) }}
+        {{ form_row(form.date, { attr: { 'data-controller': 'date-picker' } }) }}
     </div>
 </div>
-
-<script>
-(function () {
-    function initDatePicker() {
-        document.querySelectorAll('.flatpickr-date:not([data-fp-init])').forEach(function (el) {
-            el.setAttribute('data-fp-init', '1');
-            flatpickr(el, {
-                locale: 'es',
-                dateFormat: 'Y-m-d',
-                altInput: true,
-                altFormat: 'd/m/Y',
-                altInputClass: 'form-control',
-                allowInput: true,
-                appendTo: el.closest('.modal') || document.body,
-            });
-        });
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initDatePicker);
-    } else {
-        initDatePicker();
-    }
-})();
-</script>

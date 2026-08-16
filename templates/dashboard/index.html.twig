@@ -92,7 +92,7 @@
 
 
     <div class="d-flex flex-wrap justify-content-end align-items-center mb-3 gap-2 bg-body">
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newTransactionModal"
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#transactionModal"
                 data-tour-step="6"
                 data-tour-title="Añade movimientos"
                 data-tour-text="Registra un gasto o un ingreso sin salir del dashboard.">
@@ -159,7 +159,7 @@
     itemLabelPlural: 'movimientos',
 } only %}
 
-{% include 'transaction/_modal_create.html.twig' %}
+{% include 'transaction/_modal_transaction.html.twig' %}
 {% include 'transaction/_modal_summary.html.twig' %}
 
 </div> {# /tour #}

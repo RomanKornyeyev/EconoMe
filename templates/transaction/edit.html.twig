@@ -1,3 +1,18 @@
+{#
+  Formulario de alta/edición en página completa.
+
+  EN DESUSO desde v1.4.0: el flujo normal es el modal de
+  `transaction/_modal_transaction.html.twig`, y ninguna pantalla enlaza ya aquí.
+
+  Se mantiene viva y funcional a propósito, no por descuido:
+    · una URL guardada o compartida (`/transaction/12/edit`) sigue funcionando;
+    · es el destino al que caen los enlaces «Editar» si falla el JS, porque son
+      <a href> de verdad y el modal solo los intercepta;
+    · es el camino sin JavaScript para crear y editar.
+
+  Si se cambia el comportamiento del formulario, hay que mirar también la rama
+  XHR de TransactionController::edit(), que es la que ve el usuario a diario.
+#}
 {% extends 'base.html.twig' %}
 
 {% block title %}{{ isNew ? 'Nuevo movimiento' : 'Editar movimiento' }}{% endblock %}

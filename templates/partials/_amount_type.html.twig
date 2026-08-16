@@ -28,11 +28,6 @@
    pisaría el -1rem que el gutter le pone a .row (las utilidades llevan !important)
    y desplazaría de más. #}
 <div class="row g-3 pt-3" data-controller="amount-type" data-amount-type-active-class="{{ activeClass }}">
-    <div class="col-md-8">
-        {{ form_row(amount, { attr: amount.vars.attr|merge({
-            'data-amount-type-target': 'amount',
-        }) }) }}
-    </div>
     <div class="col-md-4">
         {# Sin etiqueta visible: la del importe va dentro del campo (flotante), así que
            una encima de los botones descuadraría la fila. El grupo conserva su nombre
@@ -54,5 +49,10 @@
             'data-action': (type.vars.attr['data-action']|default('') ~ ' change->amount-type#sync')|trim,
         }) }) }}
         {{ form_errors(type) }}
+    </div>
+    <div class="col-md-8">
+        {{ form_row(amount, { attr: amount.vars.attr|merge({
+            'data-amount-type-target': 'amount',
+        }) }) }}
     </div>
 </div>

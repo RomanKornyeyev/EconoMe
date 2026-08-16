@@ -1,0 +1,27 @@
+{#
+    Atributos del disparador de «Duplicar movimiento».
+
+    Uso:
+        {% import 'partials/macros/_tx_duplicate.html.twig' as dup %}
+
+        <button type="button" {{ dup.attrs(tx) }}>Duplicar</button>
+
+    tx_quick_add_controller.js escucha por delegación en document cualquier clic
+    sobre [data-tx-duplicate], rellena el modal de alta con estos valores y lo
+    abre. Por eso el disparador no necesita data-controller ni data-action, y
+    funciona igual dentro de HTML inyectado por AJAX (el modal de resumen).
+
+    El importe va con coma decimal y sin separador de miles: es el formato que
+    espera el MoneyType con locale es, y el único que acepta el `pattern` del
+    campo. La fecha va en Y-m-d, que es lo que consume flatpickr.
+#}
+
+{% macro attrs(tx) %}
+    data-tx-duplicate
+    data-tx-name="{{ tx.name }}"
+    data-tx-amount="{{ tx.amount|number_format(2, ',', '') }}"
+    data-tx-type="{{ tx.type }}"
+    data-tx-description="{{ tx.description }}"
+    data-tx-category="{{ tx.category ? tx.category.id : '' }}"
+    data-tx-date="{{ tx.date|date('Y-m-d') }}"
+{%- endmacro %}

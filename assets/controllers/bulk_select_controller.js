@@ -13,8 +13,12 @@ import { Controller } from '@hotwired/stimulus';
  * Targets en _table_desktop.html.twig:
  *   checkbox            — cada checkbox de fila
  *   selectAll           — checkbox del thead
- *   bulkForm            — form de bulk delete
+ *   bulkForm            — form compartido por las acciones en bloque
+ *   bulkToken           — input _token del form (se reescribe según la acción)
+ *   bulkCategory        — input hidden con la categoría a aplicar
  *   confirmCount        — texto "N movimientos" en el modal de confirmación bulk
+ *   categorizeCount     — ídem en el modal de categorizar
+ *   categorySelect      — <select> de categoría del modal de categorizar
  *   singleDeleteModal   — el modal de confirmación de borrado individual
  *   singleDeleteForm    — form del modal individual (action se inyecta dinámicamente)
  *   singleDeleteToken   — input hidden _token del form individual
@@ -29,7 +33,11 @@ export default class extends Controller {
         'bulkBar',
         'selectionCount',
         'bulkForm',
+        'bulkToken',
+        'bulkCategory',
         'confirmCount',
+        'categorizeCount',
+        'categorySelect',
         'singleDeleteModal',
         'singleDeleteForm',
         'singleDeleteToken',
@@ -69,7 +77,33 @@ export default class extends Controller {
     }
 
     submitBulk() {
-        this.bulkFormTarget.submit();
+        this._submitAs('delete');
+    }
+
+    // ── Bulk categorizar ─────────────────────────────────────────────────────
+
+    openCategorize() {
+        if (this.hasCategorizeCountTarget) {
+            const n = this._checkedCount();
+            this.categorizeCountTarget.textContent = n === 1 ? '1 movimiento' : `${n} movimientos`;
+        }
+    }
+
+    submitCategorize() {
+        this.bulkCategoryTarget.value = this.categorySelectTarget.value;
+        this._submitAs('categorize');
+    }
+
+    /**
+     * Envía el form compartido apuntándolo a la acción elegida. Cada ruta tiene
+     * su propio token CSRF, así que hay que reescribir los dos: destino y token.
+     */
+    _submitAs(action) {
+        const form = this.bulkFormTarget;
+
+        form.action = form.dataset[`${action}Url`];
+        this.bulkTokenTarget.value = form.dataset[`${action}Token`];
+        form.submit();
     }
 
     // ── Single delete ────────────────────────────────────────────────────────

@@ -10,9 +10,11 @@ use App\Repository\CategoryRepository;
 use App\Repository\TransactionRepository;
 use App\Service\AccountService;
 use App\Service\CategorySuggester;
+use App\Service\TransactionDraftFactory;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -30,6 +32,7 @@ class TransactionController extends AbstractController
         private TransactionRepository $transactionRepo,
         private CategoryRepository $categoryRepo,
         private EntityManagerInterface $em,
+        private TransactionDraftFactory $draftFactory,
     ) {}
 
     #[Route('', name: 'index')]
@@ -101,11 +104,30 @@ class TransactionController extends AbstractController
             $perPage
         );
 
+        // Modal de alta rápida: es esta la página donde uno se sienta a meter un
+        // extracto entero, así que no tiene sentido mandarle al formulario de
+        // página completa. Solo se construye si puede escribir en la cuenta.
+        $transactionForm = null;
+        if ($this->isGranted('ACCOUNT_EDIT', $account)) {
+            $transactionForm = $this->createForm(
+                TransactionType::class,
+                $this->draftFactory->create($account, $user),
+                [
+                    'currency' => $account->getCurrency(),
+                    'account'  => $account,
+                    'suggest'  => true, // el modal siempre crea: sugerir categoría
+                    'action'   => $this->generateUrl('transaction_create', ['account' => $account->getId()]),
+                ]
+            );
+        }
+
         return $this->render('transaction/index.html.twig', [
             'accounts'        => $accounts,
             'currentAccount'  => $account,
             'pagination'      => $pagination,
             'categories'      => $categories,
+            'transactionForm' => $transactionForm,
+            'redirectUrl'     => $request->getRequestUri(),
             'dateFrom'        => $dateFrom,
             'dateTo'          => $dateTo,
             'currentType'     => $type,
@@ -120,6 +142,20 @@ class TransactionController extends AbstractController
         ]);
     }
 
+    /**
+     * Alta y edición de un movimiento.
+     *
+     * Sirve dos clientes a la vez, según la petición sea XHR o no:
+     *
+     *  · XHR — es el flujo normal desde v1.4.0. El modal pide aquí el formulario
+     *    (GET) y envía aquí el guardado (POST), y siempre se responde JSON.
+     *  · Navegación normal — renderiza `transaction/edit.html.twig`, la vista de
+     *    página completa. **Ya nada de la aplicación enlaza a ella**: el listado y
+     *    el dashboard abren el modal. Se mantiene viva y funcional a propósito,
+     *    para no romper URLs guardadas ni el uso sin JavaScript, pero cualquier
+     *    cambio de comportamiento hay que llevarlo también a la rama XHR, que es
+     *    la que ve el usuario. Ver README.dev.md (v1.4.0).
+     */
     #[Route('/create', name: 'create')]
     #[Route('/{id}/edit', name: 'edit', requirements: ['id' => '\d+'])]
     public function edit(Request $request, ?Transaction $transaction = null): Response
@@ -134,7 +170,7 @@ class TransactionController extends AbstractController
             }
 
             $this->denyAccessUnlessGranted('ACCOUNT_EDIT', $account);
-            $transaction = new Transaction($account, $this->getUser());
+            $transaction = $this->draftFactory->create($account, $this->getUser());
             $isNew = true;
         } else {
             $this->denyAccessUnlessGranted('ACCOUNT_EDIT', $transaction->getAccount());
@@ -149,11 +185,44 @@ class TransactionController extends AbstractController
         ]);
         $form->handleRequest($request);
 
+        // El modal pide el formulario de edición ya renderizado: se le devuelve
+        // solo el cuerpo, más lo que necesita para reetiquetarse (título, cuenta
+        // y a dónde enviar). El <form> del modal, con su _token, no se toca.
+        if (!$isNew && !$form->isSubmitted() && $request->isXmlHttpRequest()) {
+            return new JsonResponse([
+                'ok'      => true,
+                'action'  => $this->generateUrl('transaction_edit', ['id' => $transaction->getId()]),
+                'account' => $account->getName(),
+                'body'    => $this->renderView('transaction/_form_transaction.html.twig', [
+                    'form'    => $form->createView(),
+                    'suggest' => false,
+                ]),
+            ]);
+        }
+
         if ($form->isSubmitted() && $form->isValid()) {
             if ($isNew) {
                 $this->em->persist($transaction);
             }
             $this->em->flush();
+
+            if ($isNew) {
+                // La siguiente alta en esta cuenta arrancará en esta fecha
+                $this->draftFactory->remember($transaction);
+            }
+
+            // Desde el modal no hay redirección que dar: se queda abierto (alta
+            // encadenada) o lo cierra el propio cliente (edición). Solo se devuelve
+            // la confirmación que pintar en la franja.
+            if ($request->isXmlHttpRequest()) {
+                return new JsonResponse([
+                    'ok'   => true,
+                    'item' => $this->renderView('transaction/_added_item.html.twig', [
+                        'tx'      => $transaction,
+                        'updated' => !$isNew,
+                    ]),
+                ]);
+            }
 
             $redirectUrl = $request->request->get('_redirect_url');
             $dashboardUrl = $this->generateUrl('dashboard', ['account' => $account->getId()]);
@@ -174,6 +243,21 @@ class TransactionController extends AbstractController
             }
 
             return $this->redirectToRoute('transaction_index', ['account' => $account->getId()]);
+        }
+
+        // Envío con errores desde el modal: se devuelve solo el cuerpo del
+        // formulario. Deliberadamente NO se toca el form_start/form_end del modal,
+        // para que el _token que vive ahí sobreviva y el reintento siga siendo
+        // válido (el id del token es el nombre del formulario, `transaction`, así
+        // que el mismo sirve para alta y para edición).
+        if ($form->isSubmitted() && $request->isXmlHttpRequest()) {
+            return new JsonResponse([
+                'ok'   => false,
+                'body' => $this->renderView('transaction/_form_transaction.html.twig', [
+                    'form'    => $form->createView(),
+                    'suggest' => $isNew,
+                ]),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         return $this->render('transaction/edit.html.twig', [
@@ -249,6 +333,87 @@ class TransactionController extends AbstractController
         }
 
         return $this->redirectToRoute('transaction_index', ['account' => $accountId]);
+    }
+
+    /**
+     * Asigna una categoría (o la quita) a los movimientos seleccionados.
+     *
+     * Es la contrapartida del alta rápida: permite meter la tanda sin pararse a
+     * categorizar y ordenarlo después en bloque, filtrando por «Sin categoría».
+     */
+    #[Route('/bulk-categorize', name: 'bulk_categorize', methods: ['POST'])]
+    public function bulkCategorize(Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('bulk_categorize', $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $ids = $request->request->all('ids');
+        $categoryId = (string) $request->request->get('category', '');
+        $category = $categoryId !== '' ? $this->categoryRepo->find((int) $categoryId) : null;
+
+        $updated = 0;
+        $mismatched = 0;
+
+        foreach ($ids as $id) {
+            $transaction = $this->transactionRepo->find((int) $id);
+            if (!$transaction || !$this->isGranted('ACCOUNT_EDIT', $transaction->getAccount())) {
+                continue;
+            }
+
+            if ($category !== null) {
+                // Categoría de otra cuenta: solo llega con la petición manipulada,
+                // porque el desplegable únicamente ofrece las de la cuenta actual.
+                if ($category->getAccount()->getId() !== $transaction->getAccount()->getId()) {
+                    continue;
+                }
+                // Las categorías están tipadas: poner una de gasto a un ingreso
+                // dejaría el dato incoherente y descuadraría los gráficos. Se
+                // omiten y se dicen, que es más honesto que colarlas en silencio.
+                if ($category->getType() !== $transaction->getType()) {
+                    $mismatched++;
+                    continue;
+                }
+            }
+
+            $transaction->setCategory($category);
+            $updated++;
+        }
+
+        if ($updated > 0) {
+            $this->em->flush();
+        }
+
+        $this->addFlash(
+            $updated > 0 ? 'success' : 'error',
+            $this->bulkCategorizeMessage($updated, $mismatched)
+        );
+
+        $redirectUrl = $request->request->get('_redirect_url');
+        if ($redirectUrl && str_starts_with($redirectUrl, '/')) {
+            return $this->redirect($redirectUrl);
+        }
+
+        return $this->redirectToRoute('transaction_index');
+    }
+
+    private function bulkCategorizeMessage(int $updated, int $mismatched): string
+    {
+        if ($updated === 0) {
+            return $mismatched > 0
+                ? 'Ningún movimiento actualizado: esa categoría no corresponde al tipo de los seleccionados.'
+                : 'Ningún movimiento actualizado.';
+        }
+
+        $done = $updated === 1 ? '1 movimiento actualizado' : "$updated movimientos actualizados";
+
+        if ($mismatched === 0) {
+            return $done . '.';
+        }
+
+        return $mismatched === 1
+            ? "$done. 1 omitido por no coincidir el tipo."
+            : "$done. $mismatched omitidos por no coincidir el tipo.";
     }
 
     #[Route('/bulk-delete', name: 'bulk_delete', methods: ['POST'])]

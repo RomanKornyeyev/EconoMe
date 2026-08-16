@@ -1,12 +1,40 @@
 [
     {
-        "version": "v1.3.3",
-        "date": "2026-08-15",
-        "title": "Optimización de la carga de la web",
+        "version": "v1.4.0",
+        "date": "2026-08-16",
+        "title": "Registrar y editar movimientos, mucho más rápido",
         "changes": [
             {
+                "type": "feat",
+                "text": "«Guardar y añadir otro»: la ventana de nuevo movimiento ya no se cierra al guardar. Se limpia sola, conserva la fecha y el tipo, y confirma cada alta con un contador de lo que llevas en la tanda. Registrar un mes entero deja de ser una recarga por movimiento."
+            },
+            {
+                "type": "feat",
+                "text": "Nuevo botón «Duplicar» en cada movimiento, disponible en el listado, en el móvil y en el detalle."
+            },
+            {
+                "type": "feat",
+                "text": "Al seleccionar varios movimientos ahora también puedes asignarles una categoría en bloque, no solo eliminarlos."
+            },
+            {
                 "type": "improvement",
-                "text": "Las páginas cargan más rápido."
+                "text": "La fecha del formulario recuerda la última que usaste en esa cuenta, en vez de volver siempre a hoy. Registrar movimientos atrasados ya no obliga a corregir la fecha una y otra vez."
+            },
+            {
+                "type": "improvement",
+                "text": "El botón «Nuevo movimiento» del listado abre la ventana rápida, igual que en el panel, en lugar de llevarte a otra página."
+            },
+            {
+                "type": "improvement",
+                "text": "Atajos de teclado: «N» abre la ventana de nuevo movimiento y «Enter» guarda y deja listo el siguiente."
+            },
+            {
+                "type": "improvement",
+                "text": "Editar un movimiento abre la misma ventana que usas para crearlo, en lugar de llevarte a otra página. Al guardar vuelves justo donde estabas, con los filtros y la página intactos."
+            },
+            {
+                "type": "improvement",
+                "text": "Las páginas cargan más rápido, debido a mejoras de carga dinámica."
             },
             {
                 "type": "fix",
