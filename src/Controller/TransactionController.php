@@ -17,6 +17,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -26,6 +27,9 @@ class TransactionController extends AbstractController
 {
     /** Listado completo: se asume que se viene a revisar movimientos en bloque. */
     private const PER_PAGE_DEFAULT = 25;
+
+    /** Nº de altas de la tanda en curso del modal. Ver {@see flashModalSave()}. */
+    private const FLASH_BATCH_KEY = 'tx.flash_batch';
 
     public function __construct(
         private AccountService $accountService,
@@ -215,6 +219,8 @@ class TransactionController extends AbstractController
             // encadenada) o lo cierra el propio cliente (edición). Solo se devuelve
             // la confirmación que pintar en la franja.
             if ($request->isXmlHttpRequest()) {
+                $this->flashModalSave($request, $isNew);
+
                 return new JsonResponse([
                     'ok'   => true,
                     'item' => $this->renderView('transaction/_added_item.html.twig', [
@@ -266,6 +272,55 @@ class TransactionController extends AbstractController
             'account'     => $account,
             'isNew'       => $isNew,
         ]);
+    }
+
+    /**
+     * Deja preparado el aviso que verá el usuario cuando el modal se cierre.
+     *
+     * El modal guarda por AJAX, así que no hay respuesta que pintar: el flash se
+     * queda en la sesión y lo muestra la recarga que el propio modal dispara al
+     * cerrarse. Sin esto, meter un movimiento suelto no daba ningún acuse de
+     * recibo en la página — la franja del modal se va con él.
+     *
+     * Se usa `set()` y no `addFlash()` porque este último acumula: una tanda de
+     * cinco altas dejaría cinco alertas apiladas. Reemplazando, siempre hay una.
+     *
+     * Y el propio flash sin consumir hace de marca de tanda: si al guardar sigue
+     * ahí, es que la página no se ha recargado y seguimos en la misma tanda, así
+     * que el contador suma; si no está, la tanda empieza de cero. Se limpia solo,
+     * porque pintar la página consume el flash.
+     */
+    private function flashModalSave(Request $request, bool $isNew): void
+    {
+        // hasSession() antes de getSession(): este último lanza excepción si no la
+        // hay, y el aviso nunca debe poder tumbar un guardado que ya salió bien.
+        if (!$request->hasSession()) {
+            return;
+        }
+
+        $session = $request->getSession();
+        if (!$session instanceof FlashBagAwareSessionInterface) {
+            return;
+        }
+
+        $bag = $session->getFlashBag();
+
+        if (!$isNew) {
+            // Editar cierra el modal de inmediato: no hay tanda que contar.
+            $session->remove(self::FLASH_BATCH_KEY);
+            $bag->set('success', 'Movimiento actualizado.');
+
+            return;
+        }
+
+        $count = $bag->peek('success') !== []
+            ? $session->get(self::FLASH_BATCH_KEY, 0) + 1
+            : 1;
+        $session->set(self::FLASH_BATCH_KEY, $count);
+
+        $bag->set('success', $count === 1
+            ? '1 movimiento añadido.'
+            : sprintf('%d movimientos añadidos.', $count));
     }
 
     /**
