@@ -48,8 +48,24 @@ Solo se sustituye el **cuerpo**, nunca el `<form>`. El `_token` vive en el
 `form_start`/`form_end` del modal y sobrevive al cambio de modo, porque el id del
 token es el nombre del formulario (`transaction`) y es el mismo creando y editando.
 
-Editando se ocultan encadenar, el enlace a recurrentes y la pista de teclado: son
-piezas de "meter una tanda", y editar es una acción única.
+Editando se ocultan encadenar y el enlace a recurrentes: son piezas de "meter una
+tanda", y editar es una acción única.
+
+### Los atajos se anuncian en su propio botón
+
+Había una línea de pistas al pie del modal («Enter guarda y sigue · N abre esta
+ventana»). Se cambió por un distintivo `.btn-kbd` dentro del botón que dispara
+cada atajo: `↵` en «Guardar y añadir otro», `N` en los dos «Nuevo movimiento».
+
+Sale gratis en mantenimiento: el `↵` vive dentro del botón de encadenar, así que
+se oculta con él en modo edición sin código extra —antes había que acordarse de
+ocultar la pista aparte, y de hecho el controlador tenía un target `hint` solo
+para eso—.
+
+El `N` se oculta por debajo de `md` (`d-none d-md-inline-flex`): sin teclado
+físico el aviso engaña. Los botones llevan `aria-keyshortcuts` y el distintivo va
+`aria-hidden`, que es la forma correcta de anunciar un atajo a un lector de
+pantalla sin que lea el adorno.
 
 ### El modal abre primero y carga después
 

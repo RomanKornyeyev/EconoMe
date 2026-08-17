@@ -35,10 +35,14 @@
         {% if canEdit %}
         <button type="button" class="btn btn-primary btn-sm"
                 data-bs-toggle="modal" data-bs-target="#transactionModal"
+                aria-keyshortcuts="N"
                 data-tour-step="5"
                 data-tour-title="Nuevo movimiento"
                 data-tour-text="Registra aquí tus gastos e ingresos. Puedes encadenar varios seguidos sin cerrar la ventana.">
             <i class="fa-solid fa-plus me-1"></i>Nuevo movimiento
+            {# El atajo global lo escucha tx-quick-add; aquí solo se anuncia. Oculto
+               por debajo de md: sin teclado físico el aviso engaña. #}
+            <kbd class="btn-kbd d-none d-md-inline-flex" aria-hidden="true">N</kbd>
         </button>
         {% endif %}
         {{ tour.help_button() }}

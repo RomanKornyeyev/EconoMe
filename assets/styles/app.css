@@ -284,6 +284,77 @@ span.flatpickr-weekday { color: var(--bs-secondary-color); }
     max-width: 630px;
 }
 
+/* ── Botón discreto (aspecto de enlace, comportamiento de botón) ──────────── */
+/* Para acciones secundarias que no deben competir con las primarias: «Cerrar»,
+   «Más opciones». En reposo es texto atenuado; al pasar por encima aparece un
+   fondo suave y el texto sube a color pleno.
+
+   El color de reposo lo pone esta clase y NO `text-muted`: esa utilidad lleva
+   `!important` y dejaría el hover sin efecto, que es justo lo que pasaba antes
+   (a simple vista el botón no respondía al ratón). Al cargarse este archivo
+   después de Bootstrap, basta con la misma especificidad para ganarle.
+
+   La transición se anula sola con `prefers-reduced-motion`: Bootstrap ya lo hace
+   de forma global para cualquier transición. */
+.btn-quiet {
+    color: var(--bs-secondary-color);
+    border-radius: var(--bs-border-radius);
+    transition: background-color .15s ease-out, color .15s ease-out;
+}
+
+.btn-quiet:hover,
+.btn-quiet:focus-visible {
+    color: var(--bs-body-color);
+    background-color: var(--bs-secondary-bg);
+}
+
+/* Un punto más de fondo al pulsar, para que el clic se note */
+.btn-quiet:active {
+    color: var(--bs-body-color);
+    background-color: var(--bs-tertiary-bg);
+}
+
+/* Con el menú desplegado, el disparador se queda «encendido» */
+.btn-quiet.show {
+    color: var(--bs-body-color);
+    background-color: var(--bs-secondary-bg);
+}
+
+/* Tecla rápida anunciada dentro del propio botón que dispara. Va sobre botones
+   sólidos (btn-primary), así que se tiñe con negro translúcido y se perfila con
+   blanco translúcido: así funciona igual en claro y en oscuro sin declarar
+   colores por tema. Sobrescribe el <kbd> de Bootstrap, que viene con el contraste
+   invertido. */
+.btn-kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* Altura fija y line-height 1: así el centrado lo decide el flex y no la
+       métrica de la fuente, que es lo que descuadraba el glifo en Chrome. */
+    height: 1.15rem;
+    min-width: 1.15rem;
+    /* margin-left: .45rem; */
+    padding: 0 .3rem;
+    font-size: .7rem;
+    line-height: 1;
+    /* El <kbd> es inline dentro del texto del botón: sin esto se apoya en la
+       línea base y queda bajo respecto a la etiqueta. */
+    vertical-align: middle;
+    color: inherit;
+    background-color: rgba(0, 0, 0, .22);
+    border: 1px solid rgba(255, 255, 255, .3);
+    border-radius: .25rem;
+}
+
+/* El icono va a 1em del propio distintivo y hereda su color. Es SVG y no el
+   carácter ↵ (U+21B5) a propósito: Chrome lo resuelve con una fuente de
+   respaldo cuya línea base no cuadra con la del resto, y se ve descolgado. */
+.btn-kbd svg {
+    width: 1em;
+    height: 1em;
+    display: block;
+}
+
 /* Hueco mientras se trae el formulario de edición. La altura aproxima la del
    formulario ya montado para que el modal no encoja al abrirse y vuelva a
    crecer al llegar el contenido. */

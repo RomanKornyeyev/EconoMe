@@ -19,8 +19,8 @@ import { Controller } from '@hotwired/stimulus';
  * sobrevive).
  *
  * En modo edición el cuerpo del formulario se pide por AJAX y se sustituye, y
- * se ocultan las piezas que solo valen creando (encadenar, enlace a recurrentes,
- * pista de teclado). Al volver a crear se restaura el cuerpo original, que se
+ * se ocultan las piezas que solo valen creando (encadenar y enlace a
+ * recurrentes). Al volver a crear se restaura el cuerpo original, que se
  * guarda tal cual llegó del servidor en connect().
  *
  * Al cerrar el modal después de haber guardado algo, se recarga la página una
@@ -32,7 +32,7 @@ import { Controller } from '@hotwired/stimulus';
 export default class extends Controller {
   static targets = [
     'form', 'body', 'addedPanel', 'addedBar', 'addedLast', 'addedCount', 'addedCounter',
-    'title', 'accountName', 'saveButton', 'chainButton', 'recurringLink', 'hint',
+    'title', 'accountName', 'saveButton', 'chainButton', 'recurring',
   ];
 
   #added = 0;
@@ -310,9 +310,10 @@ export default class extends Controller {
     this.saveButtonTarget.textContent = 'Guardar cambios';
     this.saveButtonTarget.classList.replace('btn-outline-primary', 'btn-primary');
 
+    // El atajo de Enter se anuncia dentro del propio botón de encadenar, así que
+    // se va con él sin tener que ocultarlo aparte.
     this.#toggle(this.chainButtonTarget, false);
-    this.#toggle(this.recurringLinkTarget, false);
-    this.#toggle(this.hintTarget, false);
+    this.#toggle(this.recurringTarget, false);
     // La franja es un contador de tanda; editando no hay tanda que contar
     this.#toggle(this.addedPanelTarget, false);
     this.formTarget.classList.remove('was-validated');
@@ -334,8 +335,7 @@ export default class extends Controller {
     this.saveButtonTarget.classList.replace('btn-primary', 'btn-outline-primary');
 
     this.#toggle(this.chainButtonTarget, true);
-    this.#toggle(this.recurringLinkTarget, true);
-    this.#toggle(this.hintTarget, true);
+    this.#toggle(this.recurringTarget, true);
     this.formTarget.classList.remove('was-validated');
   }
 

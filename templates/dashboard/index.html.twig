@@ -93,10 +93,14 @@
 
     <div class="d-flex flex-wrap justify-content-end align-items-center mb-3 gap-2 bg-body">
         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#transactionModal"
+                aria-keyshortcuts="N"
                 data-tour-step="6"
                 data-tour-title="Añade movimientos"
                 data-tour-text="Registra un gasto o un ingreso sin salir del dashboard.">
             <i class="fa-solid fa-plus me-1"></i>Nuevo movimiento
+            {# El atajo global lo escucha tx-quick-add; aquí solo se anuncia. Oculto
+               por debajo de md: sin teclado físico el aviso engaña. #}
+            <kbd class="btn-kbd d-none d-md-inline-flex" aria-hidden="true">N</kbd>
         </button>
         {{ tour.help_button() }}
     </div>

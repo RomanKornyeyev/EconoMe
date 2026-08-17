@@ -8,8 +8,8 @@
       por fetch y deja el modal abierto para el siguiente movimiento.
     · edición — al pulsar «Editar» se pide el formulario del movimiento por AJAX,
       se sustituye el cuerpo y se reapunta la `action`. Se ocultan las piezas que
-      solo tienen sentido creando: encadenar, el enlace a recurrentes y la pista
-      de teclado.
+      solo tienen sentido creando: encadenar (con su atajo) y el enlace a
+      recurrentes.
 
   Los elementos que cambian entre modos llevan target para que el controlador no
   tenga que conocer selectores CSS de esta plantilla.
@@ -46,8 +46,13 @@
                 'data-action': 'submit->tx-quick-add#submit keydown->tx-quick-add#onKeydown',
             }}) }}
                 <input type="hidden" name="_redirect_url" value="{{ redirectUrl }}">
-                <div class="modal-body p-4" data-tx-quick-add-target="body">
-                    {% include 'transaction/_form_transaction.html.twig' with {form: transactionForm, suggest: true} %}
+                <div class="modal-body p-4">
+                    {# El target `body` envuelve SOLO el formulario: es lo que el
+                       controlador sustituye al editar. Todo lo que deba sobrevivir
+                       al cambio de modo tiene que quedarse fuera de este div. #}
+                    <div data-tx-quick-add-target="body">
+                        {% include 'transaction/_form_transaction.html.twig' with {form: transactionForm, suggest: true} %}
+                    </div>
                 </div>
 
                 {# Confirmación del último guardado. Una sola línea a propósito: listar
@@ -71,24 +76,51 @@
                 </div>
 
                 <div class="modal-footer">
-                    <a href="{{ path('recurring_create', {account: currentAccount.id}) }}"
-                       class="me-auto small text-decoration-none"
-                       data-tx-quick-add-target="recurringLink">
-                        <i class="fa-solid fa-rotate me-1"></i>Añadir movimiento recurrente
-                    </a>
+                    {# Salida a recurrentes, plegada para no competir con los botones de
+                       guardar. Menú hacia abajo: el `.modal` desborda con scroll, no
+                       recorta, y Popper lo voltea solo si no cupiera en pantalla.
+
+                       Todo el bloque es el target `recurring` porque hoy la única
+                       opción que contiene es esta; si algún día se añaden más, ocultar
+                       al editar tendrá que pasar a ser cosa del item, no del menú. #}
+                    <div class="dropdown me-auto" data-tx-quick-add-target="recurring">
+                        <button type="button"
+                                class="btn btn-sm btn-link btn-quiet px-2 text-decoration-none dropdown-toggle"
+                                data-bs-toggle="dropdown" aria-expanded="false">Más opciones</button>
+                        <ul class="dropdown-menu">
+                            {# <li><h6 class="dropdown-header">¿Se repite cada mes?</h6></li> #}
+                            <li>
+                                <a class="dropdown-item" href="{{ path('recurring_create', {account: currentAccount.id}) }}">
+                                    <i class="fa-solid fa-rotate fa-sm me-2 text-muted"></i>Añadir movimiento recurrente
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    {# Cerrar es la salida sin consecuencias: mismo aspecto de enlace que
+                       «Más opciones», para que el peso visual se lo lleven las acciones
+                       que sí guardan.
+                       type="button" obligatorio: dentro de un <form>, un botón sin
+                       type es submit, y cerrar acabaría guardando. #}
+                    <button type="button"
+                            class="btn btn-link btn-quiet px-3 text-decoration-none"
+                            data-bs-dismiss="modal">Cerrar</button>
                     <button type="submit" class="btn btn-outline-primary"
                             data-tx-quick-add-target="saveButton">Guardar</button>
                     {# Encadenar es la acción primaria: si estás en este modal metiendo una
                        tanda, seguir es lo que quieres casi siempre. «Guardar» queda para el
                        último de la tanda, que es el que cierra. #}
                     <button type="submit" class="btn btn-primary"
-                            data-tx-quick-add-chain data-tx-quick-add-target="chainButton">
+                            data-tx-quick-add-chain data-tx-quick-add-target="chainButton"
+                            aria-keyshortcuts="Enter">
                         Guardar y añadir otro
+                        <kbd class="btn-kbd" aria-hidden="true">
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                                 stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M13 3.5v4a2 2 0 0 1-2 2H4.2"/>
+                                <path d="M6.8 7 4 9.5l2.8 2.5"/>
+                            </svg>
+                        </kbd>
                     </button>
-                </div>
-                <div class="px-3 pb-3 text-end text-muted" style="font-size:11px"
-                     data-tx-quick-add-target="hint">
-                    <kbd>Enter</kbd> guarda y sigue · <kbd>N</kbd> abre esta ventana
                 </div>
             {{ form_end(transactionForm) }}
         </div>
