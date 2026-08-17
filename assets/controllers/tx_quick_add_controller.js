@@ -279,17 +279,43 @@ export default class extends Controller {
       this.#flashDate();
     }
 
-    // El tipo necesita `change`: es lo que repinta el segmentado de amount-type.
-    const type = this.#field('type');
-    if (type && data.txType) {
-      type.value = data.txType;
-      type.dispatchEvent(new Event('change', { bubbles: true }));
+    if (data.txType) {
+      this.#setType(data.txType);
     }
 
-    // Sin `input` en el nombre a propósito: dispararlo dejaría a category-suggest
-    // pisando 350 ms después la categoría que acabamos de copiar.
+    // Ningún campo despacha eventos: category-suggest escucha `input` en el
+    // nombre y `change` en el tipo, y en cuanto se entera pisa 350 ms después la
+    // categoría que acabamos de copiar. Duplicar tiene que copiar, no sugerir.
     this.formTarget.classList.remove('was-validated');
     this.#prefilled = true;
+  }
+
+  /**
+   * Cambia el tipo y repinta el control segmentado.
+   *
+   * Se avisa a amount-type llamándole directamente en vez de despachando
+   * `change`, porque ese evento lo escuchan los dos controladores del campo y
+   * category-suggest se traería su sugerencia por delante de la categoría
+   * copiada. Fue justo el fallo que se coló en la primera versión de duplicar.
+   */
+  #setType(value) {
+    const select = this.#field('type');
+    if (!select) return;
+
+    select.value = value;
+
+    const group = select.closest('[data-controller~="amount-type"]');
+    const segmented = group && this.application.getControllerForElementAndIdentifier(group, 'amount-type');
+
+    if (segmented) {
+      segmented.sync();
+      return;
+    }
+
+    // amount-type todavía sin cargar (es lazy). Prácticamente inalcanzable: su
+    // elemento está en el DOM desde el primer render. Aun así, más vale una
+    // categoría pisada que un segmentado mintiendo sobre el tipo que se guarda.
+    select.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
   #show() {

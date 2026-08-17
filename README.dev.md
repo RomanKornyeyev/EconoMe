@@ -124,6 +124,14 @@ Los disparadores llevan los datos en `data-tx-*` (macro `partials/macros/_tx_dup
 
 El importe va con coma decimal y sin separador de miles: es lo que espera el `MoneyType` con locale `es` y lo único que acepta el `pattern` del campo.
 
+**Duplicar copia; no sugiere.** Ningún campo despacha eventos al rellenarse.
+`category-suggest` escucha `input` en el nombre **y `change` en el tipo**, y en
+cuanto se entera pisa 350 ms después la categoría copiada. La primera versión
+esquivaba el `input` pero se dejaba el `change`, y el resultado era un fallo
+silencioso: duplicabas un movimiento y su categoría cambiaba sola al segundo. Por
+eso el tipo se fija con `#setType()`, que le habla a `amount-type` directamente en
+vez de despachar un evento que escuchan los dos.
+
 **La fecha se copia como todo lo demás.** La primera versión la dejaba en la pegajosa de sesión, con el argumento de que duplicar sirve para registrar una ocurrencia nueva. Se descartó al probarlo: hacía que el resultado dependiera de un estado invisible —el mismo clic sobre la misma fila daba un formulario distinto según lo que hubieras hecho antes—. Copiándola, duplicar es función de la fila que ves. El campo se resalta con `cat-autofill-flash` para que la fecha copiada no pase inadvertida al guardar.
 
 ### Acciones en bloque: categorizar
