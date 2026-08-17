@@ -31,7 +31,7 @@ import { Controller } from '@hotwired/stimulus';
  */
 export default class extends Controller {
   static targets = [
-    'form', 'body', 'addedPanel', 'addedBar', 'addedLast', 'addedCount', 'addedCounter',
+    'form', 'body', 'addedPanel', 'addedBar', 'addedLast', 'addedCount',
     'title', 'accountName', 'saveButton', 'chainButton', 'recurring',
   ];
 
@@ -390,12 +390,32 @@ export default class extends Controller {
 
     // Sin esto, los campos recién vaciados se pintarían en rojo
     this.formTarget.classList.remove('was-validated');
+    this.#clearServerErrors();
 
     if (focus) {
       const amount = this.#field('amount');
       amount?.focus();
       amount?.select();
     }
+  }
+
+  /**
+   * Borra las marcas de error que vinieron del servidor en un 422.
+   *
+   * El tema bootstrap_5 pinta el campo con `is-invalid` y le cuelga un
+   * `.invalid-feedback`. Bootstrap muestra ese mensaje con `.is-invalid ~
+   * .invalid-feedback`, **sin depender de `was-validated`**, así que quitar esa
+   * clase del formulario no basta: sin esto, corregir el error y guardar dejaba
+   * el campo en rojo con el mensaje viejo durante el resto de la tanda.
+   *
+   * El caso llega de verdad: un importe `0` pasa el `pattern` del navegador y lo
+   * rechaza el `Assert\Positive` del servidor.
+   */
+  #clearServerErrors() {
+    this.bodyTarget.querySelectorAll('.is-invalid')
+      .forEach(el => el.classList.remove('is-invalid'));
+    this.bodyTarget.querySelectorAll('.invalid-feedback')
+      .forEach(el => el.remove());
   }
 
   /**
