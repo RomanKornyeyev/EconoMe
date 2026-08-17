@@ -1,12 +1,12 @@
 [
     {
         "version": "v1.4.0",
-        "date": "2026-08-16",
-        "title": "Registrar y editar movimientos, mucho más rápido",
+        "date": "2026-08-17",
+        "title": "Más velocidad y comodidad al introducir muchos datos",
         "changes": [
             {
                 "type": "feat",
-                "text": "«Guardar y añadir otro»: la ventana de nuevo movimiento ya no se cierra al guardar. Se limpia sola, conserva la fecha y el tipo, y confirma cada alta con un contador de lo que llevas en la tanda. Registrar un mes entero deja de ser una recarga por movimiento."
+                "text": "«Guardar y añadir otro»: la ventana de nuevo movimiento ya no se cierra al guardar. Se limpia sola, conserva la fecha y el tipo, y lleva la cuenta de los que llevas añadidos. Registrar un mes entero deja de ser una recarga por movimiento."
             },
             {
                 "type": "feat",
@@ -14,7 +14,11 @@
             },
             {
                 "type": "feat",
-                "text": "Al seleccionar varios movimientos ahora también puedes asignarles una categoría en bloque, no solo eliminarlos."
+                "text": "Al seleccionar varios movimientos ahora también puedes asignarles una categoría en bloque."
+            },
+            {
+                "type": "feat",
+                "text": "Crear o editar un movimiento abre la ventana rápida, en lugar de llevarte a otra página. Al guardar vuelves justo donde estabas, con los filtros y la página intactos."
             },
             {
                 "type": "improvement",
@@ -22,19 +26,11 @@
             },
             {
                 "type": "improvement",
-                "text": "El botón «Nuevo movimiento» del listado abre la ventana rápida, igual que en el panel, en lugar de llevarte a otra página."
-            },
-            {
-                "type": "improvement",
                 "text": "Atajos de teclado, anunciados en los propios botones: «N» abre la ventana de nuevo movimiento y «Enter» guarda y deja listo el siguiente."
             },
             {
                 "type": "improvement",
-                "text": "Editar un movimiento abre la misma ventana que usas para crearlo, en lugar de llevarte a otra página. Al guardar vuelves justo donde estabas, con los filtros y la página intactos."
-            },
-            {
-                "type": "improvement",
-                "text": "Las páginas cargan más rápido, debido a mejoras de carga dinámica."
+                "text": "Las páginas cargan más rápido: cada una descarga solo lo que necesita."
             },
             {
                 "type": "fix",
