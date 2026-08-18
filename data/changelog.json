@@ -1,5 +1,20 @@
 [
     {
+        "version": "v1.4.1",
+        "date": "2026-08-18",
+        "title": "Mejoras menores del dashboard",
+        "changes": [
+            {
+                "type": "improvement",
+                "text": "Al pinchar una categoría del gráfico y redirigir al listado, aparece un mensaje con los filtros aplicados."
+            },
+            {
+                "type": "fix",
+                "text": "El contador de recurrentes activos ya no incluye los que tenían fecha de fin y ya han terminado."
+            }
+        ]
+    },
+    {
         "version": "v1.4.0",
         "date": "2026-08-17",
         "title": "Más velocidad y comodidad al introducir muchos datos",
