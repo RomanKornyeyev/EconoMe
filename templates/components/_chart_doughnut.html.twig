@@ -32,16 +32,20 @@
 
 {% if expensesByCategory is not empty %}
 {# Un enlace por sector: mismo período y tipo que el gráfico, filtrado por categoría.
-   Sin categoría (categoryId null) se traduce a category=-1, que transaction_index
-   interpreta como "movimientos sin categoría". #}
+   Sin categoría (categoryId null) se traduce a category=-1, que el drilldown y
+   transaction_index interpretan como "movimientos sin categoría".
+
+   No se enlaza al listado directamente sino al drilldown del dashboard, que
+   traduce estos parámetros a los filtros y de paso deja el aviso de qué se ha
+   filtrado, con enlace de vuelta aquí. #}
 {% set categoryLinks = [] %}
 {% for row in expensesByCategory %}
-    {% set categoryLinks = categoryLinks|merge([path('transaction_index', {
-        account:   currentAccount.id,
-        date_from: from|date('Y-m-d'),
-        date_to:   to|date('Y-m-d'),
-        type:      categoryType,
-        category:  row.categoryId ?? -1,
+    {% set categoryLinks = categoryLinks|merge([path('dashboard_category_drilldown', {
+        account:  currentAccount.id,
+        year:     year,
+        month:    month,
+        type:     categoryType,
+        category: row.categoryId ?? -1,
     })]) %}
 {% endfor %}
 <script>

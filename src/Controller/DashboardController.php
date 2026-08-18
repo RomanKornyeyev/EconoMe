@@ -52,19 +52,7 @@ class DashboardController extends AbstractController
         $year  = $request->query->getInt('year', (int)date('Y'));
         $month = $request->query->getInt('month', (int)date('m'));
 
-        // month=0 → modo año completo
-        $yearOnly = ($month === 0);
-        if ($yearOnly) {
-            $from = new \DateTime("$year-01-01");
-            $to   = new \DateTime("$year-12-31");
-        } else {
-            $from = new \DateTime("$year-$month-01");
-            $to   = new \DateTime("$year-$month-01");
-            $to->modify('last day of this month');
-        }
-
-        $monthNames = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-        $periodLabel = $yearOnly ? (string)$year : $monthNames[$month - 1] . ' ' . $year;
+        [$from, $to, $periodLabel] = $this->resolvePeriod($year, $month);
 
         $availableYears = $transactionRepo->findYearsWithTransactions($account);
         if (!in_array($year, $availableYears)) {
@@ -143,5 +131,99 @@ class DashboardController extends AbstractController
             'categoryType'       => $categoryType,
             'transactionForm'    => $transactionForm,
         ]);
+    }
+
+    /**
+     * Salto de un sector del donut al listado de movimientos.
+     *
+     * Hace escala en el servidor —en vez de enlazar directamente a
+     * transaction_index— para poder dejar un flash que diga qué se ha filtrado
+     * y ofrezca la vuelta al dashboard. Como el aviso viaja por sesión y no por
+     * la URL, el listado conserva sus enlaces limpios y el flash no reaparece al
+     * ordenar o paginar.
+     */
+    #[Route('/dashboard/categoria', name: 'dashboard_category_drilldown', methods: ['GET'])]
+    public function categoryDrilldown(
+        Request $request,
+        AccountService $accountService,
+        CategoryRepository $categoryRepo,
+    ): Response {
+        $accounts = $accountService->getActiveAccountsForUser($this->getUser());
+        $account  = $accountService->resolveCurrentAccount($request, $accounts);
+        if (!$account) {
+            return $this->redirectToRoute('dashboard');
+        }
+        $this->denyAccessUnlessGranted('ACCOUNT_VIEW', $account);
+
+        $year  = $request->query->getInt('year', (int)date('Y'));
+        $month = $request->query->getInt('month', (int)date('m'));
+        [$from, $to, $periodLabel] = $this->resolvePeriod($year, $month);
+
+        $type = $request->query->getString('type', Transaction::TYPE_EXPENSE);
+        if (!in_array($type, [Transaction::TYPE_EXPENSE, Transaction::TYPE_INCOME], true)) {
+            $type = Transaction::TYPE_EXPENSE;
+        }
+
+        // Igual que en transaction_index: -1 es «sin categoría», y una categoría
+        // que no sea de esta cuenta se descarta en lugar de filtrar por ella.
+        $categoryRaw = $request->query->getString('category');
+        $categoryParam = null;
+        $categoryPart  = '';
+        if ($categoryRaw === '-1') {
+            $categoryParam = -1;
+            $categoryPart  = ', sin categoría';
+        } elseif ($categoryRaw !== '') {
+            foreach ($categoryRepo->findAllByAccount($account) as $category) {
+                if ($category->getId() === (int) $categoryRaw) {
+                    $categoryParam = $category->getId();
+                    $categoryPart  = ', con categoría '
+                        . htmlspecialchars($category->getName(), ENT_QUOTES, 'UTF-8');
+                    break;
+                }
+            }
+        }
+
+        $this->addFlash('info_html', sprintf(
+            '<a href="%s" class="alert-link"><i class="fa-solid fa-arrow-left me-1"></i>Volver</a>'
+            . ' &nbsp;&middot;&nbsp; Filtrados %s de %s%s.',
+            htmlspecialchars($this->generateUrl('dashboard', [
+                'account'      => $account->getId(),
+                'year'         => $year,
+                'month'        => $month,
+                'categoryType' => $type,
+            ]), ENT_QUOTES, 'UTF-8'),
+            $type === Transaction::TYPE_INCOME ? 'ingresos' : 'gastos',
+            htmlspecialchars($periodLabel, ENT_QUOTES, 'UTF-8'),
+            $categoryPart,
+        ));
+
+        return $this->redirectToRoute('transaction_index', array_filter([
+            'account'   => $account->getId(),
+            'date_from' => $from->format('Y-m-d'),
+            'date_to'   => $to->format('Y-m-d'),
+            'type'      => $type,
+            'category'  => $categoryParam,
+        ], fn($v) => $v !== null));
+    }
+
+    /**
+     * Rango y etiqueta del período elegido en la barra de filtros.
+     *
+     * month = 0 (o fuera de rango, si llega manipulado) significa año completo.
+     *
+     * @return array{0: \DateTime, 1: \DateTime, 2: string}
+     */
+    private function resolvePeriod(int $year, int $month): array
+    {
+        $monthNames = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+        if ($month < 1 || $month > 12) {
+            return [new \DateTime("$year-01-01"), new \DateTime("$year-12-31"), (string) $year];
+        }
+
+        $from = new \DateTime("$year-$month-01");
+        $to   = (new \DateTime("$year-$month-01"))->modify('last day of this month');
+
+        return [$from, $to, $monthNames[$month - 1] . ' ' . $year];
     }
 }

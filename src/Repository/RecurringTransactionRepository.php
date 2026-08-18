@@ -31,7 +31,13 @@ class RecurringTransactionRepository extends ServiceEntityRepository
     }
 
     /**
-     * Número de recurrentes activas de una cuenta concreta.
+     * Número de recurrentes vigentes de una cuenta concreta: activas y que aún
+     * no han terminado a fecha de hoy.
+     *
+     * Una recurrente con endDate pasada sigue con isActive = true (no se apaga
+     * sola), pero ya no genera nada, así que contarla inflaba el KPI. endDate es
+     * inclusiva, igual que en {@see RecurringTransaction::hasExpired} y en
+     * {@see findByAccount}.
      */
     public function countActiveByAccount($account): int
     {
@@ -39,7 +45,9 @@ class RecurringTransactionRepository extends ServiceEntityRepository
             ->select('COUNT(r.id)')
             ->where('r.account = :account')
             ->andWhere('r.isActive = true')
+            ->andWhere('r.endDate IS NULL OR r.endDate >= :today')
             ->setParameter('account', $account)
+            ->setParameter('today', new \DateTime('today'))
             ->getQuery()
             ->getSingleScalarResult();
     }
