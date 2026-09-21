@@ -1,38 +1,121 @@
+{#
+    Resumen del período.
+
+    Mismo componente en los dos tamaños, con dos lecturas distintas:
+
+    - En escritorio, cuatro tarjetas de igual peso (balance, ingresos, gastos y
+      recurrentes activos).
+    - Por debajo de lg, una sola tarjeta protagonista: el balance en grande y,
+      dentro de ella, el reparto ingresos/gastos del período y el ahorro. Las
+      otras tres tarjetas no se pintan, sus datos ya están aquí.
+
+    incomeRatio y savingsRatio vienen calculados de DashboardController: son
+    datos del período, no presentación.
+#}
 <div class="row g-3 mb-3"
      data-tour-step="3"
      data-tour-title="Resumen del período"
      data-tour-text="Balance total de la cuenta e ingresos, gastos y recurrentes activos del período seleccionado.">
-    <div class="col-12 col-md-6 col-lg-3">
-        <div class="bg-body-secondary rounded-3 p-3">
-            <div class="text-muted small text-uppercase mb-1">
-                Balance <span class="fw-normal">(total)</span>
-                <i class="fa-solid fa-circle-info ms-1"
-                   data-bs-toggle="tooltip"
-                   title="Balance total de la cuenta seleccionada, independiente del período filtrado"></i>
+
+    {# ── Balance (tarjeta protagonista en móvil) ───────────────────────── #}
+    <div class="col-12 col-lg-3 order-first">
+        <div class="bg-body-secondary rounded-3 p-3 h-100">
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                <div class="text-muted small text-uppercase">
+                    Balance <span class="fw-normal">(total)</span>
+                    <i class="fa-solid fa-circle-info ms-1"
+                       data-bs-toggle="tooltip"
+                       title="Balance total de la cuenta seleccionada, independiente del período filtrado"></i>
+                </div>
+
+                {# En móvil los recurrentes activos son un acceso, no una cifra
+                   que merezca tarjeta propia. #}
+                <a href="{{ path('recurring_index', {account: currentAccount.id}) }}"
+                   class="btn btn-sm btn-outline-secondary rounded-pill d-lg-none flex-shrink-0 py-1">
+                    <i class="fa-solid fa-rotate me-1"></i>{{ activeRecurrings }} recurrente{{ activeRecurrings == 1 ? '' : 's' }}
+                </a>
             </div>
-            <div class="fs-5 fw-semibold {{ balance >= 0 ? 'text-success' : 'text-danger' }}">
-                {{ balance|number_format(2, ',', '.') }} {{ currentAccount.currency }}
+
+            <div class="dash-balance fw-semibold {{ balance >= 0 ? 'text-success' : 'text-danger' }}">
+                {{ balance|number_format(2, ',', '.') }}
+                <span class="dash-balance__currency text-muted fw-normal">{{ currentAccount.currency }}</span>
+            </div>
+
+            {# ── Desglose del período: solo móvil ──────────────────────── #}
+            <div class="d-lg-none">
+                <div class="progress-stacked rounded-pill mt-3 mb-2" style="--bs-progress-height: .5rem"
+                     role="img"
+                     aria-label="{% if incomeRatio is not null %}Ingresos {{ incomeRatio|round }} % del movimiento del período{% else %}Sin movimientos en el período{% endif %}">
+                    {% if incomeRatio is not null %}
+                        <div class="progress" style="width: {{ incomeRatio|round(2) }}%">
+                            <div class="progress-bar bg-success"></div>
+                        </div>
+                        <div class="progress" style="width: {{ (100 - incomeRatio)|round(2) }}%">
+                            <div class="progress-bar bg-danger"></div>
+                        </div>
+                    {% else %}
+                        <div class="progress" style="width: 100%">
+                            <div class="progress-bar bg-body-tertiary"></div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div>
+                        <div class="text-muted small text-uppercase">
+                            <span class="d-inline-block rounded-circle bg-success align-middle" style="width:7px;height:7px"></span>
+                            Ingresos {{ periodLabel }}
+                        </div>
+                        <div class="fs-5 fw-semibold text-success">+{{ periodIncome|number_format(2, ',', '.') }}</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="text-muted small text-uppercase">
+                            <span class="d-inline-block rounded-circle bg-danger align-middle" style="width:7px;height:7px"></span>
+                            Gastos {{ periodLabel }}
+                        </div>
+                        <div class="fs-5 fw-semibold text-danger">-{{ periodExpense|number_format(2, ',', '.') }}</div>
+                    </div>
+                </div>
+
+                <hr class="my-3">
+
+                <div class="small text-muted">
+                    Ahorro {{ month == 0 ? 'del año' : 'del mes' }}
+                    <span class="fw-semibold {{ periodSavings >= 0 ? 'text-success' : 'text-danger' }}">
+                        {{ periodSavings >= 0 ? '+' : '' }}{{ periodSavings|number_format(2, ',', '.') }}
+                    </span>
+                    {% if savingsRatio is not null %}
+                        ·
+                        {% if savingsRatio >= 0 %}
+                            {{ savingsRatio|round }} % de tus ingresos
+                        {% else %}
+                            has gastado más de lo ingresado
+                        {% endif %}
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-12 col-md-6 col-lg-3">
-        <div class="bg-body-secondary rounded-3 p-3">
+
+    {# ── Ingresos, gastos y recurrentes: tarjetas sueltas solo en lg ───── #}
+    <div class="col-lg-3 d-none d-lg-block">
+        <div class="bg-body-secondary rounded-3 p-3 h-100">
             <div class="text-muted small text-uppercase mb-1">Ingresos de {{ periodLabel }}</div>
             <div class="fs-5 fw-semibold text-success">
                 +{{ periodIncome|number_format(2, ',', '.') }}
             </div>
         </div>
     </div>
-    <div class="col-12 col-md-6 col-lg-3">
-        <div class="bg-body-secondary rounded-3 p-3">
+    <div class="col-lg-3 d-none d-lg-block">
+        <div class="bg-body-secondary rounded-3 p-3 h-100">
             <div class="text-muted small text-uppercase mb-1">Gastos de {{ periodLabel }}</div>
             <div class="fs-5 fw-semibold text-danger">
                 -{{ periodExpense|number_format(2, ',', '.') }}
             </div>
         </div>
     </div>
-    <div class="col-12 col-md-6 col-lg-3">
-        <div class="bg-body-secondary rounded-3 p-3">
+    <div class="col-lg-3 d-none d-lg-block">
+        <div class="bg-body-secondary rounded-3 p-3 h-100">
             <div class="text-muted small text-uppercase mb-1">
                 Recurrentes activos
                 <i class="fa-solid fa-circle-info ms-1"

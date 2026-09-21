@@ -12,9 +12,11 @@
     - withTemplateItem: añade el ítem «Mi plantilla» (categorías)
     - withCreateItem:   muestra el ítem «Añadir cuenta» (por defecto true)
     - menuEnd:          alinea el desplegable a la derecha
+    - groupClass:       clases extra del .btn-group (p. ej. 'w-100' para que
+                        ocupe la fila entera en móvil)
     - tourStep / tourTitle / tourText: paso del tour de la página, si aplica
 #}
-<div class="btn-group" role="group"
+<div class="btn-group {{ groupClass ?? '' }}" role="group"
      {%- if tourStep is defined %}
      data-tour-step="{{ tourStep }}"
      data-tour-title="{{ tourTitle }}"

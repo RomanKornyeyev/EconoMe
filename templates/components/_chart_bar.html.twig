@@ -1,61 +1,63 @@
-<div class="card border shadow-sm bg-body-tertiary">
-    <div class="card-header border-bottom d-flex align-items-center" style="min-height: 3rem;">
-        <h6 class="mb-0">Ingresos vs gastos</h6>
+{#
+    Evolución mensual de ingresos y gastos, con recorte a los 6 meses del
+    período o al año entero.
+
+    Autónomo: monta su propia tarjeta, sus datos y su controlador, así que
+    puede incluirse suelto en cualquier vista o, como en el dashboard, dentro
+    de una pestaña. Quien lo incluya no tiene que aportar nada más que el
+    contexto.
+
+    Espera en contexto:
+    - yearlyTotals:   monthlyTotals() del repositorio, del año mostrado
+    - chartMonthFrom / chartMonthTo: ventana corta (meses 1-based)
+
+    Variables opcionales:
+    - titleClass:     clases del <h6> del título. El dashboard lo oculta en
+                      móvil (d-none d-lg-block) porque ahí lo dice la pestaña.
+#}
+{% set titleClass = titleClass|default('') %}
+{% set monthShort = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'] %}
+
+{# yearlyTotals solo trae los meses con movimientos: se rellenan los 12 para
+   que el eje X no dependa de dónde haya datos. Las claves se prefijan porque
+   |merge renumera las claves numéricas, y el mes se pasa a número porque la
+   consulta lo devuelve con cero delante ('08'). #}
+{% set totalsByMonth = {} %}
+{% for row in yearlyTotals %}
+    {% set totalsByMonth = totalsByMonth|merge({('m' ~ (row.month + 0)): row}) %}
+{% endfor %}
+{% set incomeSeries  = [] %}
+{% set expenseSeries = [] %}
+{% for m in 1..12 %}
+    {% set row = totalsByMonth['m' ~ m]|default(null) %}
+    {% set incomeSeries  = incomeSeries|merge([(row ? (row.totalIncome  ?? 0) : 0) + 0]) %}
+    {% set expenseSeries = expenseSeries|merge([(row ? (row.totalExpense ?? 0) : 0) + 0]) %}
+{% endfor %}
+
+<div class="card border shadow-sm bg-body-tertiary h-100"
+     data-controller="chart-bar"
+     data-chart-bar-monthly-value="{{ {
+         labels:  monthShort,
+         income:  incomeSeries,
+         expense: expenseSeries,
+     }|json_encode }}"
+     data-chart-bar-window-value="{{ [chartMonthFrom, chartMonthTo]|json_encode }}">
+    <div class="card-header border-bottom d-flex justify-content-between align-items-center gap-2" style="min-height: 3rem;">
+        <h6 class="mb-0 {{ titleClass }}">Ingresos vs gastos</h6>
+        {# Recorte del eje X. Arranca en 6 meses en móvil y en el año entero en
+           escritorio; lo decide el controlador según el ancho. #}
+        <div class="btn-group btn-group-sm ms-auto" role="group" aria-label="Rango del gráfico">
+            <button type="button" class="btn btn-outline-secondary"
+                    data-chart-bar-target="rangeButton" data-range="window"
+                    data-action="chart-bar#setRange">6 meses</button>
+            <button type="button" class="btn btn-outline-secondary"
+                    data-chart-bar-target="rangeButton" data-range="year"
+                    data-action="chart-bar#setRange">Año</button>
+        </div>
     </div>
     <div class="card-body">
-        <canvas id="barChart"></canvas>
+        <div class="dash-chart dash-chart--bar">
+            <canvas data-chart-bar-target="canvas"></canvas>
+        </div>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('barChart').getContext('2d');
-    const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-
-    const incomeData  = new Array(12).fill(0);
-    const expenseData = new Array(12).fill(0);
-    {% for row in yearlyTotals %}
-        incomeData[parseInt('{{ row.month }}') - 1]  = {{ row.totalIncome ?? 0 }};
-        expenseData[parseInt('{{ row.month }}') - 1] = {{ row.totalExpense ?? 0 }};
-    {% endfor %}
-
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: months,
-            datasets: [
-                {
-                    label: 'Ingresos',
-                    data: incomeData,
-                    backgroundColor: 'rgba(75, 192, 130, 0.8)',
-                    borderRadius: 4,
-                    barPercentage: 0.6
-                },
-                {
-                    label: 'Gastos',
-                    data: expenseData,
-                    backgroundColor: 'rgba(240, 149, 149, 0.8)',
-                    borderRadius: 4,
-                    barPercentage: 0.6
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            aspectRatio: 2.2,
-            plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 10, padding: 16, font: { size: 12 } } }
-            },
-            scales: {
-                x: { grid: { display: false } },
-                y: {
-                    grid: { color: 'rgba(0,0,0,0.05)' },
-                    ticks: { callback: v => v >= 1000 ? (v/1000) + 'k' : v },
-                    border: { display: false }
-                }
-            }
-        }
-    });
-});
-</script>

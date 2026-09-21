@@ -1,0 +1,122 @@
+{#
+    Cabecera del dashboard: cuenta, período y acciones.
+
+    Una sola cabecera para los dos tamaños, no dos plantillas: lo único que
+    cambia entre móvil y escritorio es cómo se reparte en filas, y eso lo
+    resuelven el orden flex y .dash-header (general.css).
+
+    En móvil el h1 desaparece —la navbar ya dice dónde estás—, el selector de
+    cuenta ocupa la primera fila y el período la segunda a ancho completo. El
+    botón de «Nuevo movimiento» no se pinta aquí en móvil: lo sustituye el FAB.
+
+    Espera en contexto: accounts, currentAccount, year, month, availableYears,
+    availableMonths.
+#}
+{% import 'partials/macros/_tour.html.twig' as tour %}
+
+{% set q = app.request.query.all %}
+{% set monthNames  = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'] %}
+{% set monthShort  = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'] %}
+
+{# Las flechas mueven el período completo: de mes en mes, o de año en año
+   cuando se está viendo el año entero. #}
+{% if month == 0 %}
+    {% set prevUrl = '?' ~ q|merge({'year': year - 1, 'month': 0, 'page': 1})|url_encode %}
+    {% set nextUrl = '?' ~ q|merge({'year': year + 1, 'month': 0, 'page': 1})|url_encode %}
+{% else %}
+    {% if month == 1 %}{% set prevYear = year - 1 %}{% set prevMonth = 12 %}
+    {% else %}{% set prevYear = year %}{% set prevMonth = month - 1 %}{% endif %}
+    {% if month == 12 %}{% set nextYear = year + 1 %}{% set nextMonth = 1 %}
+    {% else %}{% set nextYear = year %}{% set nextMonth = month + 1 %}{% endif %}
+    {% set prevUrl = '?' ~ q|merge({'year': prevYear, 'month': prevMonth, 'page': 1})|url_encode %}
+    {% set nextUrl = '?' ~ q|merge({'year': nextYear, 'month': nextMonth, 'page': 1})|url_encode %}
+{% endif %}
+
+<div class="dash-header d-flex flex-wrap align-items-center gap-2 mb-3">
+    <h1 class="h2 mb-0 me-1 d-none d-lg-block">Dashboard</h1>
+
+    {# Selector de cuenta. En móvil se come el ancho que sobra y empuja el
+       botón de ayuda contra el borde derecho. #}
+    <div class="order-1 flex-grow-1 flex-lg-grow-0">
+        {% include 'partials/_account_selector.html.twig' with {
+            accounts: accounts,
+            current: currentAccount,
+            menuEnd: true,
+            groupClass: 'w-100',
+            resetParams: {page: 1},
+            tourStep: 1,
+            tourTitle: 'Selector de cuenta',
+            tourText: 'Todo lo que ves en el dashboard pertenece a la cuenta seleccionada. Cambia de cuenta desde aquí.',
+        } only %}
+    </div>
+
+    <div class="order-2 order-lg-4 ms-lg-auto d-flex align-items-center gap-2">
+        {# En móvil este botón lo sustituye el FAB de dashboard/index. #}
+        <button class="btn btn-primary btn-sm d-none d-lg-inline-flex align-items-center"
+                data-bs-toggle="modal" data-bs-target="#transactionModal"
+                aria-keyshortcuts="N"
+                data-tour-step="6"
+                data-tour-title="Añade movimientos"
+                data-tour-text="Registra un gasto o un ingreso sin salir del dashboard.">
+            <i class="fa-solid fa-plus me-1"></i>Nuevo movimiento
+            {# El atajo global lo escucha tx-quick-add; aquí solo se anuncia. #}
+            <kbd class="btn-kbd ms-1" aria-hidden="true">N</kbd>
+        </button>
+        {{ tour.help_button() }}
+    </div>
+
+    {# Período: mes y año en un único desplegable. Dos desplegables contiguos
+       no caben en 390 px sin quedar en dos botones diminutos. #}
+    <div class="dash-header__period btn-group order-3 order-lg-2" role="group"
+         data-tour-step="2"
+         data-tour-title="Filtra por período"
+         data-tour-text="Navega mes a mes o consulta el año completo. Los meses sin datos aparecen atenuados.">
+        <a href="{{ prevUrl }}" class="btn btn-sm btn-outline-primary dash-header__arrow" aria-label="Período anterior">
+            <i class="fa-solid fa-chevron-left fa-sm"></i>
+        </a>
+
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                {% if month == 0 %}Año {{ year }}{% else %}{{ monthNames[month - 1] }} {{ year }}{% endif %}
+            </button>
+            <ul class="dropdown-menu dash-period-menu p-2">
+                {% if availableYears|length > 1 %}
+                    <li class="mb-2">
+                        <div class="btn-group btn-group-sm w-100 overflow-auto" role="group" aria-label="Año">
+                            {% for y in availableYears|sort %}
+                                <a class="btn {{ y == year ? 'btn-primary' : 'btn-outline-primary' }}"
+                                   href="?{{ q|merge({'year': y, 'page': 1})|url_encode }}">{{ y }}</a>
+                            {% endfor %}
+                        </div>
+                    </li>
+                {% endif %}
+
+                <li>
+                    <div class="row row-cols-3 g-1">
+                        {% for m in 1..12 %}
+                            {% set hasData = m in availableMonths %}
+                            <div class="col">
+                                <a class="btn btn-sm w-100 {{ m == month ? 'btn-primary' : 'btn-outline-secondary' }}{{ hasData ? '' : ' opacity-50' }}"
+                                   href="?{{ q|merge({'month': m, 'page': 1})|url_encode }}"
+                                   {% if not hasData %}title="Sin movimientos"{% endif %}>
+                                    {{ monthShort[m - 1] }}
+                                </a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </li>
+
+                <li><hr class="dropdown-divider"></li>
+
+                <li>
+                    <a class="btn btn-sm w-100 {{ month == 0 ? 'btn-primary' : 'btn-outline-secondary' }}"
+                       href="?{{ q|merge({'month': 0, 'page': 1})|url_encode }}">Año completo</a>
+                </li>
+            </ul>
+        </div>
+
+        <a href="{{ nextUrl }}" class="btn btn-sm btn-outline-primary dash-header__arrow" aria-label="Período siguiente">
+            <i class="fa-solid fa-chevron-right fa-sm"></i>
+        </a>
+    </div>
+</div>

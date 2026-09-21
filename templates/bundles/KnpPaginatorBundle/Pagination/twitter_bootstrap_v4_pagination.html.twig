@@ -21,12 +21,12 @@
             {% if previous is defined %}
                 <li class="page-item">
                     <a class="page-link" rel="prev" href="{{ path(route, knp_pagination_query(query, previous, options)) ~ fragmentSuffix }}">
-                        <i class="fa-solid fa-chevron-left"></i> Anterior
+                        <i class="fa-solid fa-chevron-left"></i><span class="d-none d-sm-inline ms-1">Anterior</span>
                     </a>
                 </li>
             {% else %}
                 <li class="page-item disabled">
-                    <span class="page-link"><i class="fa-solid fa-chevron-left"></i> Anterior</span>
+                    <span class="page-link"><i class="fa-solid fa-chevron-left"></i><span class="d-none d-sm-inline ms-1">Anterior</span></span>
                 </li>
             {% endif %}
 
@@ -78,12 +78,12 @@
             {% if next is defined %}
                 <li class="page-item">
                     <a class="page-link" rel="next" href="{{ path(route, knp_pagination_query(query, next, options)) ~ fragmentSuffix }}">
-                        Siguiente <i class="fa-solid fa-chevron-right"></i>
+                        <span class="d-none d-sm-inline me-1">Siguiente</span><i class="fa-solid fa-chevron-right"></i>
                     </a>
                 </li>
             {% else %}
                 <li  class="page-item disabled">
-                    <span class="page-link">Siguiente <i class="fa-solid fa-chevron-right"></i></span>
+                    <span class="page-link"><span class="d-none d-sm-inline me-1">Siguiente</span><i class="fa-solid fa-chevron-right"></i></span>
                 </li>
             {% endif %}
         </ul>

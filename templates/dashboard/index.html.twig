@@ -14,118 +14,19 @@
 {% else %}
 
 {% import 'partials/macros/_tour.html.twig' as tour %}
-{% set q = app.request.query.all %}
 
-<div {{ tour.attrs('dashboard') }}>
+{# pb-5 en móvil: el FAB flota sobre el final de la página. #}
+<div class="pb-5 pb-lg-0" {{ tour.attrs('dashboard') }}>
 
-{# Zona 1: Cabecera — título + selector de cuenta #}
-<div class="d-flex flex-wrap justify-content-between gap-2">
-    <div class="d-flex flex-wrap justify-content-start align-items-center mb-3 gap-2">
-        <h1 class="h2 mb-0">Dashboard</h1>
-        {% include 'partials/_account_selector.html.twig' with {
-            accounts: accounts,
-            current: currentAccount,
-            menuEnd: true,
-            tourStep: 1,
-            tourTitle: 'Selector de cuenta',
-            tourText: 'Todo lo que ves en el dashboard pertenece a la cuenta seleccionada. Cambia de cuenta desde aquí.',
-        } only %}
-
-        {# Zona 2: Filtros globales #}
-        {% if month == 0 %}
-            {% set prevUrl = '?' ~ q|merge({'year': year - 1, 'month': 0})|url_encode %}
-            {% set nextUrl = '?' ~ q|merge({'year': year + 1, 'month': 0})|url_encode %}
-        {% else %}
-            {% if month == 1 %}{% set prevYear = year - 1 %}{% set prevMonth = 12 %}
-            {% else %}{% set prevYear = year %}{% set prevMonth = month - 1 %}{% endif %}
-            {% if month == 12 %}{% set nextYear = year + 1 %}{% set nextMonth = 1 %}
-            {% else %}{% set nextYear = year %}{% set nextMonth = month + 1 %}{% endif %}
-            {% set prevUrl = '?' ~ q|merge({'year': prevYear, 'month': prevMonth})|url_encode %}
-            {% set nextUrl = '?' ~ q|merge({'year': nextYear, 'month': nextMonth})|url_encode %}
-        {% endif %}
-        {% set monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'] %}
-        <div class="btn-group" role="group"
-             data-tour-step="2"
-             data-tour-title="Filtra por período"
-             data-tour-text="Navega mes a mes o consulta el año completo. Los meses sin datos aparecen atenuados.">
-            <a href="{{ prevUrl }}" class="btn btn-sm btn-outline-primary" style="padding-left: 0.75rem; padding-right: 0.75rem;"><i class="fa-solid fa-chevron-left fa-sm"></i></a>
-
-            {# Desplegable de mes #}
-            <div class="btn-group" role="group">
-                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    {% if month == 0 %}Año completo{% else %}{{ monthNames[month - 1] }}{% endif %}
-                </button>
-                <ul class="dropdown-menu">
-                    {% for m in 1..12 %}
-                        {% set hasData = m in availableMonths %}
-                        <li>
-                            <a class="dropdown-item {{ m == month ? 'active' : '' }}" href="?{{ q|merge({'month': m})|url_encode }}">
-                                {% if not hasData %}
-                                    <span class="text-muted">{{ monthNames[m - 1] }}</span>
-                                {% else %}
-                                    {{ monthNames[m - 1] }}
-                                {% endif %}
-                                {% if not hasData %}<span class="ms-1" style="font-size:.72em; opacity:.4">(sin datos)</span>{% endif %}
-                            </a>
-                        </li>
-                    {% endfor %}
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item {{ month == 0 ? 'active' : '' }}" href="?{{ q|merge({'month': 0})|url_encode }}">Año completo</a></li>
-                </ul>
-            </div>
-
-            {# Desplegable de año #}
-            <div class="btn-group" role="group">
-                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    {{ year }}
-                </button>
-                <ul class="dropdown-menu">
-                    {% for y in availableYears %}
-                        <li><a class="dropdown-item {{ y == year ? 'active' : '' }}" href="?{{ q|merge({'year': y})|url_encode }}">{{ y }}</a></li>
-                    {% endfor %}
-                </ul>
-            </div>
-
-            <a href="{{ nextUrl }}" class="btn btn-sm btn-outline-primary" style="padding-left: 0.75rem; padding-right: 0.75rem;"><i class="fa-solid fa-chevron-right fa-sm"></i></a>
-        </div>
-    </div>
-
-
-    <div class="d-flex flex-wrap justify-content-end align-items-center mb-3 gap-2 bg-body">
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#transactionModal"
-                aria-keyshortcuts="N"
-                data-tour-step="6"
-                data-tour-title="Añade movimientos"
-                data-tour-text="Registra un gasto o un ingreso sin salir del dashboard.">
-            <i class="fa-solid fa-plus me-1"></i>Nuevo movimiento
-            {# El atajo global lo escucha tx-quick-add; aquí solo se anuncia. Oculto
-               por debajo de md: sin teclado físico el aviso engaña. #}
-            <kbd class="btn-kbd d-none d-md-inline-flex" aria-hidden="true">N</kbd>
-        </button>
-        {{ tour.help_button() }}
-    </div>
-</div>
-
-
-
+{# Zonas 1 y 2: cabecera — cuenta, período y acciones #}
+{% include 'dashboard/_header.html.twig' %}
 
 
 {# Zona 3: KPIs #}
 {% include 'components/_stats_cards.html.twig' %}
 
 {# Zona 4: Gráficos #}
-<div class="row g-3 mb-3"
-     data-tour-step="4"
-     data-tour-title="Tus gráficos"
-     data-tour-text="Evolución mensual de ingresos y gastos del año, y reparto por categorías del período seleccionado."
-     data-tour-side="top">
-    <div class="col-12 col-lg-8">
-        {% include 'components/_chart_bar.html.twig' %}
-    </div>
-    <div class="col-12 col-lg-4">
-        {% include 'components/_chart_doughnut.html.twig' %}
-    </div>
-</div>
+{% include 'components/_charts.html.twig' %}
 
 {# Zona 5: Movimientos #}
 <div class="card border shadow-sm" id="table_transactions" data-controller="bulk-select"
@@ -162,6 +63,18 @@
     itemLabel: 'movimiento',
     itemLabelPlural: 'movimientos',
 } only %}
+
+{# Botón flotante de «Nuevo movimiento»: sustituye en móvil al botón de la
+   cabecera. Lleva su mismo paso del tour; el tour ignora el que esté oculto,
+   así que en cada tamaño se señala el visible. #}
+<button class="dash-fab btn btn-primary rounded-circle shadow position-fixed bottom-0 end-0 m-3 d-lg-none"
+        data-bs-toggle="modal" data-bs-target="#transactionModal"
+        aria-label="Nuevo movimiento"
+        data-tour-step="6"
+        data-tour-title="Añade movimientos"
+        data-tour-text="Registra un gasto o un ingreso sin salir del dashboard.">
+    <i class="fa-solid fa-plus"></i>
+</button>
 
 {% include 'transaction/_modal_transaction.html.twig' %}
 {% include 'transaction/_modal_summary.html.twig' %}

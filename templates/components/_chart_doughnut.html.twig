@@ -1,12 +1,62 @@
-{% set queryParams = app.request.query.all|merge({'categoryType': 'expense'}) %}
-{% set urlExpense = '?' ~ queryParams|url_encode %}
-{% set queryParams = app.request.query.all|merge({'categoryType': 'income'}) %}
-{% set urlIncome  = '?' ~ queryParams|url_encode %}
+{#
+    Reparto por categoría del período, con salto al listado al pinchar un
+    sector.
 
-<div class="card border shadow-sm bg-body-tertiary h-100">
-    <div class="card-header border-bottom d-flex justify-content-between align-items-center" style="min-height: 3rem;">
-        <h6 class="mb-0">Por categoría</h6>
-        <div class="btn-group btn-group-sm" role="group">
+    Autónomo: monta su propia tarjeta, sus datos y su controlador, así que
+    puede incluirse suelto en cualquier vista o, como en el dashboard, dentro
+    de una pestaña.
+
+    Espera en contexto:
+    - expensesByCategory: sumByCategory() del repositorio
+    - categoryType:       'expense' | 'income' (el que se está viendo)
+    - currentAccount, year, month: para los enlaces de cada sector
+
+    Variables opcionales:
+    - titleClass:         clases del <h6> del título. El dashboard lo oculta en
+                          móvil (d-none d-lg-block) porque ahí lo dice la pestaña.
+#}
+{% set titleClass = titleClass|default('') %}
+
+{# Un enlace por sector: mismo período y tipo que el gráfico, filtrado por
+   categoría. Sin categoría (categoryId null) se traduce a category=-1, que el
+   drilldown y transaction_index interpretan como «movimientos sin categoría».
+
+   No se enlaza al listado directamente sino al drilldown del dashboard, que
+   traduce estos parámetros a los filtros y de paso deja el aviso de qué se ha
+   filtrado, con enlace de vuelta aquí. #}
+{% set catLabels = [] %}
+{% set catValues = [] %}
+{% set catColors = [] %}
+{% set catLinks  = [] %}
+{% for row in expensesByCategory %}
+    {% set catLabels = catLabels|merge([row.categoryName ?? 'Sin categoría']) %}
+    {% set catValues = catValues|merge([(row.total ?? 0) + 0]) %}
+    {% set catColors = catColors|merge([row.categoryColor ?? '#607D8B']) %}
+    {% set catLinks  = catLinks|merge([path('dashboard_category_drilldown', {
+        account:  currentAccount.id,
+        year:     year,
+        month:    month,
+        type:     categoryType,
+        category: row.categoryId ?? -1,
+    })]) %}
+{% endfor %}
+
+{% set urlExpense = '?' ~ app.request.query.all|merge({'categoryType': 'expense'})|url_encode %}
+{% set urlIncome  = '?' ~ app.request.query.all|merge({'categoryType': 'income'})|url_encode %}
+
+<div class="card border shadow-sm bg-body-tertiary h-100"
+     {% if expensesByCategory is not empty %}
+     data-controller="chart-doughnut"
+     data-chart-doughnut-categories-value="{{ {
+         labels: catLabels,
+         values: catValues,
+         colors: catColors,
+         links:  catLinks,
+     }|json_encode }}"
+     {% endif %}>
+    <div class="card-header border-bottom d-flex justify-content-between align-items-center gap-2" style="min-height: 3rem;">
+        <h6 class="mb-0 {{ titleClass }}">Por categoría</h6>
+        <div class="btn-group btn-group-sm ms-auto" role="group">
             <a href="{{ urlExpense }}" class="btn {{ categoryType == 'expense' ? 'btn-secondary' : 'btn-outline-secondary' }}">Gastos</a>
             <a href="{{ urlIncome }}"  class="btn {{ categoryType == 'income'  ? 'btn-secondary' : 'btn-outline-secondary' }}">Ingresos</a>
         </div>
@@ -25,119 +75,9 @@
                 </div>
             </div>
         {% else %}
-            <canvas id="doughnutChart"></canvas>
+            <div class="dash-chart dash-chart--doughnut">
+                <canvas data-chart-doughnut-target="canvas"></canvas>
+            </div>
         {% endif %}
     </div>
 </div>
-
-{% if expensesByCategory is not empty %}
-{# Un enlace por sector: mismo período y tipo que el gráfico, filtrado por categoría.
-   Sin categoría (categoryId null) se traduce a category=-1, que el drilldown y
-   transaction_index interpretan como "movimientos sin categoría".
-
-   No se enlaza al listado directamente sino al drilldown del dashboard, que
-   traduce estos parámetros a los filtros y de paso deja el aviso de qué se ha
-   filtrado, con enlace de vuelta aquí. #}
-{% set categoryLinks = [] %}
-{% for row in expensesByCategory %}
-    {% set categoryLinks = categoryLinks|merge([path('dashboard_category_drilldown', {
-        account:  currentAccount.id,
-        year:     year,
-        month:    month,
-        type:     categoryType,
-        category: row.categoryId ?? -1,
-    })]) %}
-{% endfor %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const canvas = document.getElementById('doughnutChart');
-    const ctx = canvas.getContext('2d');
-    const links = {{ categoryLinks|json_encode|raw }};
-
-    // Sector cuyo tooltip ya estaba abierto justo antes del toque actual.
-    // En táctil hace de confirmación: el primer toque solo abre el tooltip y el
-    // segundo, sobre el mismo sector, navega. Así un toque accidental no saca
-    // al usuario del dashboard. Con ratón se navega al primer clic.
-    let armedIndex  = null;
-    let pointerType = 'mouse';
-
-    function goToCategory(index) {
-        if (links[index]) {
-            window.location.href = links[index];
-        }
-    }
-
-    const chart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: [{% for row in expensesByCategory %}'{{ row.categoryName ?? "Sin categoría" }}',{% endfor %}],
-            datasets: [{
-                data: [{% for row in expensesByCategory %}{{ row.total }},{% endfor %}],
-                backgroundColor: [{% for row in expensesByCategory %}'{{ row.categoryColor ?? "#607D8B" }}',{% endfor %}],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            aspectRatio: 1.2,
-            cutout: '65%',
-            onHover: function(event, elements) {
-                canvas.style.cursor = elements.length ? 'pointer' : 'default';
-            },
-            onClick: function(event, elements) {
-                if (!elements.length) {
-                    return;
-                }
-                const index = elements[0].index;
-                if (pointerType === 'touch' && armedIndex !== index) {
-                    return; // primer toque: Chart.js ya ha abierto el tooltip
-                }
-                goToCategory(index);
-            },
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: { boxWidth: 8, padding: 10, font: { size: 11 } },
-                    // La leyenda navega en lugar de ocultar el sector: es un
-                    // objetivo pequeño y explícito, no hace falta confirmar.
-                    onClick: function(event, legendItem) {
-                        goToCategory(legendItem.index);
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const value = parseFloat(context.parsed) || 0;
-                            const total = context.chart.data.datasets[0].data
-                                .reduce((acc, v) => acc + (parseFloat(v) || 0), 0);
-                            const porcentaje = total > 0 ? (value / total) * 100 : 0;
-
-                            const importe = value.toLocaleString('es-ES', {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            });
-                            const pct = porcentaje.toLocaleString('es-ES', {
-                                minimumFractionDigits: 1,
-                                maximumFractionDigits: 1
-                            });
-
-                            return ` ${importe} € (${pct}%)`;
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    // pointerdown se dispara antes de que Chart.js procese el toque, así que aquí
-    // el tooltip todavía refleja el estado *previo*: si ya estaba abierto sobre
-    // este sector, el toque que viene es el segundo y puede navegar.
-    canvas.addEventListener('pointerdown', function(event) {
-        pointerType = event.pointerType || 'mouse';
-        const active = chart.tooltip ? chart.tooltip.getActiveElements() : [];
-        armedIndex = active.length ? active[0].index : null;
-    }, { passive: true });
-});
-</script>
-{% endif %}

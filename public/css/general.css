@@ -106,6 +106,126 @@ html{
 
 
 /* ══════════════════════════════════════════════════════════════════════ */
+/*  Dashboard en móvil                                                    */
+/*                                                                        */
+/*  El corte es lg, el mismo en toda la vista: por debajo manda la lectura */
+/*  de una columna (cabecera apilada, balance protagonista, gráficos en    */
+/*  pestañas) y a partir de ahí se recupera el layout de escritorio de     */
+/*  siempre. Aquí está solo lo que las utilidades de Bootstrap no cubren:  */
+/*  anchos y tamaños de letra por breakpoint y el disfraz de tarjeta única */
+/*  de los gráficos.                                                      */
+/* ══════════════════════════════════════════════════════════════════════ */
+
+/* ---- Cabecera ---- */
+/* El período ocupa su propia fila completa en móvil; las flechas no crecen
+   con ella, se quedan en un objetivo táctil cuadrado. */
+.dash-header__period                     { width: 100%; }
+.dash-header__period > .btn-group        { flex: 1 1 auto; }
+/* Dos clases: .btn-group > .btn ya reparte el ancho entre todos los botones. */
+.dash-header__period > .dash-header__arrow { flex: 0 0 48px; }
+/* Mes y año viven en el mismo desplegable: necesita ancho para la rejilla. */
+.dash-period-menu               { min-width: 17rem; }
+
+@media (max-width: 991.98px) {
+    /* Objetivos táctiles: cuenta, período y flechas se tocan con el pulgar. */
+    .dash-header .btn { min-height: 44px; }
+    /* El botón de ayuda es redondo: sin ancho mínimo se quedaría ovalado. */
+    .dash-header .btn.rounded-circle { min-width: 44px; }
+}
+
+@media (min-width: 992px) {
+    .dash-header__period { width: auto; }
+}
+
+/* ---- Balance ---- */
+/* Sin equivalente en utilidades: fs-1 en móvil, fs-5 en escritorio.
+   Los interlineados dan altura entera a propósito (36 × 1.25 = 45, 20 × 1.2 =
+   24): una caja con decimales desplaza medio píxel todo lo que viene debajo,
+   y lo que viene debajo son los gráficos, que al ser mapas de bits se
+   emborronan al caer fuera de la rejilla de píxeles. */
+.dash-balance            { font-size: 2.25rem; line-height: 1.25; }
+.dash-balance__currency  { font-size: .5em; }
+
+@media (min-width: 992px) {
+    .dash-balance           { font-size: 1.25rem; line-height: 1.2; }
+    .dash-balance__currency { font-size: 1em; }
+}
+
+/* ---- Gráficos ---- */
+/* Los dos Chart.js van con maintainAspectRatio:false, así que el alto lo pone
+   este contenedor y no la proporción del canvas.
+
+   En móvil, alto fijo: con la proporción de escritorio, a 358 px de ancho las
+   barras se quedarían en 160 px de alto. En lg se vuelve a la proporción que
+   tenían los gráficos antes de las pestañas (aspectRatio 2.2 y 1.2), así que
+   miden exactamente lo mismo que antes. */
+.dash-chart { position: relative; height: 260px; }
+
+@media (min-width: 992px) {
+    .dash-chart           { height: auto; }
+    .dash-chart--bar      { aspect-ratio: 2.2; }
+    .dash-chart--doughnut { aspect-ratio: 1.2; }
+}
+
+@media (max-width: 991.98px) {
+    /* Las dos pestañas se leen como una sola tarjeta: el marco lo pone el
+       contenedor y las tarjetas de dentro se quedan en simple contenido.
+       --bs-gutter-x a 0 desactiva los márgenes negativos de .row para que el
+       borde no quede desplazado. */
+    .dash-charts {
+        --bs-gutter-x: 0;
+        --bs-gutter-y: 0;
+        border: var(--bs-border-width) solid var(--bs-border-color);
+        border-radius: var(--bs-border-radius-lg);
+        background-color: var(--bs-tertiary-bg);
+        overflow: hidden;
+    }
+    .dash-charts > .tab-pane > .card,
+    .dash-charts > .tab-pane > .card > .card-header {
+        border: 0 !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+    }
+    /* Pestañas a media tarjeta cada una, a ras del borde superior. */
+    .dash-charts__tabs { border-bottom: var(--bs-border-width) solid var(--bs-border-color); }
+    .dash-charts__tabs .nav-link {
+        border-radius: 0;
+        padding: .75rem .5rem;
+        min-height: 44px;
+    }
+}
+
+@media (min-width: 992px) {
+    /* Sin pestañas: los dos paneles se ven a la vez, uno al lado del otro.
+       Mismo HTML que en móvil, donde .tab-content oculta el que no está
+       activo. */
+    .dash-charts > .tab-pane {
+        display: block !important;
+        opacity: 1 !important;
+    }
+}
+
+/* ---- Paginación ---- */
+@media (max-width: 991.98px) {
+    .pagination-bar .page-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+    }
+}
+
+/* ---- Botón flotante de nuevo movimiento ---- */
+.dash-fab {
+    width: 56px;
+    height: 56px;
+    font-size: 1.25rem;
+    /* Por delante del contenido, por detrás de modales y offcanvas. */
+    z-index: 1030;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════ */
 /*  Flatpickr × Bootstrap theme                                          */
 /* ══════════════════════════════════════════════════════════════════════ */
 .flatpickr-calendar {

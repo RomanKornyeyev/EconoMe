@@ -83,6 +83,21 @@ class DashboardController extends AbstractController
             }
         }
 
+        // Derivados del resumen del período. Se calculan aquí y no en la
+        // plantilla porque son datos, no presentación: la tarjeta de balance en
+        // móvil pinta con ellos la barra ingresos/gastos y la línea de ahorro.
+        $periodTotal   = bcadd($periodIncome, $periodExpense, 2);
+        $periodSavings = bcsub($periodIncome, $periodExpense, 2);
+        // null = «no hay nada que repartir / nada sobre lo que calcular un %».
+        $incomeRatio  = bccomp($periodTotal, '0', 2) > 0
+            ? (float) $periodIncome / (float) $periodTotal * 100
+            : null;
+        $savingsRatio = bccomp($periodIncome, '0', 2) > 0
+            ? (float) $periodSavings / (float) $periodIncome * 100
+            : null;
+
+        [$chartMonthFrom, $chartMonthTo] = $this->resolveChartWindow($year, $month);
+
         $allowedSorts = ['date', 'name', 'amount', 'type', 'category'];
         $sortField = $request->query->getString('sortBy', 'date');
         $sortDir   = $request->query->getString('sortDir', 'desc');
@@ -112,6 +127,9 @@ class DashboardController extends AbstractController
             'balance'            => $balance,
             'periodIncome'       => $periodIncome,
             'periodExpense'      => $periodExpense,
+            'periodSavings'      => $periodSavings,
+            'incomeRatio'        => $incomeRatio,
+            'savingsRatio'       => $savingsRatio,
             'activeRecurrings'   => $activeRecurrings,
             'transactions'       => $pagination,
             // Para el desplegable de «Categorizar» de la barra de acciones en bloque
@@ -121,6 +139,8 @@ class DashboardController extends AbstractController
             'sortDir'            => $sortDir,
             'expensesByCategory' => $expensesByCategory,
             'yearlyTotals'       => $yearlyTotals,
+            'chartMonthFrom'     => $chartMonthFrom,
+            'chartMonthTo'       => $chartMonthTo,
             'year'               => $year,
             'month'              => $month,
             'from'               => $from,
@@ -204,6 +224,29 @@ class DashboardController extends AbstractController
             'type'      => $type,
             'category'  => $categoryParam,
         ], fn($v) => $v !== null));
+    }
+
+    /**
+     * Ventana de 6 meses del gráfico de barras: la vista corta que se ofrece
+     * frente al año entero, y la que sale por defecto en móvil.
+     *
+     * Son los 6 meses que terminan en el mes seleccionado. Como el gráfico
+     * solo tiene datos del año elegido, la ventana no se sale de él: de enero
+     * a junio siempre se muestra ese primer semestre. Con «año completo» no
+     * hay mes seleccionado, así que se toma el mes en curso si el año es el
+     * actual y diciembre en cualquier año pasado.
+     *
+     * @return array{0: int, 1: int} meses inicial y final, 1-based
+     */
+    private function resolveChartWindow(int $year, int $month): array
+    {
+        $reference = ($month >= 1 && $month <= 12)
+            ? $month
+            : ($year === (int) date('Y') ? (int) date('n') : 12);
+
+        $to = max(6, $reference);
+
+        return [$to - 5, $to];
     }
 
     /**
