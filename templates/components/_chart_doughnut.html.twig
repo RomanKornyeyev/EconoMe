@@ -1,57 +1,89 @@
 {#
-    Reparto por categoría del período, con salto al listado al pinchar un
-    sector.
+    Reparto por categoría del período: donut y desglose en lista, con salto al
+    listado al pinchar un sector o una fila.
 
     Autónomo: monta su propia tarjeta, sus datos y su controlador, así que
     puede incluirse suelto en cualquier vista o, como en el dashboard, dentro
     de una pestaña.
 
+    La leyenda del gráfico va apagada: en su lugar, debajo del donut, una lista
+    ordenada de mayor a menor con color, nombre, porcentaje e importe. Las
+    categorías que no entran en las primeras filas se despliegan con «Ver las
+    N restantes», un collapse de Bootstrap.
+
     Espera en contexto:
-    - expensesByCategory: sumByCategory() del repositorio
+    - expensesByCategory: sumByCategory() del repositorio (ya viene ordenado
+                          por importe descendente)
     - categoryType:       'expense' | 'income' (el que se está viendo)
-    - currentAccount, year, month: para los enlaces de cada sector
+    - currentAccount, year, month: para los enlaces de cada categoría
 
     Variables opcionales:
     - titleClass:         clases del <h6> del título. El dashboard lo oculta en
                           móvil (d-none d-lg-block) porque ahí lo dice la pestaña.
+    - visibleCategories:  filas visibles antes de desplegar (por defecto, 3)
 #}
-{% set titleClass = titleClass|default('') %}
+{% set titleClass        = titleClass|default('') %}
+{% set visibleCategories = visibleCategories|default(3) %}
+{% set nameMaxLength     = 20 %}
 
-{# Un enlace por sector: mismo período y tipo que el gráfico, filtrado por
-   categoría. Sin categoría (categoryId null) se traduce a category=-1, que el
+{# Un enlace por categoría: mismo período y tipo que el gráfico, filtrado por
+   ella. Sin categoría (categoryId null) se traduce a category=-1, que el
    drilldown y transaction_index interpretan como «movimientos sin categoría».
 
    No se enlaza al listado directamente sino al drilldown del dashboard, que
    traduce estos parámetros a los filtros y de paso deja el aviso de qué se ha
    filtrado, con enlace de vuelta aquí. #}
-{% set catLabels = [] %}
-{% set catValues = [] %}
-{% set catColors = [] %}
-{% set catLinks  = [] %}
+{% set catTotal = 0 %}
 {% for row in expensesByCategory %}
-    {% set catLabels = catLabels|merge([row.categoryName ?? 'Sin categoría']) %}
-    {% set catValues = catValues|merge([(row.total ?? 0) + 0]) %}
-    {% set catColors = catColors|merge([row.categoryColor ?? '#607D8B']) %}
-    {% set catLinks  = catLinks|merge([path('dashboard_category_drilldown', {
-        account:  currentAccount.id,
-        year:     year,
-        month:    month,
-        type:     categoryType,
-        category: row.categoryId ?? -1,
-    })]) %}
+    {% set catTotal = catTotal + (row.total ?? 0) %}
+{% endfor %}
+
+{% set categories = [] %}
+{% for row in expensesByCategory %}
+    {% set name = row.categoryName ?? 'Sin categoría' %}
+    {% set categories = categories|merge([{
+        name:   name,
+        color:  row.categoryColor ?? '#607D8B',
+        total:  (row.total ?? 0) + 0,
+        share:  catTotal > 0 ? (row.total ?? 0) / catTotal * 100 : 0,
+        link:   path('dashboard_category_drilldown', {
+            account:  currentAccount.id,
+            year:     year,
+            month:    month,
+            type:     categoryType,
+            category: row.categoryId ?? -1,
+        }),
+    }]) %}
 {% endfor %}
 
 {% set urlExpense = '?' ~ app.request.query.all|merge({'categoryType': 'expense'})|url_encode %}
 {% set urlIncome  = '?' ~ app.request.query.all|merge({'categoryType': 'income'})|url_encode %}
 
+{% macro categoryRow(item, maxLength) %}
+    <a href="{{ item.link }}" class="dash-cat-row d-flex align-items-center gap-2 border-top text-decoration-none">
+        <span class="dash-cat-row__dot rounded-circle flex-shrink-0" style="background: {{ item.color }}"></span>
+        <span class="text-body text-truncate"
+              {% if item.name|length > maxLength %}title="{{ item.name }}"{% endif %}>
+            {{ item.name|length > maxLength ? item.name|slice(0, maxLength)|trim ~ '…' : item.name }}
+        </span>
+        {# «<1 %» y no «0 %»: una categoría que aparece en el gráfico siempre
+           tiene importe, y un cero se leería como que no lo tiene. #}
+        <span class="text-body fw-semibold ms-auto text-end dash-cat-row__share">
+            {{ item.share > 0 and item.share < 0.5 ? '<1' : item.share|round }} %
+        </span>
+        <span class="text-muted text-end dash-cat-row__amount">{{ item.total|number_format(2, ',', '.') }} €</span>
+    </a>
+{% endmacro %}
+{% import _self as widgets %}
+
 <div class="card border shadow-sm bg-body-tertiary h-100"
      {% if expensesByCategory is not empty %}
      data-controller="chart-doughnut"
      data-chart-doughnut-categories-value="{{ {
-         labels: catLabels,
-         values: catValues,
-         colors: catColors,
-         links:  catLinks,
+         labels: categories|column('name'),
+         values: categories|column('total'),
+         colors: categories|column('color'),
+         links:  categories|column('link'),
      }|json_encode }}"
      {% endif %}>
     <div class="card-header border-bottom d-flex justify-content-between align-items-center gap-2" style="min-height: 3rem;">
@@ -77,6 +109,34 @@
         {% else %}
             <div class="dash-chart dash-chart--doughnut">
                 <canvas data-chart-doughnut-target="canvas"></canvas>
+            </div>
+
+            {% set rest = categories|slice(visibleCategories) %}
+            <div class="dash-cat-list mt-3">
+                {% for item in categories|slice(0, visibleCategories) %}
+                    {{ widgets.categoryRow(item, nameMaxLength) }}
+                {% endfor %}
+
+                {% if rest is not empty %}
+                    <div class="collapse" id="dashCategoryRest">
+                        {% for item in rest %}
+                            {{ widgets.categoryRow(item, nameMaxLength) }}
+                        {% endfor %}
+                    </div>
+
+                    <button type="button"
+                            class="dash-cat-toggle btn btn-link btn-sm w-100 text-decoration-none border-top rounded-0"
+                            data-bs-toggle="collapse" data-bs-target="#dashCategoryRest"
+                            aria-expanded="false" aria-controls="dashCategoryRest">
+                        <span class="dash-cat-toggle__more">
+                            Ver {{ rest|length == 1 ? 'la restante' : 'las ' ~ rest|length ~ ' restantes' }}
+                            <i class="fa-solid fa-caret-down ms-1"></i>
+                        </span>
+                        <span class="dash-cat-toggle__less">
+                            Ver menos <i class="fa-solid fa-caret-up ms-1"></i>
+                        </span>
+                    </button>
+                {% endif %}
             </div>
         {% endif %}
     </div>

@@ -161,10 +161,22 @@ html{
    miden exactamente lo mismo que antes. */
 .dash-chart { position: relative; height: 260px; }
 
+/* El donut no lleva proporción sino altura fija: como su leyenda ya no se
+   pinta dentro del lienzo, el anillo ocupa toda la caja, y con una proporción
+   crecería con el ancho de la columna hasta comerse la tarjeta. */
+.dash-chart--doughnut { height: 220px; }
+
 @media (min-width: 992px) {
     .dash-chart           { height: auto; }
     .dash-chart--bar      { aspect-ratio: 2.2; }
-    .dash-chart--doughnut { aspect-ratio: 1.2; }
+    .dash-chart--doughnut { height: 265px; }
+
+    /* La tarjeta de categorías es más alta que la de barras porque lleva el
+       desglose debajo, y las dos se estiran a la altura de la fila. En vez de
+       dejar un hueco bajo las barras, el gráfico crece para ocuparlo: la
+       proporción de arriba pasa a ser su altura mínima. */
+    .dash-charts > .tab-pane > .card > .card-body { display: flex; flex-direction: column; }
+    .dash-chart--bar { flex: 1 1 auto; }
 }
 
 @media (max-width: 991.98px) {
@@ -204,6 +216,24 @@ html{
         opacity: 1 !important;
     }
 }
+
+/* ---- Desglose por categoría (bajo el donut) ---- */
+/* Sustituye a la leyenda del gráfico: una fila por categoría, de mayor a
+   menor, con su color, el porcentaje sobre el total y el importe. */
+.dash-cat-row,
+.dash-cat-toggle      { font-size: 13.5px; }
+.dash-cat-row         { padding-top: 7px; padding-bottom: 7px; }
+.dash-cat-row__dot    { width: 9px; height: 9px; }
+/* Anchos fijos para que porcentajes e importes queden en columna, alineados a
+   la derecha, sin depender de cuántos dígitos traiga cada fila. */
+.dash-cat-row__share  { min-width: 2.75rem; }
+.dash-cat-row__amount { min-width: 5.5rem; }
+
+.dash-cat-row:hover   { background-color: var(--bs-secondary-bg); }
+
+/* Las dos caras del enlace de desplegar, según el estado del collapse. */
+.dash-cat-toggle[aria-expanded="false"] .dash-cat-toggle__less,
+.dash-cat-toggle[aria-expanded="true"]  .dash-cat-toggle__more { display: none; }
 
 /* ---- Paginación ---- */
 @media (max-width: 991.98px) {

@@ -84,13 +84,10 @@ export default class extends Controller {
           goToCategory(index);
         },
         plugins: {
-          legend: {
-            position: 'bottom',
-            labels: { boxWidth: 8, padding: 10, font: { size: 12 } },
-            // La leyenda navega en lugar de ocultar el sector: es un objetivo
-            // pequeño y explícito, no hace falta confirmar.
-            onClick: (event, legendItem) => goToCategory(legendItem.index),
-          },
+          // Sin leyenda dentro del lienzo: debajo del donut va la lista de
+          // categorías en HTML, que además de color y nombre da porcentaje e
+          // importe, se lee mejor y se pulsa mejor que un rótulo pintado.
+          legend: { display: false },
           tooltip: {
             callbacks: {
               label: (context) => {
