@@ -161,6 +161,13 @@ html{
    miden exactamente lo mismo que antes. */
 .dash-chart { position: relative; height: 260px; }
 
+/* El canvas, fuera del flujo. Chart.js le escribe el alto en línea, así que si
+   contara como contenido del contenedor este no podría encoger nunca por
+   debajo de lo que él mismo hizo crecer: al desplegar el desglose de
+   categorías la tarjeta crece, el gráfico de barras la acompaña, y al plegar
+   se quedaba clavado en su altura máxima. */
+.dash-chart > canvas { position: absolute; top: 0; left: 0; }
+
 /* El donut no lleva proporción sino altura fija: como su leyenda ya no se
    pinta dentro del lienzo, el anillo ocupa toda la caja, y con una proporción
    crecería con el ancho de la columna hasta comerse la tarjeta. */
@@ -221,7 +228,10 @@ html{
 /* Sustituye a la leyenda del gráfico: una fila por categoría, de mayor a
    menor, con su color, el porcentaje sobre el total y el importe. */
 .dash-cat-row,
-.dash-cat-toggle      { font-size: 13.5px; }
+/* El padding extra por arriba separa el texto de la línea que lo corona, que
+   es el borde superior del propio botón: así baja la etiqueta sin mover la
+   raya. */
+.dash-cat-toggle      { font-size: 13.5px; padding-top: 1rem; }
 .dash-cat-row         { padding-top: 7px; padding-bottom: 7px; }
 .dash-cat-row__dot    { width: 9px; height: 9px; }
 /* Anchos fijos para que porcentajes e importes queden en columna, alineados a
