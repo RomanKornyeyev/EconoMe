@@ -5,9 +5,9 @@
     cambia entre móvil y escritorio es cómo se reparte en filas, y eso lo
     resuelven el orden flex y .dash-header (general.css).
 
-    En móvil el h1 desaparece —la navbar ya dice dónde estás—, el selector de
-    cuenta ocupa la primera fila y el período la segunda a ancho completo. El
-    botón de «Nuevo movimiento» no se pinta aquí en móvil: lo sustituye el FAB.
+    En móvil va en dos filas: título y ayuda en la primera, cuenta y período en
+    la segunda. En escritorio, todo en una. El botón de «Nuevo movimiento» no se
+    pinta aquí en móvil: lo sustituye el FAB.
 
     Espera en contexto: accounts, currentAccount, year, month, availableYears,
     availableMonths.
@@ -19,7 +19,8 @@
 {% set monthShort  = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'] %}
 
 {# Las flechas mueven el período completo: de mes en mes, o de año en año
-   cuando se está viendo el año entero. #}
+   cuando se está viendo el año entero. Ahora mismo están comentadas junto al
+   desplegable del período; las URL se siguen calculando para cuando vuelvan. #}
 {% if month == 0 %}
     {% set prevUrl = '?' ~ q|merge({'year': year - 1, 'month': 0, 'page': 1})|url_encode %}
     {% set nextUrl = '?' ~ q|merge({'year': year + 1, 'month': 0, 'page': 1})|url_encode %}
@@ -75,61 +76,102 @@
              data-tour-step="2"
              data-tour-title="Filtra por período"
              data-tour-text="Navega mes a mes o consulta el año completo. Los meses sin datos aparecen atenuados.">
+            {# Desactivada: el período se cambia desde el desplegable.
             <a href="{{ prevUrl }}" class="btn btn-sm btn-outline-primary dash-header__arrow" aria-label="Período anterior">
                 <i class="fa-solid fa-chevron-left fa-sm"></i>
             </a>
+            #}
 
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                {# auto-close outside: abrir la lista de años es un clic dentro
+                   del menú, y con el cierre por defecto se llevaría el menú
+                   entero por delante. #}
+                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle"
+                        data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                     {% if month == 0 %}
                         Año {{ year }}
                     {% else %}
-                        {# Compartiendo fila con el selector de cuenta no cabe el
-                           nombre largo del mes. #}
-                        <span class="d-lg-none">{{ monthShort[month - 1] }}</span>
-                        <span class="d-none d-lg-inline">{{ monthNames[month - 1] }}</span>
-                        {{ year }}
+                        {{ monthNames[month - 1] }} {{ year }}
                     {% endif %}
                 </button>
-                <ul class="dropdown-menu dash-period-menu p-2">
-                    {% if availableYears|length > 1 %}
-                        <li class="mb-2">
-                            <div class="btn-group btn-group-sm w-100 overflow-auto" role="group" aria-label="Año">
-                                {% for y in availableYears|sort %}
-                                    <a class="btn {{ y == year ? 'btn-primary' : 'btn-outline-primary' }}"
+
+                {# Años con datos, de menor a mayor. Las flechas del menú saltan
+                   entre ellos —los mismos que ofrece la lista— y se apagan en
+                   los extremos. Cambiar de año conserva el mes. #}
+                {% set yearsAsc = availableYears|sort %}
+                {% set prevAvailableYear = null %}
+                {% set nextAvailableYear = null %}
+                {% for y in yearsAsc %}
+                    {% if y < year %}{% set prevAvailableYear = y %}{% endif %}
+                    {% if y > year and nextAvailableYear is null %}{% set nextAvailableYear = y %}{% endif %}
+                {% endfor %}
+
+                <div class="dropdown-menu dash-period-menu p-2">
+                    <div class="d-flex align-items-center justify-content-between">
+                        {% if prevAvailableYear %}
+                            <a class="btn btn-sm dash-period-menu__nav"
+                               href="?{{ q|merge({'year': prevAvailableYear, 'page': 1})|url_encode }}"
+                               aria-label="Año anterior">
+                                <i class="fa-solid fa-chevron-left fa-sm"></i>
+                            </a>
+                        {% else %}
+                            <span class="btn btn-sm dash-period-menu__nav disabled" aria-hidden="true">
+                                <i class="fa-solid fa-chevron-left fa-sm"></i>
+                            </span>
+                        {% endif %}
+
+                        <div class="position-relative">
+                            <button type="button" class="btn dash-period-menu__year"
+                                    data-bs-toggle="collapse" data-bs-target="#dashPeriodYears"
+                                    aria-expanded="false" aria-controls="dashPeriodYears">
+                                {{ year }}<i class="fa-solid fa-caret-down ms-2"></i>
+                            </button>
+                            <div class="collapse dash-period-menu__years" id="dashPeriodYears">
+                                {% for y in yearsAsc %}
+                                    <a class="{{ y == year ? 'active' : '' }}"
                                        href="?{{ q|merge({'year': y, 'page': 1})|url_encode }}">{{ y }}</a>
                                 {% endfor %}
                             </div>
-                        </li>
-                    {% endif %}
-
-                    <li>
-                        <div class="row row-cols-3 g-1">
-                            {% for m in 1..12 %}
-                                {% set hasData = m in availableMonths %}
-                                <div class="col">
-                                    <a class="btn btn-sm w-100 {{ m == month ? 'btn-primary' : 'btn-outline-secondary' }}{{ hasData ? '' : ' opacity-50' }}"
-                                       href="?{{ q|merge({'month': m, 'page': 1})|url_encode }}"
-                                       {% if not hasData %}title="Sin movimientos"{% endif %}>
-                                        {{ monthShort[m - 1] }}
-                                    </a>
-                                </div>
-                            {% endfor %}
                         </div>
-                    </li>
 
-                    <li><hr class="dropdown-divider"></li>
+                        {% if nextAvailableYear %}
+                            <a class="btn btn-sm dash-period-menu__nav"
+                               href="?{{ q|merge({'year': nextAvailableYear, 'page': 1})|url_encode }}"
+                               aria-label="Año siguiente">
+                                <i class="fa-solid fa-chevron-right fa-sm"></i>
+                            </a>
+                        {% else %}
+                            <span class="btn btn-sm dash-period-menu__nav disabled" aria-hidden="true">
+                                <i class="fa-solid fa-chevron-right fa-sm"></i>
+                            </span>
+                        {% endif %}
+                    </div>
 
-                    <li>
-                        <a class="btn btn-sm w-100 {{ month == 0 ? 'btn-primary' : 'btn-outline-secondary' }}"
-                           href="?{{ q|merge({'month': 0, 'page': 1})|url_encode }}">Año completo</a>
-                    </li>
-                </ul>
+                    <hr class="dropdown-divider">
+
+                    <div class="dash-period-menu__months">
+                        {% for m in 1..12 %}
+                            {% set hasData = m in availableMonths %}
+                            <a class="dash-period-menu__month{{ m == month ? ' active' : '' }}{{ hasData ? '' : ' is-empty' }}"
+                               href="?{{ q|merge({'month': m, 'page': 1})|url_encode }}"
+                               {% if not hasData %}title="Sin movimientos"{% endif %}>
+                                {{ monthShort[m - 1] }}
+                            </a>
+                        {% endfor %}
+                    </div>
+
+                    <hr class="dropdown-divider">
+
+                    <a class="btn btn-sm w-100 dash-period-menu__all{{ month == 0 ? ' active' : '' }}"
+                       href="?{{ q|merge({'month': 0, 'page': 1})|url_encode }}">Año completo</a>
+                </div>
             </div>
 
+            {# Desactivada: el período se cambia desde el desplegable.
             <a href="{{ nextUrl }}" class="btn btn-sm btn-outline-primary dash-header__arrow" aria-label="Período siguiente">
                 <i class="fa-solid fa-chevron-right fa-sm"></i>
             </a>
+            #}
         </div>
     </div>
 </div>

@@ -131,19 +131,103 @@ html{
    a partir del contenido de cada flecha (icono + padding, ~26 px) e ignora el
    flex-basis, así que reservaba 44 px de menos y el período se salía de la
    fila por la derecha. width cuenta en ese cálculo en todos los navegadores. */
-.dash-header__period > .dash-header__arrow { flex: none; width: 48px; }
-/* Las flechas son <a>: a diferencia de un <button>, un enlace no centra su
-   contenido en vertical, así que al estirarse a 44 px en móvil el icono se
-   quedaba pegado arriba. */
-.dash-header__arrow { display: inline-flex; align-items: center; justify-content: center; }
+.dash-header__period > .dash-header__arrow { flex: none; width: 37px; }
+/* Botones que son <a> o <span> (flechas, «Año completo»): a diferencia de un
+   <button>, no centran su contenido en vertical, así que al estirarse a 44 px
+   en móvil el contenido se quedaba pegado arriba. */
+.dash-header a.btn,
+.dash-header span.btn { display: inline-flex; align-items: center; justify-content: center; }
+
+/* ---- Desplegable del período ---- */
 /* Mes y año viven en el mismo desplegable: necesita ancho para la rejilla. */
 .dash-period-menu               { min-width: 17rem; }
+
+/* Cabecera del menú: flechas de año a los lados, año al centro. */
+.dash-period-menu__nav          { width: 2.5rem; color: var(--bs-secondary-color); border: 0; }
+.dash-period-menu__nav:hover    { color: var(--bs-body-color); background-color: var(--bs-tertiary-bg); }
+/* Cuadradas de 40 px: misma altura que el botón del año, para que los tres
+   fondos de hover de la fila midan lo mismo. Tres clases para ganar a
+   .dash-header .btn, que en móvil impondría 44 px. */
+.dash-header .dash-period-menu__nav.btn { height: 2.5rem; min-height: 0; }
+.dash-period-menu__year         { font-weight: 600; color: var(--bs-body-color); border: 0; }
+/* Misma caja que los meses: 16 px y 40 px de alto. Tres clases para ganar a
+   .dash-header .btn, que en móvil impondría 44 px. */
+.dash-header .dash-period-menu__year.btn { --bs-btn-padding-y: .5rem; min-height: 0; }
+/* Mismo fondo que el hover de los meses; se mantiene con la lista abierta. */
+.dash-period-menu__year:hover,
+.dash-period-menu__year[aria-expanded="true"] { background-color: var(--bs-tertiary-bg); color: var(--bs-body-color); }
+.dash-period-menu__year .fa-caret-down { transition: transform .15s; }
+.dash-period-menu__year[aria-expanded="true"] .fa-caret-down { transform: rotate(180deg); }
+
+/* Lista de años: flota sobre la rejilla de meses en vez de empujarla. */
+.dash-period-menu__years {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+    min-width: 6.5rem;
+    margin-top: .25rem;
+    padding: .25rem;
+    background-color: var(--bs-body-bg);
+    border: var(--bs-border-width) solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+    box-shadow: var(--bs-box-shadow);
+}
+.dash-period-menu__years a {
+    display: block;
+    padding: .375rem .75rem;
+    border-radius: var(--bs-border-radius-sm);
+    color: var(--bs-body-color);
+    text-decoration: none;
+}
+.dash-period-menu__years a:hover  { background-color: var(--bs-tertiary-bg); }
+.dash-period-menu__years a.active { background-color: var(--bs-primary); color: #fff; }
+
+/* Meses: texto sin marco; el seleccionado, relleno; sin datos, atenuado. */
+.dash-period-menu__months {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .25rem;
+}
+.dash-period-menu__month {
+    padding: .5rem 0;
+    border-radius: var(--bs-border-radius);
+    color: var(--bs-body-color);
+    text-align: center;
+    text-decoration: none;
+}
+.dash-period-menu__month:hover    { background-color: var(--bs-tertiary-bg); }
+.dash-period-menu__month.is-empty { color: var(--bs-tertiary-color); }
+.dash-period-menu__month.active   { background-color: var(--bs-primary); color: #fff; }
+
+/* «Año completo»: botón relleno, en azul cuando es el período elegido. Va con
+   las variables de .btn para que hover y .active hereden su mecánica. */
+.dash-period-menu__all {
+    --bs-btn-color: var(--bs-body-color);
+    --bs-btn-bg: var(--bs-secondary-bg);
+    --bs-btn-border-color: transparent;
+    --bs-btn-hover-color: var(--bs-body-color);
+    --bs-btn-hover-bg: var(--bs-border-color);
+    --bs-btn-hover-border-color: transparent;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--bs-primary);
+    --bs-btn-active-border-color: transparent;
+}
 
 @media (max-width: 991.98px) {
     /* Objetivos táctiles: cuenta, período y flechas se tocan con el pulgar. */
     .dash-header .btn { min-height: 44px; }
     /* El botón de ayuda es redondo: sin ancho mínimo se quedaría ovalado. */
     .dash-header .btn.rounded-circle { min-width: 44px; }
+    /* Sin las flechas, el período mediría solo lo que su texto y la cuenta se
+       llevaría casi toda la fila: un ancho en proporción equilibra los dos
+       botones. Es mínimo y no fijo porque con el nombre completo del mes
+       «Septiembre 2026» no cabe en los móviles más estrechos; así el botón
+       crece en vez de desbordarse, y la cuenta, que sí puede encoger, le cede
+       el sitio. min-width y no flex-basis, por cómo calcula Firefox el ancho
+       intrínseco (ver .dash-header__arrow). */
+    .dash-header__period { min-width: 37%; }
 }
 
 @media (min-width: 992px) {
