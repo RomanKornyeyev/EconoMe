@@ -1,5 +1,36 @@
 [
     {
+        "version": "v1.5.0",
+        "date": "2026-10-01",
+        "title": "Mejora UX del dashboard para móvil y nuevas funcionalidades",
+        "changes": [
+            {
+                "type": "improvement",
+                "text": "Dashboard rediseñado para móvil."
+            },
+            {
+                "type": "feat",
+                "text": "Ahorro del período en el resumen."
+            },
+            {
+                "type": "feat",
+                "text": "Gráfico de ingresos y gastos: vista de 6 meses o año completo."
+            },
+            {
+                "type": "feat",
+                "text": "Desglose por categoría con porcentaje e importe."
+            },
+            {
+                "type": "improvement",
+                "text": "Gráficos más nítidos y selector de período unificado."
+            },
+            {
+                "type": "improvement",
+                "text": "Paginación más cómoda en móvil."
+            }
+        ]
+    },
+    {
         "version": "v1.4.1",
         "date": "2026-08-18",
         "title": "Mejoras menores del dashboard",

@@ -38,7 +38,7 @@
 
             <div class="dash-balance fw-semibold {{ balance >= 0 ? 'text-success' : 'text-danger' }}">
                 {{ balance|number_format(2, ',', '.') }}
-                <span class="dash-balance__currency text-muted fw-normal">{{ currentAccount.currency }}</span>
+                <span class="dash-balance__currency">{{ currentAccount.currency }}</span>
             </div>
 
             {# ── Desglose del período: solo móvil ──────────────────────── #}

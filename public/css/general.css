@@ -237,15 +237,17 @@ html{
 
 /* ---- Balance ---- */
 /* Sin equivalente en utilidades: fs-1 en móvil, fs-5 en escritorio.
-   Los interlineados dan altura entera a propósito (36 × 1.25 = 45, 20 × 1.2 =
-   24): una caja con decimales desplaza medio píxel todo lo que viene debajo,
+   Los interlineados dan altura entera a propósito (36 × 1.25 = 45, 20 × 1.5 =
+   30, el mismo de fs-5, para que en escritorio la cifra quede a la altura de
+   las tarjetas vecinas): una caja con decimales desplaza medio píxel todo lo
+   que viene debajo,
    y lo que viene debajo son los gráficos, que al ser mapas de bits se
    emborronan al caer fuera de la rejilla de píxeles. */
 .dash-balance            { font-size: 2.25rem; line-height: 1.25; }
 .dash-balance__currency  { font-size: .5em; }
 
 @media (min-width: 992px) {
-    .dash-balance           { font-size: 1.25rem; line-height: 1.2; }
+    .dash-balance           { font-size: 1.25rem; line-height: 1.5; }
     .dash-balance__currency { font-size: 1em; }
 }
 
