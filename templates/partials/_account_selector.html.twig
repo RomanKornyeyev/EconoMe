@@ -14,6 +14,9 @@
     - menuEnd:          alinea el desplegable a la derecha
     - groupClass:       clases extra del .btn-group (p. ej. 'w-100' para que
                         ocupe la fila entera en móvil)
+    - labelPrefix:      texto delante del nombre en el botón (p. ej. 'Cuenta ').
+                        Se omite si el nombre ya empieza por él, y no cuenta
+                        para el truncado a 20 caracteres.
     - tourStep / tourTitle / tourText: paso del tour de la página, si aplica
 #}
 <div class="btn-group {{ groupClass ?? '' }}" role="group"
@@ -23,9 +26,11 @@
      data-tour-text="{{ tourText }}"
      {%- endif %}>
     {% set buttonLabel = (label ?? null) ?: (current ? current.name : '') %}
+    {% set prefix = labelPrefix ?? '' %}
+    {% if prefix and buttonLabel|lower starts with prefix|lower %}{% set prefix = '' %}{% endif %}
     <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"
             {% if buttonLabel|length > 20 %}title="{{ buttonLabel }}"{% endif %}>
-        {{ buttonLabel|length > 20 ? buttonLabel|slice(0, 20)|trim ~ '…' : buttonLabel }}
+        {{ prefix }}{{ buttonLabel|length > 20 ? buttonLabel|slice(0, 20)|trim ~ '…' : buttonLabel }}
     </button>
     <ul class="dropdown-menu{{ (menuEnd ?? false) ? ' dropdown-menu-end' : '' }}">
         {% for acc in accounts %}
