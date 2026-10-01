@@ -20,27 +20,28 @@
      data-tour-text="Evolución mensual de ingresos y gastos, y reparto por categorías del período seleccionado. En móvil cambia entre los dos con las pestañas."
      data-tour-side="top">
 
-    {# Pestañas: solo por debajo de lg #}
+    {# Pestañas: solo por debajo de lg. «Por categoría» va primero y abierta;
+       el orden de los paneles no se toca, que en lg es el de las columnas. #}
     <div class="col-12 d-lg-none dash-charts__tabs">
         <ul class="nav nav-pills nav-justified" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="dashTabBar" type="button" role="tab"
-                        data-bs-toggle="tab" data-bs-target="#dashPaneBar"
-                        aria-controls="dashPaneBar" aria-selected="true">Ingresos vs gastos</button>
+                <button class="nav-link active" id="dashTabCategory" type="button" role="tab"
+                        data-bs-toggle="tab" data-bs-target="#dashPaneCategory"
+                        aria-controls="dashPaneCategory" aria-selected="true">Por categoría</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="dashTabCategory" type="button" role="tab"
-                        data-bs-toggle="tab" data-bs-target="#dashPaneCategory"
-                        aria-controls="dashPaneCategory" aria-selected="false">Por categoría</button>
+                <button class="nav-link" id="dashTabBar" type="button" role="tab"
+                        data-bs-toggle="tab" data-bs-target="#dashPaneBar"
+                        aria-controls="dashPaneBar" aria-selected="false">Ingresos vs gastos</button>
             </li>
         </ul>
     </div>
 
-    <div class="col-12 col-lg-8 tab-pane fade show active" id="dashPaneBar" role="tabpanel" aria-labelledby="dashTabBar" tabindex="0">
+    <div class="col-12 col-lg-8 tab-pane fade" id="dashPaneBar" role="tabpanel" aria-labelledby="dashTabBar" tabindex="0">
         {% include 'components/_chart_bar.html.twig' with {titleClass: 'd-none d-lg-block'} %}
     </div>
 
-    <div class="col-12 col-lg-4 tab-pane fade" id="dashPaneCategory" role="tabpanel" aria-labelledby="dashTabCategory" tabindex="0">
+    <div class="col-12 col-lg-4 tab-pane fade show active" id="dashPaneCategory" role="tabpanel" aria-labelledby="dashTabCategory" tabindex="0">
         {% include 'components/_chart_doughnut.html.twig' with {titleClass: 'd-none d-lg-block'} %}
     </div>
 </div>
