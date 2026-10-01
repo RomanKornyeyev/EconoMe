@@ -117,12 +117,25 @@ html{
 /* ══════════════════════════════════════════════════════════════════════ */
 
 /* ---- Cabecera ---- */
-/* El período ocupa su propia fila completa en móvil; las flechas no crecen
-   con ella, se quedan en un objetivo táctil cuadrado. */
-.dash-header__period                     { width: 100%; }
+/* Cuenta y período comparten la segunda fila en móvil: el contenedor de los
+   dos ocupa el ancho completo y fuerza el salto, y dentro la cuenta se queda
+   el espacio que el período no necesita. Las flechas no crecen con la fila,
+   se quedan en un objetivo táctil cuadrado. */
+.dash-header__controls                   { width: 100%; min-width: 0; }
+/* Sin esto el botón de cuenta no puede encoger por debajo de su texto y
+   empujaría al período fuera de la fila. */
+.dash-header__account                    { min-width: 0; }
 .dash-header__period > .btn-group        { flex: 1 1 auto; }
-/* Dos clases: .btn-group > .btn ya reparte el ancho entre todos los botones. */
-.dash-header__period > .dash-header__arrow { flex: 0 0 48px; }
+/* Dos clases: .btn-group > .btn ya reparte el ancho entre todos los botones.
+   El ancho va en width y no en flex-basis: Firefox calcula el ancho del grupo
+   a partir del contenido de cada flecha (icono + padding, ~26 px) e ignora el
+   flex-basis, así que reservaba 44 px de menos y el período se salía de la
+   fila por la derecha. width cuenta en ese cálculo en todos los navegadores. */
+.dash-header__period > .dash-header__arrow { flex: none; width: 48px; }
+/* Las flechas son <a>: a diferencia de un <button>, un enlace no centra su
+   contenido en vertical, así que al estirarse a 44 px en móvil el icono se
+   quedaba pegado arriba. */
+.dash-header__arrow { display: inline-flex; align-items: center; justify-content: center; }
 /* Mes y año viven en el mismo desplegable: necesita ancho para la rejilla. */
 .dash-period-menu               { min-width: 17rem; }
 
@@ -134,7 +147,8 @@ html{
 }
 
 @media (min-width: 992px) {
-    .dash-header__period { width: auto; }
+    /* Una sola fila: los controles dejan de reservarse el ancho entero. */
+    .dash-header__controls { width: auto; }
 }
 
 /* ---- Balance ---- */
