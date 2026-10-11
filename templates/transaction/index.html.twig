@@ -13,12 +13,15 @@
 
 <div {{ tour.attrs('transactions') }}>
 
+{% set recurringTourText = 'Automatiza los gastos e ingresos periódicos (nómina, alquiler, suscripciones…) para no tener que registrarlos a mano.' %}
+
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <div class="d-flex align-items-center gap-2">
-        <h1 class="mb-0 h3">Movimientos</h1>
+        <h1 class="mb-0 h2 me-1">Movimientos</h1>
         {% include 'partials/_account_selector.html.twig' with {
             accounts: accounts,
             current: currentAccount,
+            labelPrefix: 'Cuenta ',
             resetParams: {page: 1, category: ''},
             tourStep: 1,
             tourTitle: 'Selector de cuenta',
@@ -26,12 +29,6 @@
         } only %}
     </div>
     <div class="d-flex align-items-center gap-2">
-        <a href="{{ path('recurring_index', {account: currentAccount.id}) }}" class="btn btn-outline-primary btn-sm"
-           data-tour-step="4"
-           data-tour-title="Movimientos recurrentes"
-           data-tour-text="Automatiza los gastos e ingresos periódicos (nómina, alquiler, suscripciones…) para no tener que registrarlos a mano.">
-            <i class="fa-solid fa-rotate me-1"></i>Movimientos recurrentes
-        </a>
         {% if canEdit %}
         <button type="button" class="btn btn-primary btn-sm"
                 data-bs-toggle="modal" data-bs-target="#transactionModal"
@@ -48,6 +45,12 @@
         {{ tour.help_button() }}
     </div>
 </div>
+
+{% include 'transaction/_tabs.html.twig' with {
+    account: currentAccount,
+    active: 'transactions',
+    recurringTourText: recurringTourText,
+} only %}
 
 {# Filters #}
 <div class="card border shadow-sm mb-3 bg-body-tertiary"

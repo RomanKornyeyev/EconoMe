@@ -1,25 +1,18 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Transacciones recurrentes{% endblock %}
+{% block title %}Movimientos recurrentes{% endblock %}
 
 {% block content %}
 {% set canEdit = is_granted('ACCOUNT_EDIT', currentAccount) %}
-<nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ path('transaction_index', {account: currentAccount.id}) }}">Movimientos</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Recurrentes</li>
-    </ol>
-</nav>
-
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <div class="d-flex align-items-center gap-2">
-        <h4 class="mb-0">
-            {# <i class="fa-solid fa-rotate me-2"></i> #}
-            Movimientos recurrentes
-        </h4>
+        {# Mismo título visible que en movimientos: la pestaña ya dice dónde
+           estás. El lector de pantalla sí necesita oírlo en el propio h1. #}
+        <h1 class="mb-0 h2 me-1">Movimientos<span class="visually-hidden"> recurrentes</span></h1>
         {% include 'partials/_account_selector.html.twig' with {
             accounts: accounts,
             current: currentAccount,
+            labelPrefix: 'Cuenta ',
         } only %}
     </div>
     {% if canEdit %}
@@ -28,6 +21,11 @@
     </a>
     {% endif %}
 </div>
+
+{% include 'transaction/_tabs.html.twig' with {
+    account: currentAccount,
+    active: 'recurring',
+} only %}
 
 <div class="mb-3">
     <a class="help-toggle collapsed small text-decoration-none d-inline-flex align-items-center gap-1"

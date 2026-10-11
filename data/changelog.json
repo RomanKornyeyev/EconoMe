@@ -1,5 +1,20 @@
 [
     {
+        "version": "v1.5.1",
+        "date": "2026-10-11",
+        "title": "Movimientos y recurrentes, unificados en pestañas",
+        "changes": [
+            {
+                "type": "improvement",
+                "text": "Movimientos y Movimientos recurrentes pasan a ser pestañas bajo la cabecera, en ordenador, tablet y móvil."
+            },
+            {
+                "type": "improvement",
+                "text": "Las cabeceras de movimientos y recurrentes siguen el estilo del dashboard: título más grande y selector «Cuenta …»."
+            }
+        ]
+    },
+    {
         "version": "v1.5.0",
         "date": "2026-10-01",
         "title": "Mejora UX del dashboard para móvil y nuevas funcionalidades",

@@ -1,0 +1,32 @@
+{#
+    Pestañas Movimientos / Movimientos recurrentes, compartidas por las dos
+    páginas y en todos los tamaños. Por debajo de sm la segunda se abrevia a
+    «Recurrentes»: con el nombre completo no caben las dos en 390 px.
+
+    Variables:
+    - account:           cuenta activa
+    - active:            'transactions' | 'recurring'
+    - recurringTourText: si se define, la pestaña de recurrentes es el paso 4
+                         del tour de movimientos
+#}
+<ul class="nav nav-tabs flex-nowrap mb-3">
+    <li class="nav-item">
+        <a class="nav-link text-nowrap{{ active == 'transactions' ? ' active' : '' }}"
+           {% if active == 'transactions' %}aria-current="page"{% endif %}
+           href="{{ path('transaction_index', {account: account.id}) }}">
+            <i class="fa-solid fa-list me-2"></i>Movimientos
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-nowrap{{ active == 'recurring' ? ' active' : '' }}"
+           {% if active == 'recurring' %}aria-current="page"{% endif %}
+           href="{{ path('recurring_index', {account: account.id}) }}"
+           {%- if recurringTourText is defined %}
+           data-tour-step="4"
+           data-tour-title="Movimientos recurrentes"
+           data-tour-text="{{ recurringTourText }}"
+           {%- endif %}>
+            <i class="fa-solid fa-rotate me-2"></i><span class="d-sm-none">Recurrentes</span><span class="d-none d-sm-inline">Movimientos recurrentes</span>
+        </a>
+    </li>
+</ul>
