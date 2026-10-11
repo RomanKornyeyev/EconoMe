@@ -2,15 +2,15 @@
     {
         "version": "v1.5.1",
         "date": "2026-10-11",
-        "title": "Movimientos y recurrentes, unificados en pestañas",
+        "title": "Mejora UX de las secciones de movimientos y filtros en móvil",
         "changes": [
             {
                 "type": "improvement",
-                "text": "Movimientos y Movimientos recurrentes pasan a ser pestañas bajo la cabecera, en ordenador, tablet y móvil."
+                "text": "Mejoras UX movimientos y movimientos recurrentes para móviles."
             },
             {
-                "type": "improvement",
-                "text": "Las cabeceras de movimientos y recurrentes siguen el estilo del dashboard: título más grande y selector «Cuenta …»."
+                "type": "feat",
+                "text": "Nueva sección de filtros en móvil, más compacta e intuitiva."
             }
         ]
     },

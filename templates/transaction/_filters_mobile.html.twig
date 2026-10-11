@@ -1,0 +1,189 @@
+{#
+    Filtros del listado en móvil (< md): buscador, botón «Filtros» que abre un
+    panel inferior y, debajo, una etiqueta por filtro aplicado.
+
+    Escritorio sigue con la tarjeta de filtros de siempre (transaction/index).
+    Los dos formularios mandan los mismos parámetros al mismo listado; aquí el
+    panel, además, anuncia cuántos movimientos saldrán antes de aplicarlo
+    (tx_filters_controller.js + transaction_count).
+
+    Las etiquetas son enlaces a la misma URL sin ese filtro: quitar uno es
+    navegar, igual que aplicarlo, y funciona sin JavaScript.
+
+    Espera en contexto lo mismo que transaction/index: currentAccount,
+    categories, pagination, dateFrom, dateTo, currentType, currentCategory,
+    currentSearch, currentAmountFrom, currentAmountTo, sortField, sortDir,
+    perPage.
+#}
+{% set q = app.request.query.all|merge({account: currentAccount.id}) %}
+{% set clearUrl = path('transaction_index', {account: currentAccount.id, perPage: perPage}) %}
+{% set currencySymbol = {EUR: '€', USD: '$', GBP: '£'}[currentAccount.currency] ?? currentAccount.currency %}
+
+{# ---- Etiquetas de filtros aplicados: texto y parámetros que retira ---- #}
+{% set chips = [] %}
+
+{% if currentType %}
+    {% set chips = chips|merge([{label: currentType == 'income' ? 'Ingresos' : 'Gastos', remove: ['type']}]) %}
+{% endif %}
+
+{% if dateFrom or dateTo %}
+    {# Sin año si es el actual: «1/10 – 10/10» cabe en una etiqueta, con año no. #}
+    {% set thisYear = 'now'|date('Y') %}
+    {% set fromLabel = dateFrom ? dateFrom|date(dateFrom|date('Y') == thisYear ? 'j/n' : 'j/n/y') : null %}
+    {% set toLabel = dateTo ? dateTo|date(dateTo|date('Y') == thisYear ? 'j/n' : 'j/n/y') : null %}
+    {% if fromLabel and toLabel %}
+        {% set dateLabel = fromLabel == toLabel ? fromLabel : fromLabel ~ ' – ' ~ toLabel %}
+    {% elseif fromLabel %}
+        {% set dateLabel = 'Desde ' ~ fromLabel %}
+    {% else %}
+        {% set dateLabel = 'Hasta ' ~ toLabel %}
+    {% endif %}
+    {% set chips = chips|merge([{label: dateLabel, remove: ['date_from', 'date_to']}]) %}
+{% endif %}
+
+{% if currentCategory %}
+    {% set categoryLabel = 'Sin categoría' %}
+    {% for cat in categories|filter(c => c.id == currentCategory) %}
+        {% set categoryLabel = cat.name %}
+    {% endfor %}
+    {% set chips = chips|merge([{label: categoryLabel, remove: ['category']}]) %}
+{% endif %}
+
+{% if currentAmountFrom is not null or currentAmountTo is not null %}
+    {# Sin decimales cuando son ,00: «10 €» y no «10,00 €». #}
+    {% set amountFromLabel = currentAmountFrom is not null
+        ? currentAmountFrom|number_format(currentAmountFrom == currentAmountFrom|round ? 0 : 2, ',', '.') : null %}
+    {% set amountToLabel = currentAmountTo is not null
+        ? currentAmountTo|number_format(currentAmountTo == currentAmountTo|round ? 0 : 2, ',', '.') : null %}
+    {% if amountFromLabel is not null and amountToLabel is not null %}
+        {% set amountLabel = amountFromLabel ~ ' – ' ~ amountToLabel ~ ' ' ~ currencySymbol %}
+    {% elseif amountFromLabel is not null %}
+        {% set amountLabel = '≥ ' ~ amountFromLabel ~ ' ' ~ currencySymbol %}
+    {% else %}
+        {% set amountLabel = '≤ ' ~ amountToLabel ~ ' ' ~ currencySymbol %}
+    {% endif %}
+    {% set chips = chips|merge([{label: amountLabel, remove: ['amount_from', 'amount_to']}]) %}
+{% endif %}
+
+<form method="get" action="{{ path('transaction_index') }}" class="d-md-none mb-3"
+      data-controller="tx-filters"
+      data-tx-filters-count-url-value="{{ path('transaction_count') }}"
+      data-tx-filters-count-value="{{ pagination.getTotalItemCount() }}"
+      data-action="input->tx-filters#refresh change->tx-filters#refresh submit->tx-filters#submit"
+      data-tour-step="2"
+      data-tour-title="Filtros"
+      data-tour-text="Busca por nombre o abre «Filtros» para acotar por tipo, fechas, categoría o importe.">
+    <input type="hidden" name="account" value="{{ currentAccount.id }}">
+    <input type="hidden" name="sortBy" value="{{ sortField }}">
+    <input type="hidden" name="sortDir" value="{{ sortDir }}">
+    <input type="hidden" name="perPage" value="{{ perPage }}">
+
+    <div class="d-flex gap-2">
+        <div class="tx-search flex-grow-1">
+            <i class="fa-solid fa-magnifying-glass tx-search__icon" aria-hidden="true"></i>
+            <input type="search" name="search" class="form-control tx-search__input"
+                   placeholder="Buscar movimiento…" aria-label="Buscar movimiento"
+                   enterkeyhint="search" value="{{ currentSearch ?? '' }}">
+        </div>
+        <button type="button" class="btn btn-outline-secondary tx-filters-btn flex-shrink-0"
+                data-bs-toggle="offcanvas" data-bs-target="#txFiltersSheet" aria-controls="txFiltersSheet">
+            <i class="fa-solid fa-sliders"></i>Filtros
+            {% if chips is not empty %}
+                <span class="badge rounded-pill text-bg-primary">
+                    {{ chips|length }}<span class="visually-hidden"> aplicados</span>
+                </span>
+            {% endif %}
+        </button>
+    </div>
+
+    {% if chips is not empty %}
+        <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
+            {% for chip in chips %}
+                <a class="tx-chip"
+                   href="{{ path('transaction_index') }}?{{ q|filter((v, k) => k not in chip.remove and k != 'page')|url_encode }}"
+                   aria-label="Quitar filtro: {{ chip.label }}">
+                    {{ chip.label }}<i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </a>
+            {% endfor %}
+            <a href="{{ clearUrl }}" class="tx-chips__clear">Limpiar</a>
+        </div>
+    {% endif %}
+
+    {# ---- Panel inferior ---- #}
+    <div class="offcanvas offcanvas-bottom tx-sheet" tabindex="-1" id="txFiltersSheet"
+         aria-labelledby="txFiltersSheetLabel" data-tx-filters-target="sheet">
+        {# Asa y cabecera: arrastrarlas hacia abajo cierra el panel. #}
+        <div class="tx-sheet__drag" data-action="touchstart->tx-filters#dragStart touchmove->tx-filters#dragMove touchend->tx-filters#dragEnd touchcancel->tx-filters#dragEnd">
+            <div class="tx-sheet__handle" aria-hidden="true"></div>
+            <div class="offcanvas-header justify-content-between">
+                <h2 class="offcanvas-title h5" id="txFiltersSheetLabel">Filtros</h2>
+                <button type="button" class="btn btn-link p-0 tx-chips__clear" data-action="tx-filters#clear">
+                    Limpiar todo
+                </button>
+            </div>
+        </div>
+
+        <div class="offcanvas-body">
+            <div class="mb-3">
+                <label class="form-label" for="mf-type">Tipo</label>
+                <select name="type" id="mf-type" class="form-select" data-tx-filters-target="type">
+                    <option value="" {{ not currentType ? 'selected' }}>Todos</option>
+                    <option value="expense" {{ currentType == 'expense' ? 'selected' }}>Gastos</option>
+                    <option value="income" {{ currentType == 'income' ? 'selected' }}>Ingresos</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="mf-range">Fechas</label>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill tx-sheet__preset"
+                            data-tx-filters-target="preset" data-tx-filters-range-param="month"
+                            data-action="tx-filters#preset">Este mes</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill tx-sheet__preset"
+                            data-tx-filters-target="preset" data-tx-filters-range-param="lastMonth"
+                            data-action="tx-filters#preset">Mes pasado</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill tx-sheet__preset"
+                            data-tx-filters-target="preset" data-tx-filters-range-param="last3"
+                            data-action="tx-filters#preset">Últimos 3 meses</button>
+                </div>
+                {# Un campo visible; los hidden son los que viajan al backend. #}
+                <input type="text" id="mf-range" class="form-control" placeholder="Selecciona un rango…"
+                       autocomplete="off" data-tx-filters-target="range">
+                <input type="hidden" name="date_from" value="{{ dateFrom ? dateFrom|date('Y-m-d') }}" data-tx-filters-target="dateFrom">
+                <input type="hidden" name="date_to" value="{{ dateTo ? dateTo|date('Y-m-d') }}" data-tx-filters-target="dateTo">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="mf-category">Categoría</label>
+                <select name="category" id="mf-category" class="form-select" data-tx-filters-target="category">
+                    <option value="" {{ not currentCategory ? 'selected' }}>Todas las categorías</option>
+                    <option value="-1" {{ currentCategory == -1 ? 'selected' }}>Sin categoría</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.id }}" data-cat-type="{{ cat.type }}"
+                                {{ cat.id == currentCategory ? 'selected' }}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="form-label" for="mf-amount-from">Importe ({{ currencySymbol }})</label>
+                <div class="d-flex align-items-center gap-2">
+                    <input type="number" name="amount_from" id="mf-amount-from" class="form-control"
+                           placeholder="Desde" step="0.01" inputmode="decimal" aria-label="Importe desde"
+                           value="{{ currentAmountFrom ?? '' }}">
+                    <span class="text-body-secondary" aria-hidden="true">–</span>
+                    <input type="number" name="amount_to" class="form-control"
+                           placeholder="Hasta" step="0.01" inputmode="decimal" aria-label="Importe hasta"
+                           value="{{ currentAmountTo ?? '' }}">
+                </div>
+            </div>
+        </div>
+
+        <div class="tx-sheet__footer">
+            <button type="submit" class="btn btn-primary w-100" data-tx-filters-target="submit">
+                Ver {{ pagination.getTotalItemCount()|number_format(0, ',', '.') }}
+                {{ pagination.getTotalItemCount() == 1 ? 'movimiento' : 'movimientos' }}
+            </button>
+        </div>
+    </div>
+</form>

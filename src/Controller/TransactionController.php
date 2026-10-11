@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Account;
+use App\Entity\Category;
 use App\Entity\Transaction;
 use App\Form\TransactionType;
 use App\Pagination\PageSize;
@@ -21,6 +22,11 @@ use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+/**
+ * @phpstan-type Filters array{dateFrom: ?\DateTime, dateTo: ?\DateTime, type: ?string,
+ *                             categoryId: ?int, noCategory: bool, search: ?string,
+ *                             amountFrom: ?float, amountTo: ?float}
+ */
 #[IsGranted('ROLE_USER')]
 #[Route('/transaction', name: 'transaction_')]
 class TransactionController extends AbstractController
@@ -52,42 +58,8 @@ class TransactionController extends AbstractController
         $account = $this->accountService->resolveCurrentAccount($request, $accounts);
         $this->denyAccessUnlessGranted('ACCOUNT_VIEW', $account);
 
-        $dateFrom = null;
-        $dateTo   = null;
-        if ($raw = $request->query->get('date_from', '')) {
-            $dateFrom = \DateTime::createFromFormat('Y-m-d', $raw) ?: null;
-            if ($dateFrom) {
-                $dateFrom->setTime(0, 0, 0);
-            }
-        }
-        if ($raw = $request->query->get('date_to', '')) {
-            $dateTo = \DateTime::createFromFormat('Y-m-d', $raw) ?: null;
-            if ($dateTo) {
-                $dateTo->setTime(23, 59, 59);
-            }
-        }
-        $type = $request->query->get('type') ?: null;
-        $categoryRaw = $request->query->get('category', '');
-        $noCategory = ($categoryRaw === '-1');
-        $categoryId = (!$noCategory && $categoryRaw !== '') ? (int) $categoryRaw : null;
-
         $categories = $this->categoryRepo->findAllByAccount($account);
-
-        // Descarta un filtro de categoría que no pertenece a la cuenta actual
-        // (arrastrado al cambiar de cuenta, o desde una URL antigua/compartida)
-        if ($categoryId !== null && !in_array($categoryId, array_map(fn($c) => $c->getId(), $categories), true)) {
-            $categoryId = null;
-        }
-        $search = trim($request->query->get('search', '')) ?: null;
-
-        $amountFrom = null;
-        $amountTo   = null;
-        if ($request->query->get('amount_from', '') !== '') {
-            $amountFrom = (float) $request->query->get('amount_from');
-        }
-        if ($request->query->get('amount_to', '') !== '') {
-            $amountTo = (float) $request->query->get('amount_to');
-        }
+        $filters = $this->readFilters($request, $categories);
 
         $allowedSorts = ['date', 'name', 'amount', 'type', 'category'];
         $sortField = $request->query->getString('sortBy', 'date');
@@ -98,9 +70,7 @@ class TransactionController extends AbstractController
 
         $perPage = PageSize::fromRequest($request, self::PER_PAGE_DEFAULT);
 
-        $query = $this->transactionRepo->findByFiltersQuery(
-            $account, $dateFrom, $dateTo, $type, $categoryId, $noCategory, $search, $sortField, $sortDir, $amountFrom, $amountTo
-        );
+        $query = $this->filtersQuery($account, $filters, $sortField, $sortDir);
 
         $pagination = $paginator->paginate(
             $query,
@@ -132,18 +102,103 @@ class TransactionController extends AbstractController
             'categories'      => $categories,
             'transactionForm' => $transactionForm,
             'redirectUrl'     => $request->getRequestUri(),
-            'dateFrom'        => $dateFrom,
-            'dateTo'          => $dateTo,
-            'currentType'     => $type,
-            'currentCategory' => $noCategory ? -1 : $categoryId,
-            'currentSearch'      => $search,
-            'currentAmountFrom'  => $amountFrom,
-            'currentAmountTo'    => $amountTo,
+            'dateFrom'        => $filters['dateFrom'],
+            'dateTo'          => $filters['dateTo'],
+            'currentType'     => $filters['type'],
+            'currentCategory' => $filters['noCategory'] ? -1 : $filters['categoryId'],
+            'currentSearch'      => $filters['search'],
+            'currentAmountFrom'  => $filters['amountFrom'],
+            'currentAmountTo'    => $filters['amountTo'],
             'sortField'          => $sortField,
             'sortDir'            => $sortDir,
             'perPage'            => $perPage,
             'perPageOptions'     => PageSize::OPTIONS,
         ]);
+    }
+
+    /**
+     * Nº de movimientos que daría el listado con los filtros de la query.
+     *
+     * Lo consulta el panel de filtros del móvil (tx_filters_controller.js) para
+     * anunciar en su botón cuántos resultados hay antes de aplicarlos. Lee los
+     * filtros con el mismo {@see readFilters()} que el listado: si cada uno
+     * llevara su versión, el botón prometería una cifra y el listado daría otra.
+     */
+    #[Route('/count', name: 'count', methods: ['GET'])]
+    public function count(Request $request, PaginatorInterface $paginator): JsonResponse
+    {
+        $accounts = $this->accountService->getActiveAccountsForUser($this->getUser());
+        if (empty($accounts)) {
+            return new JsonResponse(['count' => 0]);
+        }
+
+        $account = $this->accountService->resolveCurrentAccount($request, $accounts);
+        $this->denyAccessUnlessGranted('ACCOUNT_VIEW', $account);
+
+        $filters = $this->readFilters($request, $this->categoryRepo->findAllByAccount($account));
+
+        // Página de un elemento: solo interesa el total, que KnpPaginator saca
+        // con su propia consulta COUNT.
+        $count = $paginator->paginate($this->filtersQuery($account, $filters), 1, 1)->getTotalItemCount();
+
+        return new JsonResponse(['count' => $count]);
+    }
+
+    /**
+     * Filtros del listado leídos de la query, ya saneados.
+     *
+     * @param Category[] $categories categorías de la cuenta, para descartar un
+     *                               filtro de categoría ajeno a ella
+     *
+     * @return Filters
+     */
+    private function readFilters(Request $request, array $categories): array
+    {
+        $dateFrom = null;
+        $dateTo   = null;
+        if ($raw = $request->query->get('date_from', '')) {
+            $dateFrom = \DateTime::createFromFormat('Y-m-d', $raw) ?: null;
+            if ($dateFrom) {
+                $dateFrom->setTime(0, 0, 0);
+            }
+        }
+        if ($raw = $request->query->get('date_to', '')) {
+            $dateTo = \DateTime::createFromFormat('Y-m-d', $raw) ?: null;
+            if ($dateTo) {
+                $dateTo->setTime(23, 59, 59);
+            }
+        }
+        $type = $request->query->get('type') ?: null;
+        $categoryRaw = $request->query->get('category', '');
+        $noCategory = ($categoryRaw === '-1');
+        $categoryId = (!$noCategory && $categoryRaw !== '') ? (int) $categoryRaw : null;
+
+        // Descarta un filtro de categoría que no pertenece a la cuenta actual
+        // (arrastrado al cambiar de cuenta, o desde una URL antigua/compartida)
+        if ($categoryId !== null && !in_array($categoryId, array_map(fn($c) => $c->getId(), $categories), true)) {
+            $categoryId = null;
+        }
+        $search = trim($request->query->get('search', '')) ?: null;
+
+        $amountFrom = null;
+        $amountTo   = null;
+        if ($request->query->get('amount_from', '') !== '') {
+            $amountFrom = (float) $request->query->get('amount_from');
+        }
+        if ($request->query->get('amount_to', '') !== '') {
+            $amountTo = (float) $request->query->get('amount_to');
+        }
+
+        return compact('dateFrom', 'dateTo', 'type', 'categoryId', 'noCategory', 'search', 'amountFrom', 'amountTo');
+    }
+
+    /** @param Filters $f */
+    private function filtersQuery(Account $account, array $f, string $sortField = 'date', string $sortDir = 'desc'): \Doctrine\ORM\QueryBuilder
+    {
+        return $this->transactionRepo->findByFiltersQuery(
+            $account, $f['dateFrom'], $f['dateTo'], $f['type'], $f['categoryId'], $f['noCategory'],
+            $f['search'], $sortField, $sortDir, $f['amountFrom'], $f['amountTo']
+        );
     }
 
     /**

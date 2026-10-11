@@ -11,38 +11,46 @@
 {% import 'partials/macros/_tour.html.twig' as tour %}
 {% set canEdit = is_granted('ACCOUNT_EDIT', currentAccount) %}
 
-<div {{ tour.attrs('transactions') }}>
+{# pb-5 en móvil: el FAB flota sobre el final de la página. #}
+<div class="pb-5 pb-md-0" {{ tour.attrs('transactions') }}>
 
 {% set recurringTourText = 'Automatiza los gastos e ingresos periódicos (nómina, alquiler, suscripciones…) para no tener que registrarlos a mano.' %}
+{% set newTxTourText = 'Registra aquí tus gastos e ingresos. Puedes encadenar varios seguidos sin cerrar la ventana.' %}
 
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-    <div class="d-flex align-items-center gap-2">
-        <h1 class="mb-0 h2 me-1">Movimientos</h1>
+{# Cabecera. En escritorio, una fila: título, cuenta y, al otro extremo, las
+   acciones. En móvil, dos: título y ayuda; debajo, la cuenta a todo el ancho.
+   El reparto lo hacen los order-* y .tx-header__account (general.css). #}
+<div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+    <h1 class="mb-0 h2 me-1">Movimientos</h1>
+
+    <div class="order-1 order-md-2 ms-auto d-flex align-items-center gap-2">
+        {# En móvil este botón lo sustituye el FAB del final de la página. #}
+        {% if canEdit %}
+        <button type="button" class="btn btn-primary btn-sm d-none d-md-inline-flex align-items-center"
+                data-bs-toggle="modal" data-bs-target="#transactionModal"
+                aria-keyshortcuts="N"
+                data-tour-step="5"
+                data-tour-title="Nuevo movimiento"
+                data-tour-text="{{ newTxTourText }}">
+            <i class="fa-solid fa-plus me-1"></i>Nuevo movimiento
+            {# El atajo global lo escucha tx-quick-add; aquí solo se anuncia. #}
+            <kbd class="btn-kbd ms-1" aria-hidden="true">N</kbd>
+        </button>
+        {% endif %}
+        {{ tour.help_button() }}
+    </div>
+
+    <div class="tx-header__account order-2 order-md-1">
         {% include 'partials/_account_selector.html.twig' with {
             accounts: accounts,
             current: currentAccount,
             labelPrefix: 'Cuenta ',
+            groupClass: 'w-100',
             resetParams: {page: 1, category: ''},
             tourStep: 1,
             tourTitle: 'Selector de cuenta',
             tourText: 'Aquí ves los movimientos de la cuenta seleccionada. Cambia de cuenta cuando quieras.',
         } only %}
-    </div>
-    <div class="d-flex align-items-center gap-2">
-        {% if canEdit %}
-        <button type="button" class="btn btn-primary btn-sm"
-                data-bs-toggle="modal" data-bs-target="#transactionModal"
-                aria-keyshortcuts="N"
-                data-tour-step="5"
-                data-tour-title="Nuevo movimiento"
-                data-tour-text="Registra aquí tus gastos e ingresos. Puedes encadenar varios seguidos sin cerrar la ventana.">
-            <i class="fa-solid fa-plus me-1"></i>Nuevo movimiento
-            {# El atajo global lo escucha tx-quick-add; aquí solo se anuncia. Oculto
-               por debajo de md: sin teclado físico el aviso engaña. #}
-            <kbd class="btn-kbd d-none d-md-inline-flex" aria-hidden="true">N</kbd>
-        </button>
-        {% endif %}
-        {{ tour.help_button() }}
     </div>
 </div>
 
@@ -52,8 +60,11 @@
     recurringTourText: recurringTourText,
 } only %}
 
-{# Filters #}
-<div class="card border shadow-sm mb-3 bg-body-tertiary"
+{# Filtros en móvil: buscador + panel inferior. #}
+{% include 'transaction/_filters_mobile.html.twig' %}
+
+{# Filtros en escritorio #}
+<div class="card border shadow-sm mb-3 bg-body-tertiary d-none d-md-block"
      data-tour-step="2"
      data-tour-title="Filtros"
      data-tour-text="Encuentra cualquier movimiento filtrando por fechas, tipo, categoría, texto o importe.">
@@ -245,6 +256,17 @@
 } only %}
 
 {% if canEdit %}
+    {# Botón flotante de «Nuevo movimiento»: sustituye en móvil al de la
+       cabecera. Lleva su mismo paso del tour; el tour ignora el oculto. #}
+    <button type="button" class="dash-fab btn btn-primary rounded-circle shadow position-fixed bottom-0 end-0 m-3 d-md-none"
+            data-bs-toggle="modal" data-bs-target="#transactionModal"
+            aria-label="Nuevo movimiento"
+            data-tour-step="5"
+            data-tour-title="Nuevo movimiento"
+            data-tour-text="{{ newTxTourText }}">
+        <i class="fa-solid fa-plus"></i>
+    </button>
+
     {% include 'transaction/_modal_transaction.html.twig' %}
 {% endif %}
 {% include 'transaction/_modal_summary.html.twig' %}
