@@ -15,22 +15,6 @@ class CategoryRepository extends ServiceEntityRepository
     }
 
     /**
-     * Categorías raíz de una cuenta filtradas por tipo.
-     */
-    public function findRootByAccountAndType(Account $account, string $type): array
-    {
-        return $this->createQueryBuilder('c')
-            ->where('c.account = :account')
-            ->andWhere('c.type = :type')
-            ->andWhere('c.parent IS NULL')
-            ->setParameter('account', $account)
-            ->setParameter('type', $type)
-            ->orderBy('c.name', 'ASC')
-            ->getQuery()
-            ->getResult();
-    }
-
-    /**
      * Todas las categorías raíz de una cuenta (para selects en formularios).
      */
     public function findAllByAccount(Account $account): array
@@ -39,8 +23,7 @@ class CategoryRepository extends ServiceEntityRepository
             ->where('c.account = :account')
             ->andWhere('c.parent IS NULL')
             ->setParameter('account', $account)
-            ->orderBy('c.type', 'ASC')
-            ->addOrderBy('c.name', 'ASC')
+            ->orderBy('c.name', 'ASC')
             ->getQuery()
             ->getResult();
     }

@@ -20,8 +20,8 @@ final class ChangelogController extends AbstractController
             ltrim($a['version'], 'v')
         ));
 
-        // Dentro de cada versión: primero lo nuevo, luego mejoras, luego arreglos
-        $typeOrder = ['feat' => 0, 'improvement' => 1, 'fix' => 2];
+        // Dentro de cada versión: primero lo nuevo, luego mejoras, avisos y arreglos
+        $typeOrder = ['feat' => 0, 'improvement' => 1, 'info' => 2, 'fix' => 3];
         foreach ($releases as &$release) {
             usort(
                 $release['changes'],

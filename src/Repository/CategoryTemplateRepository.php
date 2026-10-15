@@ -15,15 +15,14 @@ class CategoryTemplateRepository extends ServiceEntityRepository
     }
 
     /**
-     * Todas las plantillas de un usuario, ordenadas por tipo y nombre.
+     * Todas las plantillas de un usuario, ordenadas por nombre.
      */
     public function findAllByUser(User $user): array
     {
         return $this->createQueryBuilder('ct')
             ->where('ct.user = :user')
             ->setParameter('user', $user)
-            ->orderBy('ct.type', 'ASC')
-            ->addOrderBy('ct.name', 'ASC')
+            ->orderBy('ct.name', 'ASC')
             ->getQuery()
             ->getResult();
     }

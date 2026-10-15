@@ -5,7 +5,6 @@ namespace App\Controller;
 use App\Entity\Account;
 use App\Entity\AccountInvitation;
 use App\Entity\AccountMember;
-use App\Entity\Category;
 use App\Entity\User;
 use App\Form\AccountType;
 use App\Repository\AccountInvitationRepository;
@@ -117,8 +116,7 @@ class AccountController extends AbstractController
             'pendingInvitations' => $pendingInvitations,
             'activeRecurrings' => $recurringRepository->countActiveByAccount($account),
             'transactionCount' => $transactionRepository->count(['account' => $account]),
-            'categoryIncomeCount' => $categoryRepository->count(['account' => $account, 'type' => Category::TYPE_INCOME]),
-            'categoryExpenseCount' => $categoryRepository->count(['account' => $account, 'type' => Category::TYPE_EXPENSE]),
+            'categoryCount' => $categoryRepository->count(['account' => $account]),
         ]);
     }
 

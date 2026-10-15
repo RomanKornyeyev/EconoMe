@@ -6,6 +6,7 @@ use App\Entity\Account;
 use App\Entity\Category;
 use App\Entity\RecurringTransaction;
 use App\Repository\CategoryRepository;
+use App\Service\CategoryUsage;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
@@ -19,6 +20,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class RecurringTransactionType extends AbstractType
 {
+    public function __construct(
+        private CategoryUsage $categoryUsage,
+    ) {}
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -66,16 +71,17 @@ class RecurringTransactionType extends AbstractType
                 'choice_label' => 'name',
                 'required' => false,
                 'placeholder' => 'Sin categoría',
+                // Agrupa las categorías según el tipo elegido (ver TransactionType).
+                'attr' => ['data-controller' => 'category-order'],
                 'query_builder' => function (CategoryRepository $repo) use ($options) {
                     return $repo->createQueryBuilder('c')
                         ->where('c.account = :account')
                         ->setParameter('account', $options['account'])
-                        ->orderBy('c.type', 'ASC')
-                        ->addOrderBy('c.name', 'ASC');
+                        ->orderBy('c.name', 'ASC');
                 },
-                'group_by' => function (Category $category) {
-                    return $category->getType() === 'expense' ? 'Gastos' : 'Ingresos';
-                },
+                'choice_attr' => fn (Category $category) => [
+                    'data-used-as' => $this->categoryUsage->usedAs($options['account'], $category->getId()),
+                ],
             ])
             ->add('startDate', DateType::class, [
                 'label' => 'Fecha de inicio',

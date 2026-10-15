@@ -11,7 +11,7 @@
     navegar, igual que aplicarlo, y funciona sin JavaScript.
 
     Espera en contexto lo mismo que transaction/index: currentAccount,
-    categories, pagination, dateFrom, dateTo, currentType, currentCategory,
+    categories, categoryTypes, pagination, dateFrom, dateTo, currentType, currentCategory,
     currentSearch, currentAmountFrom, currentAmountTo, sortField, sortDir,
     perPage.
 #}
@@ -159,7 +159,7 @@
                     <option value="" {{ not currentCategory ? 'selected' }}>Todas las categorías</option>
                     <option value="-1" {{ currentCategory == -1 ? 'selected' }}>Sin categoría</option>
                     {% for cat in categories %}
-                        <option value="{{ cat.id }}" data-cat-type="{{ cat.type }}"
+                        <option value="{{ cat.id }}" data-used-as="{{ (categoryTypes[cat.id] ?? [])|join(' ') }}"
                                 {{ cat.id == currentCategory ? 'selected' }}>{{ cat.name }}</option>
                     {% endfor %}
                 </select>

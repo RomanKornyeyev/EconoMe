@@ -1,5 +1,16 @@
 [
     {
+        "version": "v1.5.2",
+        "date": "2026-10-15",
+        "title": "Categorías para gastos e ingresos",
+        "changes": [
+            {
+                "type": "info",
+                "text": "Las categorías ya sirven tanto para gastos como para ingresos."
+            }
+        ]
+    },
+    {
         "version": "v1.5.1",
         "date": "2026-10-11",
         "title": "Mejora UX de las secciones de movimientos y filtros en móvil",

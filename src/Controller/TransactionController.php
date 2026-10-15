@@ -11,6 +11,7 @@ use App\Repository\CategoryRepository;
 use App\Repository\TransactionRepository;
 use App\Service\AccountService;
 use App\Service\CategorySuggester;
+use App\Service\CategoryUsage;
 use App\Service\TransactionDraftFactory;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
@@ -43,6 +44,7 @@ class TransactionController extends AbstractController
         private CategoryRepository $categoryRepo,
         private EntityManagerInterface $em,
         private TransactionDraftFactory $draftFactory,
+        private CategoryUsage $categoryUsage,
     ) {}
 
     #[Route('', name: 'index')]
@@ -100,6 +102,9 @@ class TransactionController extends AbstractController
             'currentAccount'  => $account,
             'pagination'      => $pagination,
             'categories'      => $categories,
+            // Tipos de movimiento usados por cada categoría: los filtros ocultan
+            // las que no tienen ninguno del tipo elegido.
+            'categoryTypes'   => $this->categoryUsage->typesByCategory($account),
             'transactionForm' => $transactionForm,
             'redirectUrl'     => $request->getRequestUri(),
             'dateFrom'        => $filters['dateFrom'],
@@ -463,7 +468,6 @@ class TransactionController extends AbstractController
         $category = $categoryId !== '' ? $this->categoryRepo->find((int) $categoryId) : null;
 
         $updated = 0;
-        $mismatched = 0;
 
         foreach ($ids as $id) {
             $transaction = $this->transactionRepo->find((int) $id);
@@ -475,13 +479,6 @@ class TransactionController extends AbstractController
                 // Categoría de otra cuenta: solo llega con la petición manipulada,
                 // porque el desplegable únicamente ofrece las de la cuenta actual.
                 if ($category->getAccount()->getId() !== $transaction->getAccount()->getId()) {
-                    continue;
-                }
-                // Las categorías están tipadas: poner una de gasto a un ingreso
-                // dejaría el dato incoherente y descuadraría los gráficos. Se
-                // omiten y se dicen, que es más honesto que colarlas en silencio.
-                if ($category->getType() !== $transaction->getType()) {
-                    $mismatched++;
                     continue;
                 }
             }
@@ -496,7 +493,7 @@ class TransactionController extends AbstractController
 
         $this->addFlash(
             $updated > 0 ? 'success' : 'error',
-            $this->bulkCategorizeMessage($updated, $mismatched)
+            $this->bulkCategorizeMessage($updated)
         );
 
         $redirectUrl = $request->request->get('_redirect_url');
@@ -507,23 +504,13 @@ class TransactionController extends AbstractController
         return $this->redirectToRoute('transaction_index');
     }
 
-    private function bulkCategorizeMessage(int $updated, int $mismatched): string
+    private function bulkCategorizeMessage(int $updated): string
     {
-        if ($updated === 0) {
-            return $mismatched > 0
-                ? 'Ningún movimiento actualizado: esa categoría no corresponde al tipo de los seleccionados.'
-                : 'Ningún movimiento actualizado.';
-        }
-
-        $done = $updated === 1 ? '1 movimiento actualizado' : "$updated movimientos actualizados";
-
-        if ($mismatched === 0) {
-            return $done . '.';
-        }
-
-        return $mismatched === 1
-            ? "$done. 1 omitido por no coincidir el tipo."
-            : "$done. $mismatched omitidos por no coincidir el tipo.";
+        return match ($updated) {
+            0       => 'Ningún movimiento actualizado.',
+            1       => '1 movimiento actualizado.',
+            default => "$updated movimientos actualizados.",
+        };
     }
 
     #[Route('/bulk-delete', name: 'bulk_delete', methods: ['POST'])]

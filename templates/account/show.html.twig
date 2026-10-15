@@ -124,15 +124,8 @@
                         <i class="fa-solid fa-tags fa-lg text-body-secondary"></i>
                     </div>
                     <div class="min-w-0">
-                        {% set categoryCount = categoryIncomeCount + categoryExpenseCount %}
                         <h5 class="mb-0 fw-semibold">Categorías</h5>
-                        <small class="text-muted">
-                            {{ categoryCount }} en total 
-                            (
-                                <span class="text-success">{{ categoryIncomeCount }} de ingresos</span>,
-                                <span class="text-danger">{{ categoryExpenseCount }} de gastos</span>
-                            )
-                        </small>
+                        <small class="text-muted">{{ categoryCount }} en total</small>
                     </div>
                 </div>
                 <p class="text-muted mb-0">Ver y modificar las categorías asociadas a esta cuenta.</p>

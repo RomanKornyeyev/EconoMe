@@ -116,7 +116,7 @@
                         <option value="" {{ not currentCategory ? 'selected' : '' }}>Todas las categorías</option>
                         <option value="-1" {{ currentCategory == -1 ? 'selected' : '' }}>Sin categoría</option>
                         {% for cat in categories %}
-                            <option value="{{ cat.id }}" data-cat-type="{{ cat.type }}"
+                            <option value="{{ cat.id }}" data-used-as="{{ (categoryTypes[cat.id] ?? [])|join(' ') }}"
                                     {{ cat.id == currentCategory ? 'selected' : '' }}>{{ cat.name }}</option>
                         {% endfor %}
                     </select>
@@ -151,8 +151,8 @@
 (function () {
     function filterCats(type) {
         const catSelect = document.getElementById('f-category');
-        catSelect.querySelectorAll('option[data-cat-type]').forEach(function (opt) {
-            const matches = !type || opt.dataset.catType === type;
+        catSelect.querySelectorAll('option[data-used-as]').forEach(function (opt) {
+            const matches = !type || opt.dataset.usedAs.split(' ').includes(type);
             opt.hidden = !matches;
             opt.disabled = !matches;
         });

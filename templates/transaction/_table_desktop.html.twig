@@ -188,24 +188,12 @@
 				</p>
 				<select class="form-select" data-bulk-select-target="categorySelect" aria-label="Categoría">
 					<option value="">Sin categoría</option>
-					<optgroup label="Gastos">
-						{% for cat in categories|filter(c => c.type == 'expense') %}
-							<option value="{{ cat.id }}">{{ cat.name }}</option>
-						{% endfor %}
-					</optgroup>
-					<optgroup label="Ingresos">
-						{% for cat in categories|filter(c => c.type == 'income') %}
-							<option value="{{ cat.id }}">{{ cat.name }}</option>
-						{% endfor %}
-					</optgroup>
+					{# Lista plana: la selección puede mezclar gastos e ingresos, y
+					   cualquier categoría vale para ambos. #}
+					{% for cat in categories %}
+						<option value="{{ cat.id }}">{{ cat.name }}</option>
+					{% endfor %}
 				</select>
-				{# Las categorías están tipadas, así que la selección puede mezclar gastos
-				   e ingresos y no todos encajar. El servidor omite los que no casan y lo
-				   dice en el flash; avisarlo aquí evita la sorpresa. #}
-				<p class="text-muted mt-2 mb-0" style="font-size:12px">
-					<i class="fa-solid fa-circle-info me-1"></i>Los movimientos cuyo tipo (ingreso/gasto) no
-					corresponda a la categoría elegida se dejarán como están.
-				</p>
 			</div>
 			<div class="modal-footer border-0 pt-0">
 				<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>

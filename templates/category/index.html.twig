@@ -49,9 +49,6 @@
         <span>Esta es tu plantilla de categorías. Podrás usarlas para tus nuevas cuentas.</span>
     </div>
 
-    {% set tplExpenses = templates|filter(t => t.type == 'expense') %}
-    {% set tplIncomes  = templates|filter(t => t.type == 'income') %}
-
     {% if templates is empty %}
         <div class="text-center py-5">
             <i class="fa-solid fa-layer-group fa-3x text-muted mb-3"></i>
@@ -62,87 +59,45 @@
         </div>
     {% else %}
         <div class="row g-3">
-            {% if tplExpenses is not empty %}
-                <div class="col-12 col-md-6">
-                    <div class="card shadow border">
-                        <div class="card-header bg-body-tertiary border-bottom">
-                            <h6 class="mb-0 text-danger"><i class="fa-solid fa-arrow-trend-down me-2"></i>Gastos</h6>
-                        </div>
-                        <ul class="list-group list-group-flush">
-                            {% for tpl in tplExpenses %}
-                                <li class="list-group-item d-flex align-items-center justify-content-between">
-                                    <div class="d-flex align-items-center gap-2">
-                                        {% if tpl.color %}
-                                            <span class="rounded-circle d-inline-block" style="width:12px;height:12px;background:{{ tpl.color }}"></span>
-                                        {% endif %}
-                                        <span>{{ tpl.name }}</span>
-                                    </div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <a href="{{ path('category_template_edit', {id: tpl.id}) }}" class="btn btn-sm btn-outline-primary py-0 px-1">
-                                            <i class="fa-solid fa-pen"></i>
-                                        </a>
-                                        <form method="post" action="{{ path('category_template_delete', {id: tpl.id}) }}" class="d-flex"
-                                              data-controller="confirm"
-                                              data-action="submit->confirm#submit"
-                                              data-confirm-message-value="¿Eliminar la plantilla «{{ tpl.name }}»?"
-                                              data-confirm-text-value="Eliminar">
-                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tpl.id) }}">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1">
-                                                <i class="fa-solid fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </li>
-                            {% endfor %}
-                        </ul>
+            <div class="col-12 col-md-8 col-lg-6">
+                <div class="card shadow border">
+                    <div class="card-header bg-body-tertiary border-bottom">
+                        <h6 class="mb-0"><i class="fa-solid fa-layer-group me-2"></i>{{ templates|length }} {{ templates|length == 1 ? 'categoría' : 'categorías' }}</h6>
                     </div>
+                    <ul class="list-group list-group-flush">
+                        {% for tpl in templates %}
+                            <li class="list-group-item d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if tpl.color %}
+                                        <span class="rounded-circle d-inline-block" style="width:12px;height:12px;background:{{ tpl.color }}"></span>
+                                    {% endif %}
+                                    <span>{{ tpl.name }}</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <a href="{{ path('category_template_edit', {id: tpl.id}) }}" class="btn btn-sm btn-outline-primary py-0 px-1">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </a>
+                                    <form method="post" action="{{ path('category_template_delete', {id: tpl.id}) }}" class="d-flex"
+                                          data-controller="confirm"
+                                          data-action="submit->confirm#submit"
+                                          data-confirm-message-value="¿Eliminar la plantilla «{{ tpl.name }}»?"
+                                          data-confirm-text-value="Eliminar">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tpl.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
                 </div>
-            {% endif %}
-
-            {% if tplIncomes is not empty %}
-                <div class="col-12 col-md-6">
-                    <div class="card shadow border">
-                        <div class="card-header bg-body-tertiary border-bottom">
-                            <h6 class="mb-0 text-success"><i class="fa-solid fa-arrow-trend-up me-2"></i>Ingresos</h6>
-                        </div>
-                        <ul class="list-group list-group-flush">
-                            {% for tpl in tplIncomes %}
-                                <li class="list-group-item d-flex align-items-center justify-content-between">
-                                    <div class="d-flex align-items-center gap-2">
-                                        {% if tpl.color %}
-                                            <span class="rounded-circle d-inline-block" style="width:12px;height:12px;background:{{ tpl.color }}"></span>
-                                        {% endif %}
-                                        <span>{{ tpl.name }}</span>
-                                    </div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <a href="{{ path('category_template_edit', {id: tpl.id}) }}" class="btn btn-sm btn-outline-primary py-0 px-1">
-                                            <i class="fa-solid fa-pen"></i>
-                                        </a>
-                                        <form method="post" action="{{ path('category_template_delete', {id: tpl.id}) }}" class="d-flex"
-                                              data-controller="confirm"
-                                              data-action="submit->confirm#submit"
-                                              data-confirm-message-value="¿Eliminar la plantilla «{{ tpl.name }}»?"
-                                              data-confirm-text-value="Eliminar">
-                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tpl.id) }}">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1">
-                                                <i class="fa-solid fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-            {% endif %}
+            </div>
         </div>
     {% endif %}
 
 {# ── Vista: categorías de cuenta ─────────────────────────────────────────── #}
 {% else %}
-
-    {% set expenses = categories|filter(c => c.type == 'expense') %}
-    {% set incomes  = categories|filter(c => c.type == 'income') %}
 
     {% if categories is empty %}
         <div class="text-center py-5">
@@ -157,86 +112,45 @@
     {% else %}
         <div class="row g-3"
              data-tour-step="3"
-             data-tour-title="Gastos e ingresos"
-             data-tour-text="Tus categorías, separadas por tipo. Al crear movimientos podrás asignarles una categoría y así ver en qué se te va el dinero."
+             data-tour-title="Tus categorías"
+             data-tour-text="Una misma categoría sirve para gastos y para ingresos. Al crear movimientos podrás asignarles una y así ver en qué se te va el dinero y de dónde entra."
              data-tour-side="top">
-            {% if expenses is not empty %}
-                <div class="col-12 col-md-6">
-                    <div class="card shadow border">
-                        <div class="card-header bg-body-tertiary border-bottom">
-                            <h6 class="mb-0 text-danger"><i class="fa-solid fa-arrow-trend-down me-2"></i>Gastos</h6>
-                        </div>
-                        <ul class="list-group list-group-flush">
-                            {% for cat in expenses %}
-                                <li class="list-group-item d-flex align-items-center justify-content-between">
-                                    <div class="d-flex align-items-center gap-2">
-                                        {% if cat.color %}
-                                            <span class="rounded-circle d-inline-block" style="width:12px;height:12px;background:{{ cat.color }}"></span>
-                                        {% endif %}
-                                        <span>{{ cat.name }}</span>
-                                    </div>
-                                    {% if is_granted('ACCOUNT_EDIT', currentAccount) %}
-                                        <div class="d-flex align-items-center gap-2">
-                                            <a href="{{ path('category_edit', {id: cat.id}) }}" class="btn btn-sm btn-outline-primary py-0 px-1">
-                                                <i class="fa-solid fa-pen"></i>
-                                            </a>
-                                            <form method="post" action="{{ path('category_delete', {id: cat.id}) }}" class="d-flex"
-                                                  data-controller="confirm"
-                                                  data-action="submit->confirm#submit"
-                                                  data-confirm-message-value="¿Eliminar la categoría «{{ cat.name }}»?"
-                                                  data-confirm-text-value="Eliminar">
-                                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cat.id) }}">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1">
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    {% endif %}
-                                </li>
-                            {% endfor %}
-                        </ul>
+            <div class="col-12 col-md-8 col-lg-6">
+                <div class="card shadow border">
+                    <div class="card-header bg-body-tertiary border-bottom">
+                        <h6 class="mb-0"><i class="fa-solid fa-tags me-2"></i>{{ categories|length }} {{ categories|length == 1 ? 'categoría' : 'categorías' }}</h6>
                     </div>
-                </div>
-            {% endif %}
-
-            {% if incomes is not empty %}
-                <div class="col-12 col-md-6">
-                    <div class="card shadow border">
-                        <div class="card-header bg-body-tertiary border-bottom">
-                            <h6 class="mb-0 text-success"><i class="fa-solid fa-arrow-trend-up me-2"></i>Ingresos</h6>
-                        </div>
-                        <ul class="list-group list-group-flush">
-                            {% for cat in incomes %}
-                                <li class="list-group-item d-flex align-items-center justify-content-between">
-                                    <div class="d-flex align-items-center gap-2">
-                                        {% if cat.color %}
-                                            <span class="rounded-circle d-inline-block" style="width:12px;height:12px;background:{{ cat.color }}"></span>
-                                        {% endif %}
-                                        <span>{{ cat.name }}</span>
-                                    </div>
-                                    {% if is_granted('ACCOUNT_EDIT', currentAccount) %}
-                                        <div class="d-flex align-items-center gap-2">
-                                            <a href="{{ path('category_edit', {id: cat.id}) }}" class="btn btn-sm btn-outline-primary py-0 px-1">
-                                                <i class="fa-solid fa-pen"></i>
-                                            </a>
-                                            <form method="post" action="{{ path('category_delete', {id: cat.id}) }}" class="d-flex"
-                                                  data-controller="confirm"
-                                                  data-action="submit->confirm#submit"
-                                                  data-confirm-message-value="¿Eliminar la categoría «{{ cat.name }}»?"
-                                                  data-confirm-text-value="Eliminar">
-                                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cat.id) }}">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1">
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
+                    <ul class="list-group list-group-flush">
+                        {% for cat in categories %}
+                            <li class="list-group-item d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if cat.color %}
+                                        <span class="rounded-circle d-inline-block" style="width:12px;height:12px;background:{{ cat.color }}"></span>
                                     {% endif %}
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
+                                    <span>{{ cat.name }}</span>
+                                </div>
+                                {% if is_granted('ACCOUNT_EDIT', currentAccount) %}
+                                    <div class="d-flex align-items-center gap-2">
+                                        <a href="{{ path('category_edit', {id: cat.id}) }}" class="btn btn-sm btn-outline-primary py-0 px-1">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </a>
+                                        <form method="post" action="{{ path('category_delete', {id: cat.id}) }}" class="d-flex"
+                                              data-controller="confirm"
+                                              data-action="submit->confirm#submit"
+                                              data-confirm-message-value="¿Eliminar la categoría «{{ cat.name }}»?"
+                                              data-confirm-text-value="Eliminar">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cat.id) }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
                 </div>
-            {% endif %}
+            </div>
         </div>
     {% endif %}
 

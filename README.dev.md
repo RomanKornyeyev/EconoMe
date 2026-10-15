@@ -140,6 +140,8 @@ vez de despachar un evento que escuchan los dos.
 
 Las categorías están tipadas, así que una selección mixta no puede recibir todas la misma: los movimientos cuyo tipo no casa **se omiten y se cuentan** en el flash. Colarlas descuadraría los gráficos; omitirlas en silencio sería mentir.
 
+> **Desde v1.5.2 ya no aplica.** Las categorías dejaron de tener tipo: el tipo es del movimiento y una misma categoría vale para gastos e ingresos, así que categorizar en bloque ya no omite nada. Donde hace falta saber con qué tipos se usa una categoría (agrupar el desplegable, ocultar opciones en los filtros) se deduce del historial con `CategoryUsage`.
+
 ### El modal de alta, también en Movimientos
 
 Era la página donde uno se sienta a meter un extracto y era la única que mandaba al formulario de página completa. Salió casi gratis porque el dashboard y el listado ya compartían los mismos partials.

@@ -198,10 +198,15 @@ export default class extends Controller {
 
   // ── Categorías según el tipo ──────────────────────────────────────────
 
+  /**
+   * Con un tipo elegido, oculta las categorías sin ningún movimiento de ese
+   * tipo: filtrar por ellas daría siempre cero resultados. `data-used-as` lo
+   * pinta el servidor a partir del historial (ver CategoryUsage).
+   */
   #filterCategories() {
     const type = this.typeTarget.value;
-    for (const option of this.categoryTarget.querySelectorAll('option[data-cat-type]')) {
-      const matches = !type || option.dataset.catType === type;
+    for (const option of this.categoryTarget.querySelectorAll('option[data-used-as]')) {
+      const matches = !type || option.dataset.usedAs.split(' ').includes(type);
       option.hidden = !matches;
       option.disabled = !matches;
     }

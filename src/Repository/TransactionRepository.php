@@ -266,6 +266,35 @@ class TransactionRepository extends ServiceEntityRepository
     }
 
     /**
+     * Tipos de movimiento (gasto/ingreso) con los que se ha usado cada categoría
+     * de la cuenta, en todo el historial.
+     *
+     * Las categorías no tienen tipo propio: el tipo es del movimiento, y una
+     * misma categoría puede tener gastos e ingresos. Las que aún no tienen
+     * movimientos no aparecen.
+     *
+     * @return array<int, list<string>> id de categoría => tipos usados
+     */
+    public function findCategoryTypes(Account $account): array
+    {
+        $rows = $this->createQueryBuilder('t')
+            ->select('IDENTITY(t.category) AS categoryId', 't.type AS type')
+            ->where('t.account = :account')
+            ->andWhere('t.category IS NOT NULL')
+            ->setParameter('account', $account)
+            ->groupBy('t.category', 't.type')
+            ->getQuery()
+            ->getArrayResult();
+
+        $types = [];
+        foreach ($rows as $row) {
+            $types[(int) $row['categoryId']][] = $row['type'];
+        }
+
+        return $types;
+    }
+
+    /**
      * Meses distintos (1-12) en los que hay transacciones para una cuenta y año dados.
      */
     public function findMonthsWithTransactions(Account $account, int $year): array

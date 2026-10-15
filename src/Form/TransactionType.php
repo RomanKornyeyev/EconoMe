@@ -6,6 +6,7 @@ use App\Entity\Account;
 use App\Entity\Category;
 use App\Entity\Transaction;
 use App\Repository\CategoryRepository;
+use App\Service\CategoryUsage;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -18,6 +19,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class TransactionType extends AbstractType
 {
+    public function __construct(
+        private CategoryUsage $categoryUsage,
+    ) {}
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         // Atributos Stimulus para la sugerencia de categoría (solo al insertar).
@@ -26,7 +31,9 @@ class TransactionType extends AbstractType
         $suggest = $options['suggest'];
         $nameAttr = ['class' => 'form-control'];
         $typeAttr = [];
-        $categoryAttr = [];
+        // category-order agrupa las categorías según el tipo elegido (ver
+        // category_order_controller.js); va con o sin sugerencia.
+        $categoryAttr = ['data-controller' => 'category-order'];
         if ($suggest) {
             $nameAttr += [
                 'data-category-suggest-target' => 'name',
@@ -77,12 +84,13 @@ class TransactionType extends AbstractType
                     return $repo->createQueryBuilder('c')
                         ->where('c.account = :account')
                         ->setParameter('account', $options['account'])
-                        ->orderBy('c.type', 'ASC')
-                        ->addOrderBy('c.name', 'ASC');
+                        ->orderBy('c.name', 'ASC');
                 },
-                'group_by' => function (Category $category) {
-                    return $category->getType() === 'expense' ? 'Gastos' : 'Ingresos';
-                },
+                // Tipos con los que se ha usado cada categoría. Solo se calcula
+                // al pintar el campo, no al procesar un envío.
+                'choice_attr' => fn (Category $category) => [
+                    'data-used-as' => $this->categoryUsage->usedAs($options['account'], $category->getId()),
+                ],
             ])
             ->add('date', DateType::class, [
                 'label' => 'Fecha',

@@ -304,6 +304,11 @@ export default class extends Controller {
 
     select.value = value;
 
+    // Mismo motivo: las categorías se reagrupan por tipo sin pasar por `change`.
+    // Si category-order aún no ha cargado, leerá el tipo nuevo al conectar.
+    const category = this.#field('category');
+    category && this.application.getControllerForElementAndIdentifier(category, 'category-order')?.reorder();
+
     const group = select.closest('[data-controller~="amount-type"]');
     const segmented = group && this.application.getControllerForElementAndIdentifier(group, 'amount-type');
 
