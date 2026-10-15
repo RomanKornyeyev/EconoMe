@@ -16,9 +16,6 @@ class Category
 {
     use TimestampableEntity;
 
-    public const TYPE_EXPENSE = 'expense';
-    public const TYPE_INCOME = 'income';
-
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: "integer")]
@@ -42,10 +39,6 @@ class Category
 
     #[ORM\Column(type: "string", length: 7, nullable: true)]
     private ?string $color = null;
-
-    #[ORM\Column(type: "string", length: 10)]
-    #[Assert\Choice(choices: [self::TYPE_EXPENSE, self::TYPE_INCOME])]
-    private string $type = self::TYPE_EXPENSE;
 
     public function __construct(Account $account)
     {
@@ -103,17 +96,6 @@ class Category
     public function setColor(?string $color): self
     {
         $this->color = $color;
-        return $this;
-    }
-
-    public function getType(): string
-    {
-        return $this->type;
-    }
-
-    public function setType(string $type): self
-    {
-        $this->type = $type;
         return $this;
     }
 }

@@ -8,30 +8,32 @@ use Doctrine\ORM\EntityManagerInterface;
 
 class CategoryTemplateSeeder
 {
-    private const EXPENSE_TEMPLATES = [
-        ['name' => 'Alquiler / hipoteca', 'color' => '#26A69A'],
-        ['name' => 'Seguros', 'color' => '#3F51B5'],
-        ['name' => 'Hogar', 'color' => '#8BC34A'],
+    private const TEMPLATES = [
+        // Gastos (comunmente)
         ['name' => 'Alimentación', 'color' => '#4CAF50'],
-        ['name' => 'Transporte', 'color' => '#2196F3'],
+        ['name' => 'Hipoteca / alquiler', 'color' => '#26A69A'],
+        ['name' => 'Hogar', 'color' => '#8BC34A'],
+        ['name' => 'Informática /cloud', 'color' => '#007495'],
+        ['name' => 'Internet / móvil', 'color' => '#2dd4bf'],
+        ['name' => 'Luz / agua / gas', 'color' => '#0000df'],
+        ['name' => 'Ocio', 'color' => '#e879f9'],
+        ['name' => 'Regalos', 'color' => '#7E57C2'],
+        ['name' => 'Restaurantes / delivery', 'color' => '#e91e63'],
         ['name' => 'Ropa', 'color' => '#9C27B0'],
-        
-        ['name' => 'Restaurantes / Ocio', 'color' => '#E91E63'],
-        ['name' => 'Suscripciones', 'color' => '#00BCD4'],
-        ['name' => 'Viajes', 'color' => '#FF5722'],
-
         ['name' => 'Salud', 'color' => '#F44336'],
+        ['name' => 'Seguros', 'color' => '#3F51B5'],
+        ['name' => 'Suscripciones', 'color' => '#00BCD4'],
+        ['name' => 'Transporte', 'color' => '#2196F3'],
+        ['name' => 'Vacaciones / viajes', 'color' => '#FF5722'],
         ['name' => 'Educación', 'color' => '#FF9800'],
         ['name' => 'Mascotas', 'color' => '#FFC107'],
-        ['name' => 'Regalos', 'color' => '#7E57C2'],
-
-        ['name' => 'Otros', 'color' => '#9E9E9E'],
-    ];
-
-    private const INCOME_TEMPLATES = [
+        
+        // Ingresos (comunmente)
         ['name' => 'Nómina', 'color' => '#4CAF50'],
         ['name' => 'Freelance', 'color' => '#2196F3'],
         ['name' => 'Inversiones', 'color' => '#FF9800'],
+
+        // Mixtas
         ['name' => 'Otros', 'color' => '#9E9E9E'],
     ];
 
@@ -45,19 +47,10 @@ class CategoryTemplateSeeder
      */
     public function seedForUser(User $user): void
     {
-        foreach (self::EXPENSE_TEMPLATES as $data) {
+        foreach (self::TEMPLATES as $data) {
             $template = new CategoryTemplate($user);
             $template->setName($data['name']);
             $template->setColor($data['color']);
-            $template->setType(CategoryTemplate::TYPE_EXPENSE);
-            $this->em->persist($template);
-        }
-
-        foreach (self::INCOME_TEMPLATES as $data) {
-            $template = new CategoryTemplate($user);
-            $template->setName($data['name']);
-            $template->setColor($data['color']);
-            $template->setType(CategoryTemplate::TYPE_INCOME);
             $this->em->persist($template);
         }
     }

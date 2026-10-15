@@ -6,7 +6,7 @@
         "changes": [
             {
                 "type": "info",
-                "text": "Las categorías ya sirven tanto para gastos como para ingresos."
+                "text": "Las categorías ya sirven tanto para gastos como para ingresos, y al crearlas ya no hay que elegir tipo."
             }
         ]
     },

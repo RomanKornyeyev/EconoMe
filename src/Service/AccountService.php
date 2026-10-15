@@ -52,7 +52,6 @@ class AccountService
             $category = new Category($account);
             $category->setName($template->getName());
             $category->setColor($template->getColor());
-            $category->setType($template->getType());
             $this->em->persist($category);
         }
     }
