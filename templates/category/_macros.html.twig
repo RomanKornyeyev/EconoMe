@@ -1,0 +1,39 @@
+{#
+    Piezas de las categorías que comparten el listado y el resumen (modal «Ver»).
+
+    Uso:
+        {% import 'category/_macros.html.twig' as cat %}
+        {{ cat.avatar(category.name, category.color) }}
+        {{ cat.used_as(usage[category.id] ?? []) }}
+#}
+
+{# Cuadrado con la inicial sobre el color de la categoría. El color del texto se
+   calcula para que se lea sobre cualquier color, también uno personalizado. Sin
+   color, los neutros del tema. #}
+{% macro avatar(name, color, size = '2rem') %}
+    <span class="category-avatar"
+          style="--category-avatar-size: {{ size }};{% if color %} background-color: {{ color }}; color: {{ color|contrast_text }};{% endif %}"
+          aria-hidden="true">{{ name|first|upper }}</span>
+{%- endmacro %}
+
+{# Tipos de movimiento con los que se ha usado la categoría. counts: nº de
+   movimientos por tipo, de CategoryUsage::countsByCategory(). #}
+{% macro used_as(counts) %}
+    {% if (counts.expense ?? 0) > 0 or (counts.income ?? 0) > 0 %}
+        <span class="d-inline-flex flex-wrap gap-1">
+            {% if (counts.expense ?? 0) > 0 %}
+                <span class="badge rounded-pill bg-danger-subtle text-danger fw-normal">Gastos</span>
+            {% endif %}
+            {% if (counts.income ?? 0) > 0 %}
+                <span class="badge rounded-pill bg-success-subtle text-success fw-normal">Ingresos</span>
+            {% endif %}
+        </span>
+    {% else %}
+        <span class="small text-body-secondary">Sin uso aún</span>
+    {% endif %}
+{%- endmacro %}
+
+{# Importe con signo según el tipo, en el formato del resto de la app. #}
+{% macro amount(value, type, symbol = '') %}
+    {{- type == 'expense' ? '-' : '+' }}{{ value|number_format(2, ',', '.') }}{{ symbol ? ' ' ~ symbol -}}
+{% endmacro %}

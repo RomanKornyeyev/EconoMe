@@ -1,9 +1,13 @@
 [
     {
         "version": "v1.5.2",
-        "date": "2026-10-15",
-        "title": "Categorías para gastos e ingresos",
+        "date": "2026-10-19",
+        "title": "Categorías renovadas",
         "changes": [
+            {
+                "type": "improvement",
+                "text": "Nueva vista de categorías: resumen de cada una y crear/editar sin salir de la página."
+            },
             {
                 "type": "info",
                 "text": "Las categorías ya sirven tanto para gastos como para ingresos, y al crearlas ya no hay que elegir tipo."

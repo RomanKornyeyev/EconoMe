@@ -1,5 +1,13 @@
 {% extends 'base.html.twig' %}
 
+{#
+    EN DESUSO. Crear y editar categorías (y plantillas) se hace ahora en un modal:
+    category/_form.html.twig + category_modal_controller.js. Esta vista no se
+    borra porque sigue siendo el destino de los <a href> que el modal intercepta:
+    cubre URLs guardadas, el uso sin JavaScript y el fallback si el AJAX falla.
+    Si cambias los campos del formulario, cambia también el modal.
+#}
+
 {% set entity = isTemplateView ? template : category %}
 {% if isTemplateView %}
     {% set heading = isNew ? 'Nueva categoría (mi plantilla)' : 'Editar plantilla' %}

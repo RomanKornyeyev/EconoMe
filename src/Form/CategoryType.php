@@ -9,6 +9,11 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * Se pinta en dos sitios: el modal (category/_form.html.twig, el que se usa) y
+ * la vista de página completa category/edit.html.twig, EN DESUSO pero viva como
+ * fallback. Si añades o quitas un campo, toca las dos plantillas.
+ */
 class CategoryType extends AbstractType
 {
     /** Paleta de 12 colores para el selector de categorías (JSON para el controlador Stimulus). */
@@ -20,6 +25,9 @@ class CategoryType extends AbstractType
             ->add('name', TextType::class, [
                 'label' => 'Nombre',
                 'attr' => ['placeholder' => 'Ej: Alimentación, Nómina...'],
+                // Vacío llega como '' y no como null: así lo frena el NotBlank de
+                // la entidad con su mensaje, en vez de reventar en setName(string).
+                'empty_data' => '',
             ])
             ->add('color', ColorType::class, [
                 'label' => 'Color',

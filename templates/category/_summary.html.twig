@@ -1,0 +1,89 @@
+{#
+  Partial AJAX: resumen de una categoría (modal «Ver»). Devuelve el contenido
+  entero del modal (cabecera, cuerpo), inyectado en #categoryModal por
+  category_modal_controller.js.
+
+  Variables:
+    - category:    Category
+    - counts:      nº de movimientos por tipo en todo el historial ({expense, income})
+    - totalCount:  nº total de movimientos
+    - monthTotals: importe y nº por tipo en el mes en curso ({expense: {total, count}, …})
+    - monthCount:  nº de movimientos en el mes en curso
+    - latest:      Transaction[] últimos movimientos
+    - canEdit:     bool (ACCOUNT_EDIT sobre la cuenta)
+#}
+{% import 'category/_macros.html.twig' as cat %}
+{% set symbol = {EUR: '€', USD: '$', GBP: '£'}[category.account.currency] ?? category.account.currency %}
+
+<div class="modal-header align-items-center gap-3 p-4">
+    {{ cat.avatar(category.name, category.color, '3.5rem') }}
+    <div class="min-w-0">
+        <h5 class="modal-title fw-semibold text-break mb-1" id="categoryModalLabel">{{ category.name }}</h5>
+        {{ cat.used_as(counts) }}
+    </div>
+    <div class="d-flex align-items-center gap-3 ms-auto align-self-start">
+        {% if canEdit %}
+            {# Mismo modal: el controlador cambia el resumen por el formulario. Sin JS,
+               navega a la vista de página completa. #}
+            <a href="{{ path('category_edit', {id: category.id}) }}" class="btn btn-sm btn-outline-primary text-nowrap"
+               data-action="category-modal#form">
+                <i class="fa-solid fa-pen me-1"></i>Editar
+            </a>
+        {% endif %}
+        <button type="button" class="btn-close m-0" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+    </div>
+</div>
+
+<div class="modal-body p-4">
+    {# Mes en curso. Si hay gastos e ingresos, las dos cifras: sumarlas en un neto
+       mezclaría cosas distintas. #}
+    <div class="row g-2 mb-4">
+        <div class="col-6">
+            <div class="bg-body-secondary rounded-3 px-3 py-3 h-100">
+                <div class="small text-body-secondary mb-1">Este mes</div>
+                {% set both = monthTotals.expense is defined and monthTotals.income is defined %}
+                {% for type in ['expense', 'income'] %}
+                    {% if monthTotals[type] is defined %}
+                        <div class="{{ both ? 'fs-6' : 'fs-4' }} fw-semibold text-nowrap {{ type == 'expense' ? 'text-danger' : 'text-success' }}">
+                            {{ cat.amount(monthTotals[type].total, type, symbol) }}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+                {% if monthTotals is empty %}
+                    <div class="fs-4 fw-semibold text-body-secondary text-nowrap">0,00 {{ symbol }}</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="bg-body-secondary rounded-3 px-3 py-3 h-100">
+                <div class="small text-body-secondary mb-1">Movimientos este mes</div>
+                <div class="fs-4 fw-semibold">{{ monthCount }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="small text-body-secondary mb-2">Últimos movimientos</div>
+    {% if latest is empty %}
+        <p class="text-body-secondary mb-0">Todavía no hay movimientos con esta categoría.</p>
+    {% else %}
+        <ul class="list-unstyled mb-0">
+            {% for tx in latest %}
+                <li class="d-flex justify-content-between align-items-start gap-3 py-2 {{ not loop.last ? 'border-bottom' }}">
+                    <div class="min-w-0">
+                        <div class="text-truncate">{{ tx.name }}</div>
+                        <div class="small text-body-secondary">{{ tx.date|date('d/m/Y') }}</div>
+                    </div>
+                    <div class="fw-semibold text-nowrap {{ tx.isExpense() ? 'text-danger' : 'text-success' }}">
+                        {{ cat.amount(tx.amount, tx.type) }}
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+
+        {# Escala en category_transactions, que deja el flash de «Filtrados…» #}
+        <a href="{{ path('category_transactions', {id: category.id}) }}"
+           class="btn btn-primary w-100 mt-4">
+            Ver todos los movimientos ({{ totalCount|number_format(0, ',', '.') }})
+        </a>
+    {% endif %}
+</div>

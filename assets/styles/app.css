@@ -39,6 +39,52 @@ body {
     border-style: dashed;
 }
 
+/* ── Categorías ───────────────────────────────────────────────────────────── */
+/* Inicial sobre el color de la categoría (category/_macros.html.twig). El fondo
+   y el color del texto llegan inline; sin color, los neutros del tema. */
+.category-avatar {
+    --category-avatar-size: 2rem;
+    width: var(--category-avatar-size);
+    height: var(--category-avatar-size);
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: calc(var(--category-avatar-size) * .25);
+    background-color: var(--bs-secondary-bg);
+    color: var(--bs-body-color);
+    font-size: calc(var(--category-avatar-size) * .45);
+    font-weight: 600;
+    line-height: 1;
+}
+
+/* Buscador del listado: la lupa va dentro del campo, no en un input-group, para
+   que fondo y borde se vean de una pieza */
+.category-search {
+    position: relative;
+    width: 100%;
+    max-width: 16rem;
+}
+
+.category-search__icon {
+    position: absolute;
+    top: 50%;
+    left: .65rem;
+    transform: translateY(-50%);
+    font-size: .8rem;
+    color: var(--bs-secondary-color);
+    cursor: text;
+}
+
+.category-search .form-control {
+    padding-left: 1.9rem;
+}
+
+/* Bootstrap no la trae: deja que un hijo flex se encoja y trunque su texto */
+.min-w-0 {
+    min-width: 0;
+}
+
 /* Destino del ancla de paginación: deja hueco para el navbar sticky */
 #table_transactions {
     scroll-margin-top: 90px;

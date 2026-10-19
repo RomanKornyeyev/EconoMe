@@ -1,0 +1,39 @@
+{#
+  Partial AJAX: formulario de crear/editar categoría o plantilla en el modal.
+  Devuelve el contenido entero del modal (el <form> con cabecera, cuerpo y pie),
+  inyectado en #categoryModal por category_modal_controller.js. Mismo diseño que
+  la vista de página completa category/edit.html.twig (en desuso): si cambias
+  los campos, cambia las dos.
+
+  Variables (CategoryController::formView()):
+    - form:     formulario CategoryType o CategoryTemplateType
+    - heading:  título
+    - subtitle: nombre de la categoría al editar (null al crear)
+    - isNew:    bool
+#}
+{{ form_start(form, {attr: {
+    class: 'needs-validation',
+    novalidate: 'novalidate',
+    'data-action': 'submit->category-modal#submit',
+}}) }}
+    <div class="modal-header px-4">
+        <div class="min-w-0">
+            <h5 class="modal-title mb-0" id="categoryModalLabel">{{ heading }}</h5>
+            {% if subtitle %}
+                <small class="text-body-secondary text-break">{{ subtitle }}</small>
+            {% endif %}
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+    </div>
+    <div class="modal-body p-4">
+        {# Errores del formulario entero, p. ej. el token CSRF caducado #}
+        {{ form_errors(form) }}
+        {{ form_row(form.name) }}
+        {{ form_row(form.color) }}
+    </div>
+    <div class="modal-footer justify-content-center">
+        <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-check me-1"></i>{{ isNew ? 'Crear' : 'Guardar cambios' }}
+        </button>
+    </div>
+{{ form_end(form) }}

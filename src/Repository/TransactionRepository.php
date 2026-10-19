@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Account;
+use App\Entity\Category;
 use App\Entity\RecurringTransaction;
 use App\Entity\Transaction;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -266,19 +267,19 @@ class TransactionRepository extends ServiceEntityRepository
     }
 
     /**
-     * Tipos de movimiento (gasto/ingreso) con los que se ha usado cada categoría
-     * de la cuenta, en todo el historial.
+     * Nº de movimientos de cada categoría de la cuenta por tipo (gasto/ingreso),
+     * en todo el historial.
      *
      * Las categorías no tienen tipo propio: el tipo es del movimiento, y una
      * misma categoría puede tener gastos e ingresos. Las que aún no tienen
      * movimientos no aparecen.
      *
-     * @return array<int, list<string>> id de categoría => tipos usados
+     * @return array<int, array{expense: int, income: int}> id de categoría => conteos
      */
-    public function findCategoryTypes(Account $account): array
+    public function countByCategoryAndType(Account $account): array
     {
         $rows = $this->createQueryBuilder('t')
-            ->select('IDENTITY(t.category) AS categoryId', 't.type AS type')
+            ->select('IDENTITY(t.category) AS categoryId', 't.type AS type', 'COUNT(t.id) AS cnt')
             ->where('t.account = :account')
             ->andWhere('t.category IS NOT NULL')
             ->setParameter('account', $account)
@@ -286,12 +287,60 @@ class TransactionRepository extends ServiceEntityRepository
             ->getQuery()
             ->getArrayResult();
 
-        $types = [];
+        $counts = [];
         foreach ($rows as $row) {
-            $types[(int) $row['categoryId']][] = $row['type'];
+            $id = (int) $row['categoryId'];
+            $counts[$id] ??= [Transaction::TYPE_EXPENSE => 0, Transaction::TYPE_INCOME => 0];
+            $counts[$id][$row['type']] = (int) $row['cnt'];
         }
 
-        return $types;
+        return $counts;
+    }
+
+    /**
+     * Importe total y nº de movimientos de una categoría por tipo en un rango de
+     * fechas. Para el resumen de la categoría («Este mes»).
+     *
+     * @return array<string, array{total: string, count: int}> tipo => totales;
+     *         los tipos sin movimientos en el rango no aparecen
+     */
+    public function totalsByTypeForCategory(Category $category, \DateTimeInterface $from, \DateTimeInterface $to): array
+    {
+        $rows = $this->createQueryBuilder('t')
+            ->select('t.type AS type', 'SUM(t.amount) AS total', 'COUNT(t.id) AS cnt')
+            ->where('t.category = :category')
+            ->andWhere('t.date >= :from')
+            ->andWhere('t.date <= :to')
+            ->setParameter('category', $category)
+            ->setParameter('from', $from)
+            ->setParameter('to', $to)
+            ->groupBy('t.type')
+            ->getQuery()
+            ->getArrayResult();
+
+        $totals = [];
+        foreach ($rows as $row) {
+            $totals[$row['type']] = ['total' => (string) $row['total'], 'count' => (int) $row['cnt']];
+        }
+
+        return $totals;
+    }
+
+    /**
+     * Últimos movimientos de una categoría, del más reciente al más antiguo.
+     *
+     * @return Transaction[]
+     */
+    public function findLatestByCategory(Category $category, int $limit): array
+    {
+        return $this->createQueryBuilder('t')
+            ->where('t.category = :category')
+            ->setParameter('category', $category)
+            ->orderBy('t.date', 'DESC')
+            ->addOrderBy('t.id', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
     }
 
     /**
