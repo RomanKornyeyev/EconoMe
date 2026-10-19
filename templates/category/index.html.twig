@@ -6,23 +6,47 @@
 {% import 'partials/macros/_tour.html.twig' as tour %}
 {% import 'category/_macros.html.twig' as cat %}
 
-{# Cuenta y plantilla comparten tabla. La plantilla no tiene movimientos: sin
-   columnas de uso ni «Ver», y siempre editable (es del propio usuario). #}
+{# Cuenta y plantilla comparten listado y flujo. La plantilla no tiene
+   movimientos: en escritorio, sin columnas de uso ni «Ver»; siempre editable
+   (es del propio usuario). #}
 {% set items   = isTemplateView ? templates : categories %}
 {% set canEdit = isTemplateView or is_granted('ACCOUNT_EDIT', currentAccount) %}
 {% set createUrl = isTemplateView
     ? path('category_template_create')
     : path('category_create', {account: currentAccount.id}) %}
+{% set listTourText = 'Una misma categoría sirve para gastos y para ingresos. Aquí ves en cuáles la has usado y cuántos movimientos tiene.' %}
+{% set createTourText = 'Añade las categorías que necesites para clasificar tus gastos e ingresos.' %}
 
-<div {{ tour.attrs('categories', not isTemplateView) }}>
+{# pb-5 en móvil: el FAB flota sobre el final de la página. #}
+<div class="pb-5 pb-md-0" {{ tour.attrs('categories', not isTemplateView) }}>
 {# Crear, editar y ver abren #categoryModal (category_modal_controller.js). No
    hay vista de página completa: el formulario solo vive en el modal. #}
 <div data-controller="category-modal">
 
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-    <div class="d-flex align-items-center gap-2">
-        <h4 class="mb-0">Categorías</h4>
+{# Cabecera. En escritorio, una fila: título, cuenta y, al otro extremo, las
+   acciones. En móvil, dos: título y ayuda; debajo, la cuenta a todo el ancho.
+   Mismo reparto que en movimientos (order-* y .tx-header__account). #}
+<div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+    <h1 class="mb-0 h2 me-1">Categorías</h1>
 
+    <div class="order-1 order-md-2 ms-auto d-flex align-items-center gap-2">
+        {# En móvil este botón lo sustituye el FAB del final de la página. #}
+        {% if canEdit %}
+            <button type="button" class="btn btn-primary btn-sm d-none d-md-inline-flex align-items-center"
+                    data-action="category-modal#form"
+                    data-category-modal-url-param="{{ createUrl }}"
+                    {% if not isTemplateView %}
+                    data-tour-step="2"
+                    data-tour-title="Crea categorías"
+                    data-tour-text="{{ createTourText }}"
+                    {% endif %}>
+                <i class="fa-solid fa-plus me-1"></i>{{ isTemplateView ? 'Nueva categoría (plantilla)' : 'Nueva categoría' }}
+            </button>
+        {% endif %}
+        {{ tour.help_button() }}
+    </div>
+
+    <div class="tx-header__account order-2 order-md-1">
         {% include 'partials/_account_selector.html.twig' with {
             accounts: accounts,
             current: isTemplateView ? null : currentAccount,
@@ -30,26 +54,11 @@
             route: 'category_index',
             withTemplateItem: true,
             withCreateItem: false,
+            groupClass: 'w-100',
             tourStep: 1,
             tourTitle: 'Cuenta o plantilla',
             tourText: 'Cada cuenta tiene sus propias categorías. Además, dispones de «Mi plantilla»: un juego personal de categorías que puedes aplicar al crear cuentas nuevas.',
         } only %}
-    </div>
-
-    <div class="d-flex align-items-center gap-2">
-        {% if canEdit %}
-            <button type="button" class="btn btn-primary btn-sm"
-                    data-action="category-modal#form"
-                    data-category-modal-url-param="{{ createUrl }}"
-                    {% if not isTemplateView %}
-                    data-tour-step="2"
-                    data-tour-title="Crea categorías"
-                    data-tour-text="Añade las categorías que necesites para clasificar tus gastos e ingresos."
-                    {% endif %}>
-                <i class="fa-solid fa-plus me-1"></i>{{ isTemplateView ? 'Nueva categoría (plantilla)' : 'Nueva categoría' }}
-            </button>
-        {% endif %}
-        {{ tour.help_button() }}
     </div>
 </div>
 
@@ -73,11 +82,54 @@
         {% endif %}
     </div>
 {% else %}
-    <div class="card shadow-sm border" data-controller="table-filter"
+<div data-controller="table-filter">
+
+    {# ── Móvil (< md): buscador y lista; tocar una fila abre el resumen ──── #}
+    <div class="d-md-none">
+        <div class="tx-search mb-3">
+            <i class="fa-solid fa-magnifying-glass tx-search__icon" aria-hidden="true"></i>
+            <input type="search" class="form-control tx-search__input"
+                   placeholder="Buscar categoría…" aria-label="Buscar categoría" enterkeyhint="search"
+                   data-table-filter-target="input"
+                   data-action="input->table-filter#filter keydown.esc->table-filter#clear">
+        </div>
+
+        <div class="list-group category-list shadow-sm"
+             {% if not isTemplateView %}
+             data-tour-step="3"
+             data-tour-title="Tus categorías"
+             data-tour-text="{{ listTourText }}"
+             data-tour-side="top"
+             {% endif %}>
+            {% for item in items %}
+                {% set counts = isTemplateView ? [] : (usage[item.id] ?? []) %}
+                <button type="button"
+                        class="list-group-item list-group-item-action category-list__item"
+                        data-table-filter-target="row" data-filter-text="{{ item.name }}"
+                        data-action="category-modal#view"
+                        data-category-modal-url-param="{{ isTemplateView ? path('category_template_summary', {id: item.id}) : path('category_summary', {id: item.id}) }}">
+                    {{ cat.avatar(item.name, item.color, '2.25rem') }}
+                    <span class="min-w-0 flex-grow-1">
+                        <span class="d-block text-truncate">{{ item.name }}</span>
+                        {% if not isTemplateView %}
+                            <span class="d-block small text-body-secondary text-truncate">{{ cat.usage_line(counts) }}</span>
+                        {% endif %}
+                    </span>
+                    <i class="fa-solid fa-chevron-right text-body-secondary" aria-hidden="true"></i>
+                </button>
+            {% endfor %}
+            <div class="list-group-item text-center text-body-secondary py-4" data-table-filter-target="empty" hidden>
+                Ninguna categoría coincide con la búsqueda.
+            </div>
+        </div>
+    </div>
+
+    {# ── Escritorio (≥ md): tabla ─────────────────────────────────────────── #}
+    <div class="card shadow-sm border d-none d-md-block"
          {% if not isTemplateView %}
          data-tour-step="3"
          data-tour-title="Tus categorías"
-         data-tour-text="Una misma categoría sirve para gastos y para ingresos. Aquí ves en cuáles la has usado y cuántos movimientos tiene."
+         data-tour-text="{{ listTourText }}"
          data-tour-side="top"
          {% endif %}>
         <div class="card-header bg-body-tertiary d-flex align-items-center justify-content-between gap-3 py-2">
@@ -148,20 +200,11 @@
                                                 data-category-modal-url-param="{{ isTemplateView ? path('category_template_edit', {id: item.id}) : path('category_edit', {id: item.id}) }}">
                                             <i class="fa-solid fa-pen fa-sm"></i>
                                         </button>
-                                        {% if isTemplateView %}
-                                            {% set message = '¿Eliminar la plantilla «' ~ item.name ~ '»?' %}
-                                        {% elseif total == 0 %}
-                                            {% set message = '¿Eliminar la categoría «' ~ item.name ~ '»?' %}
-                                        {% elseif total == 1 %}
-                                            {% set message = '¿Eliminar la categoría «' ~ item.name ~ '»? Su movimiento quedará sin categoría.' %}
-                                        {% else %}
-                                            {% set message = '¿Eliminar la categoría «' ~ item.name ~ '»? Sus ' ~ total|number_format(0, ',', '.') ~ ' movimientos quedarán sin categoría.' %}
-                                        {% endif %}
                                         <form method="post" class="d-inline-flex"
                                               action="{{ isTemplateView ? path('category_template_delete', {id: item.id}) : path('category_delete', {id: item.id}) }}"
                                               data-controller="confirm"
                                               data-action="submit->confirm#submit"
-                                              data-confirm-message-value="{{ message }}"
+                                              data-confirm-message-value="{{ cat.delete_message(item.name, total, isTemplateView) }}"
                                               data-confirm-text-value="Eliminar">
                                             <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ item.id) }}">
                                             <button type="submit"
@@ -184,14 +227,40 @@
             </table>
         </div>
     </div>
+
+</div> {# /table-filter #}
+{% endif %}
+
+{% if canEdit %}
+    {# Botón flotante de «Nueva categoría»: sustituye en móvil al de la
+       cabecera. Lleva su mismo paso del tour; el tour ignora el oculto. #}
+    <button type="button" class="dash-fab btn btn-primary rounded-circle shadow position-fixed bottom-0 end-0 m-3 d-md-none"
+            aria-label="{{ isTemplateView ? 'Nueva categoría (plantilla)' : 'Nueva categoría' }}"
+            data-action="category-modal#form"
+            data-category-modal-url-param="{{ createUrl }}"
+            {% if not isTemplateView %}
+            data-tour-step="2"
+            data-tour-title="Crea categorías"
+            data-tour-text="{{ createTourText }}"
+            {% endif %}>
+        <i class="fa-solid fa-plus"></i>
+    </button>
 {% endif %}
 
 {# Contenedor de ver/crear/editar. El contenido entero (cabecera incluida) lo
-   pinta el servidor: category/_summary.html.twig o category/_form.html.twig. #}
-<div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="categoryModalLabel" aria-hidden="true"
+   pinta el servidor: category/_summary.html.twig o category/_form.html.twig.
+   En móvil, .category-modal lo convierte en panel inferior (app.css) y el asa
+   lo cierra al arrastrarla hacia abajo. #}
+<div class="modal fade category-modal" id="categoryModal" tabindex="-1" aria-labelledby="categoryModalLabel" aria-hidden="true"
      data-category-modal-target="modal">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-body-tertiary" data-category-modal-target="content"></div>
+    <div class="modal-dialog modal-dialog-centered" data-category-modal-target="dialog">
+        <div class="modal-content bg-body-tertiary">
+            <div class="tx-sheet__drag d-md-none pb-2"
+                 data-action="touchstart->category-modal#dragStart touchmove->category-modal#dragMove touchend->category-modal#dragEnd touchcancel->category-modal#dragEnd">
+                <div class="tx-sheet__handle" aria-hidden="true"></div>
+            </div>
+            <div data-category-modal-target="content"></div>
+        </div>
     </div>
 </div>
 

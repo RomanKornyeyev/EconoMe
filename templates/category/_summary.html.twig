@@ -1,36 +1,63 @@
 {#
-  Partial AJAX: resumen de una categoría (modal «Ver»). Devuelve el contenido
-  entero del modal (cabecera, cuerpo), inyectado en #categoryModal por
-  category_modal_controller.js.
+  Partial AJAX: resumen de una categoría o de una plantilla (modal «Ver»).
+  Devuelve el contenido entero del modal (cabecera y cuerpo), inyectado en
+  #categoryModal por category_modal_controller.js. En escritorio es un modal
+  centrado; en móvil, un panel inferior: el marcado es el mismo.
+
+  La plantilla sigue el mismo flujo que una categoría para no liar al usuario,
+  pero no tiene movimientos: las cifras salen con «—» y se explica por qué.
 
   Variables:
-    - category:    Category
+    - item:        Category o CategoryTemplate
+    - isTemplate:  bool
     - counts:      nº de movimientos por tipo en todo el historial ({expense, income})
     - totalCount:  nº total de movimientos
     - monthTotals: importe y nº por tipo en el mes en curso ({expense: {total, count}, …})
     - monthCount:  nº de movimientos en el mes en curso
     - latest:      Transaction[] últimos movimientos
-    - canEdit:     bool (ACCOUNT_EDIT sobre la cuenta)
+    - canEdit:     bool (editar/eliminar)
 #}
 {% import 'category/_macros.html.twig' as cat %}
-{% set symbol = {EUR: '€', USD: '$', GBP: '£'}[category.account.currency] ?? category.account.currency %}
+{% set symbol = isTemplate ? '' : ({EUR: '€', USD: '$', GBP: '£'}[item.account.currency] ?? item.account.currency) %}
+{% set editUrl = isTemplate
+    ? path('category_template_edit', {id: item.id, back: 1})
+    : path('category_edit', {id: item.id, back: 1}) %}
 
 <div class="modal-header align-items-center gap-3 p-4">
-    {{ cat.avatar(category.name, category.color, '3.5rem') }}
+    {{ cat.avatar(item.name, item.color, '3.5rem') }}
     <div class="min-w-0">
-        <h5 class="modal-title fw-semibold text-break mb-1" id="categoryModalLabel">{{ category.name }}</h5>
-        {{ cat.used_as(counts) }}
+        <h5 class="modal-title fw-semibold text-break mb-1" id="categoryModalLabel">{{ item.name }}</h5>
+        {% if isTemplate %}
+            <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis fw-normal">Plantilla</span>
+        {% else %}
+            {{ cat.used_as(counts) }}
+        {% endif %}
     </div>
-    <div class="d-flex align-items-center gap-3 ms-auto align-self-start">
+    <div class="d-flex align-items-center gap-2 ms-auto align-self-start">
         {% if canEdit %}
+            {# data-bs-dismiss cierra este modal antes de que abra la confirmación:
+               Bootstrap no apila modales. #}
+            <form method="post" class="d-flex"
+                  action="{{ isTemplate ? path('category_template_delete', {id: item.id}) : path('category_delete', {id: item.id}) }}"
+                  data-controller="confirm"
+                  data-action="submit->confirm#submit"
+                  data-confirm-message-value="{{ cat.delete_message(item.name, totalCount, isTemplate) }}"
+                  data-confirm-text-value="Eliminar">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ item.id) }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger" data-bs-dismiss="modal"
+                        aria-label="Eliminar" title="Eliminar">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </form>
             {# Mismo modal: el controlador cambia el resumen por el formulario #}
             <button type="button" class="btn btn-sm btn-outline-primary text-nowrap"
                     data-action="category-modal#form"
-                    data-category-modal-url-param="{{ path('category_edit', {id: category.id}) }}">
+                    data-category-modal-url-param="{{ editUrl }}">
                 <i class="fa-solid fa-pen me-1"></i>Editar
             </button>
         {% endif %}
-        <button type="button" class="btn-close m-0" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        {# En móvil se cierra arrastrando el asa o tocando fuera #}
+        <button type="button" class="btn-close m-0 ms-1 d-none d-md-inline-block" data-bs-dismiss="modal" aria-label="Cerrar"></button>
     </div>
 </div>
 
@@ -50,40 +77,47 @@
                     {% endif %}
                 {% endfor %}
                 {% if monthTotals is empty %}
-                    <div class="fs-4 fw-semibold text-body-secondary text-nowrap">0,00 {{ symbol }}</div>
+                    <div class="fs-4 fw-semibold text-body-secondary text-nowrap">{{ isTemplate ? '—' : '0,00 ' ~ symbol }}</div>
                 {% endif %}
             </div>
         </div>
         <div class="col-6">
             <div class="bg-body-secondary rounded-3 px-3 py-3 h-100">
                 <div class="small text-body-secondary mb-1">Movimientos este mes</div>
-                <div class="fs-4 fw-semibold">{{ monthCount }}</div>
+                <div class="fs-4 fw-semibold {{ isTemplate ? 'text-body-secondary' }}">{{ isTemplate ? '—' : monthCount }}</div>
             </div>
         </div>
     </div>
 
-    <div class="small text-body-secondary mb-2">Últimos movimientos</div>
-    {% if latest is empty %}
-        <p class="text-body-secondary mb-0">Todavía no hay movimientos con esta categoría.</p>
+    {% if isTemplate %}
+        <p class="small text-body-secondary mb-0">
+            <i class="fa-solid fa-circle-info me-1"></i>Es una categoría de tu plantilla: se copia a cada cuenta
+            nueva que crees. Por eso no tiene movimientos; sus datos los verás en las categorías de cada cuenta.
+        </p>
     {% else %}
-        <ul class="list-unstyled mb-0">
-            {% for tx in latest %}
-                <li class="d-flex justify-content-between align-items-start gap-3 py-2 {{ not loop.last ? 'border-bottom' }}">
-                    <div class="min-w-0">
-                        <div class="text-truncate">{{ tx.name }}</div>
-                        <div class="small text-body-secondary">{{ tx.date|date('d/m/Y') }}</div>
-                    </div>
-                    <div class="fw-semibold text-nowrap {{ tx.isExpense() ? 'text-danger' : 'text-success' }}">
-                        {{ cat.amount(tx.amount, tx.type) }}
-                    </div>
-                </li>
-            {% endfor %}
-        </ul>
+        <div class="small text-body-secondary mb-2">Últimos movimientos</div>
+        {% if latest is empty %}
+            <p class="text-body-secondary mb-0">Todavía no hay movimientos con esta categoría.</p>
+        {% else %}
+            <ul class="list-unstyled mb-0">
+                {% for tx in latest %}
+                    <li class="d-flex justify-content-between align-items-start gap-3 py-2 {{ not loop.last ? 'border-bottom' }}">
+                        <div class="min-w-0">
+                            <div class="text-truncate">{{ tx.name }}</div>
+                            <div class="small text-body-secondary">{{ tx.date|date('d/m/Y') }}</div>
+                        </div>
+                        <div class="fw-semibold text-nowrap {{ tx.isExpense() ? 'text-danger' : 'text-success' }}">
+                            {{ cat.amount(tx.amount, tx.type) }}
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
 
-        {# Escala en category_transactions, que deja el flash de «Filtrados…» #}
-        <a href="{{ path('category_transactions', {id: category.id}) }}"
-           class="btn btn-primary w-100 mt-4">
-            Ver todos los movimientos ({{ totalCount|number_format(0, ',', '.') }})
-        </a>
+            {# Escala en category_transactions, que deja el flash de «Filtrados…» #}
+            <a href="{{ path('category_transactions', {id: item.id}) }}"
+               class="btn btn-primary w-100 mt-4">
+                Ver todos los movimientos ({{ totalCount|number_format(0, ',', '.') }})
+            </a>
+        {% endif %}
     {% endif %}
 </div>

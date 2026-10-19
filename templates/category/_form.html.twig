@@ -2,37 +2,65 @@
   Partial AJAX: formulario de crear/editar categoría o plantilla en el modal.
   Devuelve el contenido entero del modal (el <form> con cabecera, cuerpo y pie),
   inyectado en #categoryModal por category_modal_controller.js. Es el único sitio
-  donde se pinta el formulario: no hay vista de página completa.
+  donde se pinta el formulario: no hay vista de página completa. En escritorio
+  es un modal centrado; en móvil, un panel inferior: el marcado es el mismo.
+
+  El avatar de la izquierda es una vista previa: category-modal#preview lo
+  repinta al escribir el nombre o elegir el color.
 
   Variables (CategoryController::formView()):
-    - form:     formulario CategoryType o CategoryTemplateType
-    - heading:  título
-    - subtitle: nombre de la categoría al editar (null al crear)
-    - isNew:    bool
+    - form:    formulario CategoryType o CategoryTemplateType
+    - heading: título
+    - isNew:   bool
+    - backUrl: resumen al que vuelve «Volver» (solo al editar desde el resumen);
+               sin él, la cabecera lleva la X de cerrar
 #}
+{% import 'category/_macros.html.twig' as cat %}
 {{ form_start(form, {attr: {
     class: 'needs-validation',
     novalidate: 'novalidate',
-    'data-action': 'submit->category-modal#submit',
+    'data-action': 'submit->category-modal#submit input->category-modal#preview',
 }}) }}
-    <div class="modal-header px-4">
-        <div class="min-w-0">
-            <h5 class="modal-title mb-0" id="categoryModalLabel">{{ heading }}</h5>
-            {% if subtitle %}
-                <small class="text-body-secondary text-break">{{ subtitle }}</small>
+    <div class="modal-header category-form__header px-4">
+        <div>
+            {% if backUrl %}
+                <button type="button" class="btn btn-link text-body-secondary text-decoration-none p-0"
+                        data-action="category-modal#view"
+                        data-category-modal-url-param="{{ backUrl }}">
+                    <i class="fa-solid fa-chevron-left me-1"></i>Volver
+                </button>
             {% endif %}
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        <h5 class="modal-title text-center fs-6 fw-semibold" id="categoryModalLabel">{{ heading }}</h5>
+        <div class="text-end">
+            {# Con «Volver», en móvil sobra la X: se cierra arrastrando el asa #}
+            <button type="button" class="btn-close m-0 {{ backUrl ? 'd-none d-md-inline-block' }}"
+                    data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
     </div>
+
     <div class="modal-body p-4">
         {# Errores del formulario entero, p. ej. el token CSRF caducado #}
         {{ form_errors(form) }}
-        {{ form_row(form.name) }}
-        {{ form_row(form.color) }}
+
+        <div class="d-flex align-items-start gap-3">
+            <span data-category-preview>
+                {{ cat.avatar(form.name.vars.value, form.color.vars.value, '3.5rem') }}
+            </span>
+            <div class="flex-grow-1 min-w-0">
+                {# Etiqueta flotante, como los campos de texto de movimientos: la
+                   pone el tema (form/bootstrap_5_floating.html.twig) en form_row #}
+                {{ form_row(form.name, {attr: {autocomplete: 'off'}}) }}
+            </div>
+        </div>
+
+        {# form_row y no form_widget: el color-picker cuelga del row_attr de la fila #}
+        {{ form_row(form.color, {label_attr: {class: 'form-label small text-body-secondary mb-1'}}) }}
     </div>
-    <div class="modal-footer justify-content-center">
-        <button type="submit" class="btn btn-primary">
-            <i class="fa-solid fa-check me-1"></i>{{ isNew ? 'Crear' : 'Guardar cambios' }}
+
+    <div class="modal-footer border-0 px-4 pb-4 pt-0">
+        <button type="submit" class="btn btn-primary w-100 m-0">
+            <i class="fa-solid fa-check me-1"></i>{{ isNew ? 'Crear' : 'Guardar' }}
         </button>
     </div>
 {{ form_end(form) }}

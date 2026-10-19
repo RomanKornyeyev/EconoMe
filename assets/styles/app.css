@@ -80,6 +80,65 @@ body {
     padding-left: 1.9rem;
 }
 
+/* Lista de móvil: filas con el relleno de la tarjeta, no el fondo de la página */
+.category-list {
+    --bs-list-group-bg: var(--bs-tertiary-bg);
+}
+
+/* Flex sin !important (no .d-flex): así el atributo hidden del buscador
+   (table_filter_controller.js) puede ocultar la fila */
+.category-list__item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-top: .85rem;
+    padding-bottom: .85rem;
+}
+
+/* Cabecera del formulario: «Volver» | título centrado | cerrar */
+.category-form__header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: .5rem;
+}
+
+/* Modal de categorías en móvil: panel inferior, como el de filtros de
+   movimientos. Se cierra arrastrando el asa (category_modal_controller.js). */
+@media (max-width: 767.98px) {
+    .category-modal .modal-dialog {
+        position: fixed;
+        inset: auto 0 0 0;
+        width: 100%;
+        max-width: none;
+        min-height: 0;
+        margin: 0;
+        display: block;
+    }
+
+    .category-modal.fade .modal-dialog {
+        transform: translateY(100%);
+        transition: transform .25s ease-out;
+    }
+
+    .category-modal.show .modal-dialog {
+        transform: none;
+    }
+
+    .category-modal .modal-content {
+        max-height: 90dvh;
+        overflow-y: auto;
+        border: 0;
+        border-radius: 1rem 1rem 0 0;
+    }
+
+    /* Colores más grandes: se eligen con el dedo */
+    .category-modal .color-picker-swatch {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+}
+
 /* Bootstrap no la trae: deja que un hijo flex se encoja y trunque su texto */
 .min-w-0 {
     min-width: 0;

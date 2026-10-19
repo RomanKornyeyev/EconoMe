@@ -1,5 +1,6 @@
 {#
-    Piezas de las categorías que comparten el listado y el resumen (modal «Ver»).
+    Piezas de las categorías que comparten el listado (escritorio y móvil), el
+    resumen y el formulario del modal.
 
     Uso:
         {% import 'category/_macros.html.twig' as cat %}
@@ -31,6 +32,32 @@
     {% else %}
         <span class="small text-body-secondary">Sin uso aún</span>
     {% endif %}
+{%- endmacro %}
+
+{# Línea corta de uso para la lista de móvil: «112 mov. · Gastos e ingresos». #}
+{% macro usage_line(counts) %}
+    {%- set expense = counts.expense ?? 0 -%}
+    {%- set income = counts.income ?? 0 -%}
+    {%- if expense + income == 0 -%}
+        Sin uso aún
+    {%- else -%}
+        {{ (expense + income)|number_format(0, ',', '.') }} mov. ·
+        {{ expense > 0 and income > 0 ? 'Gastos e ingresos' : (expense > 0 ? 'Gastos' : 'Ingresos') }}
+    {%- endif -%}
+{%- endmacro %}
+
+{# Texto de la confirmación de borrado. total: movimientos que se quedarán sin
+   categoría (las plantillas no tienen). #}
+{% macro delete_message(name, total, isTemplate) %}
+    {%- if isTemplate -%}
+        ¿Eliminar la plantilla «{{ name }}»?
+    {%- elseif total == 0 -%}
+        ¿Eliminar la categoría «{{ name }}»?
+    {%- elseif total == 1 -%}
+        ¿Eliminar la categoría «{{ name }}»? Su movimiento quedará sin categoría.
+    {%- else -%}
+        ¿Eliminar la categoría «{{ name }}»? Sus {{ total|number_format(0, ',', '.') }} movimientos quedarán sin categoría.
+    {%- endif -%}
 {%- endmacro %}
 
 {# Importe con signo según el tipo, en el formato del resto de la app. #}

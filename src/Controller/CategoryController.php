@@ -100,13 +100,38 @@ class CategoryController extends AbstractController
         $counts = $this->categoryUsage->countsByCategory($account)[$category->getId()] ?? [];
 
         return $this->render('category/_summary.html.twig', [
-            'category'    => $category,
+            'item'        => $category,
+            'isTemplate'  => false,
             'counts'      => $counts,
             'totalCount'  => array_sum($counts),
             'monthTotals' => $monthTotals,
             'monthCount'  => array_sum(array_column($monthTotals, 'count')),
             'latest'      => $transactionRepo->findLatestByCategory($category, self::SUMMARY_LATEST),
             'canEdit'     => $this->isGranted('ACCOUNT_EDIT', $account),
+        ]);
+    }
+
+    /**
+     * Resumen de una plantilla. Mismo modal y mismo flujo que una categoría, para
+     * no liar al usuario; como una plantilla no tiene movimientos, las cifras
+     * salen vacías y el modal explica por qué.
+     */
+    #[Route('/template/{id}/summary', name: 'template_summary', methods: ['GET'], requirements: ['id' => '\d+'])]
+    public function templateSummary(CategoryTemplate $template): Response
+    {
+        if ($template->getUser() !== $this->getUser()) {
+            throw $this->createAccessDeniedException();
+        }
+
+        return $this->render('category/_summary.html.twig', [
+            'item'        => $template,
+            'isTemplate'  => true,
+            'counts'      => [],
+            'totalCount'  => 0,
+            'monthTotals' => [],
+            'monthCount'  => 0,
+            'latest'      => [],
+            'canEdit'     => true,
         ]);
     }
 
@@ -148,7 +173,7 @@ class CategoryController extends AbstractController
             'action' => $this->generateUrl('category_template_create'),
         ]);
 
-        return $this->handleForm($request, $form, $this->formView(true, true, $template),
+        return $this->handleForm($request, $form, $this->formView(true, true),
             function () use ($template) {
                 $this->em->persist($template);
                 $this->em->flush();
@@ -178,7 +203,7 @@ class CategoryController extends AbstractController
             'action' => $this->generateUrl('category_create', ['account' => $account->getId()]),
         ]);
 
-        return $this->handleForm($request, $form, $this->formView(false, true, $category),
+        return $this->handleForm($request, $form, $this->formView(false, true),
             function () use ($category) {
                 $this->em->persist($category);
                 $this->em->flush();
@@ -195,11 +220,15 @@ class CategoryController extends AbstractController
     {
         $this->denyAccessUnlessGranted('ACCOUNT_EDIT', $category->getAccount());
 
+        $back = $request->query->getBoolean('back');
         $form = $this->createForm(CategoryType::class, $category, [
-            'action' => $this->generateUrl('category_edit', ['id' => $category->getId()]),
+            'action' => $this->generateUrl('category_edit', ['id' => $category->getId()] + ($back ? ['back' => 1] : [])),
         ]);
 
-        return $this->handleForm($request, $form, $this->formView(false, false, $category),
+        $view = $this->formView(false, false,
+            $back ? $this->generateUrl('category_summary', ['id' => $category->getId()]) : null);
+
+        return $this->handleForm($request, $form, $view,
             fn () => $this->em->flush(),
             'Categoría actualizada.',
             $this->generateUrl('category_index', ['account' => $category->getAccount()->getId()]),
@@ -232,11 +261,15 @@ class CategoryController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
+        $back = $request->query->getBoolean('back');
         $form = $this->createForm(CategoryTemplateType::class, $template, [
-            'action' => $this->generateUrl('category_template_edit', ['id' => $template->getId()]),
+            'action' => $this->generateUrl('category_template_edit', ['id' => $template->getId()] + ($back ? ['back' => 1] : [])),
         ]);
 
-        return $this->handleForm($request, $form, $this->formView(true, false, $template),
+        $view = $this->formView(true, false,
+            $back ? $this->generateUrl('category_template_summary', ['id' => $template->getId()]) : null);
+
+        return $this->handleForm($request, $form, $view,
             fn () => $this->em->flush(),
             'Plantilla actualizada.',
             $this->generateUrl('category_index', ['template' => 'true']),
@@ -317,9 +350,12 @@ class CategoryController extends AbstractController
     /**
      * Variables del formulario del modal (category/_form.html.twig).
      *
+     * @param ?string $backUrl resumen al que vuelve «Volver»: solo al editar desde
+     *                         el resumen (?back=1); si no, el modal se cierra
+     *
      * @return array<string, mixed>
      */
-    private function formView(bool $isTemplate, bool $isNew, Category|CategoryTemplate $entity): array
+    private function formView(bool $isTemplate, bool $isNew, ?string $backUrl = null): array
     {
         if ($isTemplate) {
             $heading = $isNew ? 'Nueva categoría (mi plantilla)' : 'Editar plantilla';
@@ -328,11 +364,9 @@ class CategoryController extends AbstractController
         }
 
         return [
-            'heading'        => $heading,
-            // Nombre de antes del envío: si el nuevo no valida, la cabecera no
-            // debe enseñar el texto a medio corregir.
-            'subtitle'       => $isNew ? null : $entity->getName(),
-            'isNew'          => $isNew,
+            'heading' => $heading,
+            'isNew'   => $isNew,
+            'backUrl' => $backUrl,
         ];
     }
 }

@@ -6,7 +6,7 @@
         "changes": [
             {
                 "type": "improvement",
-                "text": "Nueva vista de categorías: resumen de cada una y crear/editar sin salir de la página."
+                "text": "Nueva vista de categorías, también en móvil: resumen de cada una y crear/editar sin salir de la página."
             },
             {
                 "type": "info",

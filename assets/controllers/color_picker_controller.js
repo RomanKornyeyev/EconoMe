@@ -41,6 +41,9 @@ export default class extends Controller {
     // ya guardado de una cuenta existente.
     if (!this.inputTarget.getAttribute('value') && this.paletteValue.length) {
       this.inputTarget.value = this.paletteValue[0];
+      // Como si lo hubiera elegido el usuario: quien escuche el campo (la vista
+      // previa del avatar de categoría) se entera del color preseleccionado.
+      this.inputTarget.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
     this.swatchesEl = document.createElement('div');

@@ -7,6 +7,10 @@ import { Controller } from '@hotwired/stimulus';
  * ni acentos («nomina» encuentra «Nómina»). El texto de cada fila sale de su
  * `data-filter-text` o, si no lo tiene, de su contenido.
  *
+ * Admite varios buscadores y varias listas a la vez (p. ej. la lista de móvil y
+ * la tabla de escritorio de una misma página): los buscadores se mantienen
+ * sincronizados y cada lista tiene su propio aviso de «sin resultados».
+ *
  * Uso:
  *   <div data-controller="table-filter">
  *     <input data-table-filter-target="input"
@@ -19,25 +23,28 @@ import { Controller } from '@hotwired/stimulus';
 export default class extends Controller {
   static targets = ['input', 'row', 'empty'];
 
-  filter() {
-    const query = normalize(this.inputTarget.value.trim());
-    let visible = 0;
-
-    for (const row of this.rowTargets) {
-      const match = query === '' || normalize(row.dataset.filterText ?? row.textContent).includes(query);
-      row.hidden = !match;
-      if (match) visible++;
+  filter(event) {
+    const value = event?.target?.value ?? '';
+    for (const input of this.inputTargets) {
+      if (input !== event?.target) input.value = value;
     }
 
-    if (this.hasEmptyTarget) {
-      this.emptyTarget.hidden = visible > 0;
+    const query = normalize(value.trim());
+    for (const row of this.rowTargets) {
+      row.hidden = query !== '' && !normalize(row.dataset.filterText ?? row.textContent).includes(query);
+    }
+
+    // Cada aviso mira solo las filas de su propia lista
+    for (const empty of this.emptyTargets) {
+      const rows = this.rowTargets.filter(row => row.parentElement === empty.parentElement);
+      empty.hidden = rows.some(row => !row.hidden);
     }
   }
 
   /** Escape: vacía la búsqueda y vuelve a enseñarlo todo. */
-  clear() {
-    this.inputTarget.value = '';
-    this.filter();
+  clear(event) {
+    event.target.value = '';
+    this.filter(event);
   }
 }
 
