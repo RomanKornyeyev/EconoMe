@@ -155,7 +155,7 @@
             <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
-                        <th style="width:3.5rem"><span class="visually-hidden">Color</span></th>
+                        <th style="width:3rem"><span class="visually-hidden">Color</span></th>
                         <th class="small text-body-secondary fw-normal">Nombre</th>
                         {% if not isTemplateView %}
                             <th class="small text-body-secondary fw-normal">Se usa en</th>
@@ -169,11 +169,13 @@
                         {% set counts = isTemplateView ? [] : (usage[item.id] ?? []) %}
                         {% set total = (counts.expense ?? 0) + (counts.income ?? 0) %}
                         <tr data-table-filter-target="row" data-filter-text="{{ item.name }}">
-                            <td>{{ cat.avatar(item.name, item.color) }}</td>
+                            {# 1.5rem: a la altura de los botones de acción, para que el
+                               avatar no estire la fila #}
+                            <td>{{ cat.avatar(item.name, item.color, '1.5rem') }}</td>
                             <td class="fw-semibold text-break">{{ item.name }}</td>
                             {% if not isTemplateView %}
-                                <td>{{ cat.used_as(counts) }}</td>
-                                <td class="text-end text-nowrap {{ total == 0 ? 'text-body-secondary' }}">
+                                <td>{{ cat.used_as(counts, '—') }}</td>
+                                <td class="text-end text-nowrap small text-body-secondary">
                                     {% if total > 0 %}
                                         {{ total|number_format(0, ',', '.') }} {{ total == 1 ? 'movimiento' : 'movimientos' }}
                                     {% else %}

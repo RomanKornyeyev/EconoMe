@@ -2,11 +2,15 @@
     {
         "version": "v1.5.2",
         "date": "2026-10-19",
-        "title": "Categorías renovadas",
+        "title": "Mejora UX de las categorías en PC y móvil",
         "changes": [
             {
+                "type": "feat",
+                "text": "Las categorías muestran más información: resumen del mes, últimos movimientos y si se usan en gastos o ingresos."
+            },
+            {
                 "type": "improvement",
-                "text": "Nueva vista de categorías, también en móvil: resumen de cada una y crear/editar sin salir de la página."
+                "text": "Mejora UX categorías (PC y móvil)."
             },
             {
                 "type": "info",

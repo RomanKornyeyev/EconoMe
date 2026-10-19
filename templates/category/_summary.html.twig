@@ -69,7 +69,8 @@
             <div class="bg-body-secondary rounded-3 px-3 py-3 h-100">
                 <div class="small text-body-secondary mb-1">Este mes</div>
                 {% set both = monthTotals.expense is defined and monthTotals.income is defined %}
-                {% for type in ['expense', 'income'] %}
+                {# Ingresos antes que gastos, como en el resto de la sección #}
+                {% for type in ['income', 'expense'] %}
                     {% if monthTotals[type] is defined %}
                         <div class="{{ both ? 'fs-6' : 'fs-4' }} fw-semibold text-nowrap {{ type == 'expense' ? 'text-danger' : 'text-success' }}">
                             {{ cat.amount(monthTotals[type].total, type, symbol) }}

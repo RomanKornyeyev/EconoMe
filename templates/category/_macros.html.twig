@@ -18,23 +18,31 @@
 {%- endmacro %}
 
 {# Tipos de movimiento con los que se ha usado la categoría. counts: nº de
-   movimientos por tipo, de CategoryUsage::countsByCategory(). #}
-{% macro used_as(counts) %}
+   movimientos por tipo, de CategoryUsage::countsByCategory(). Ingresos siempre
+   antes que gastos, en toda la sección de categorías. empty: texto si
+   no se ha usado; si se da (la tabla de escritorio pasa «—»), va con las
+   medidas de un badge sin fondo, para alinearse con el texto de los badges de
+   las filas de al lado. Sin él, «Sin uso aún» como texto normal. #}
+{% macro used_as(counts, empty = null) %}
     {% if (counts.expense ?? 0) > 0 or (counts.income ?? 0) > 0 %}
         <span class="d-inline-flex flex-wrap gap-1">
-            {% if (counts.expense ?? 0) > 0 %}
-                <span class="badge rounded-pill bg-danger-subtle text-danger fw-normal">Gastos</span>
-            {% endif %}
             {% if (counts.income ?? 0) > 0 %}
                 <span class="badge rounded-pill bg-success-subtle text-success fw-normal">Ingresos</span>
             {% endif %}
+            {% if (counts.expense ?? 0) > 0 %}
+                <span class="badge rounded-pill bg-danger-subtle text-danger fw-normal">Gastos</span>
+            {% endif %}
         </span>
     {% else %}
-        <span class="small text-body-secondary">Sin uso aún</span>
+        {% if empty is not null %}
+            <span class="badge fw-normal text-body-secondary">{{ empty }}</span>
+        {% else %}
+            <span class="small text-body-secondary">Sin uso aún</span>
+        {% endif %}
     {% endif %}
 {%- endmacro %}
 
-{# Línea corta de uso para la lista de móvil: «112 mov. · Gastos e ingresos». #}
+{# Línea corta de uso para la lista de móvil: «112 mov. · Ingresos y gastos». #}
 {% macro usage_line(counts) %}
     {%- set expense = counts.expense ?? 0 -%}
     {%- set income = counts.income ?? 0 -%}
@@ -42,7 +50,7 @@
         Sin uso aún
     {%- else -%}
         {{ (expense + income)|number_format(0, ',', '.') }} mov. ·
-        {{ expense > 0 and income > 0 ? 'Gastos e ingresos' : (expense > 0 ? 'Gastos' : 'Ingresos') }}
+        {{ expense > 0 and income > 0 ? 'Ingresos y gastos' : (income > 0 ? 'Ingresos' : 'Gastos') }}
     {%- endif -%}
 {%- endmacro %}
 
