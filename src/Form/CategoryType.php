@@ -10,9 +10,8 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
- * Se pinta en dos sitios: el modal (category/_form.html.twig, el que se usa) y
- * la vista de página completa category/edit.html.twig, EN DESUSO pero viva como
- * fallback. Si añades o quitas un campo, toca las dos plantillas.
+ * Se pinta solo en el modal de categorías (category/_form.html.twig): no hay
+ * vista de página completa. Si añades o quitas un campo, tócalo ahí.
  */
 class CategoryType extends AbstractType
 {

@@ -1,9 +1,8 @@
 {#
   Partial AJAX: formulario de crear/editar categoría o plantilla en el modal.
   Devuelve el contenido entero del modal (el <form> con cabecera, cuerpo y pie),
-  inyectado en #categoryModal por category_modal_controller.js. Mismo diseño que
-  la vista de página completa category/edit.html.twig (en desuso): si cambias
-  los campos, cambia las dos.
+  inyectado en #categoryModal por category_modal_controller.js. Es el único sitio
+  donde se pinta el formulario: no hay vista de página completa.
 
   Variables (CategoryController::formView()):
     - form:     formulario CategoryType o CategoryTemplateType

@@ -9,8 +9,11 @@ const SPINNER = '<div class="modal-body p-5 text-center"><span class="spinner-bo
  * Un único #categoryModal cuyo contenido entero (cabecera incluida) pinta el
  * servidor, así que títulos y botones según permisos se deciden allí:
  *   · view → GET category_summary, HTML (category/_summary.html.twig);
- *   · form → GET del href de crear/editar con XHR, JSON {ok, body}
+ *   · form → GET de la ruta de crear/editar con XHR, JSON {ok, body}
  *     (category/_form.html.twig). Ver CategoryController::handleForm().
+ *
+ * Los dos se disparan desde botones con la URL en un parámetro de acción:
+ *   data-action="category-modal#form" data-category-modal-url-param="…"
  *
  * El «Editar» del resumen también llama a `form`: se cambia el contenido del
  * mismo modal, sin cerrar y abrir otro.
@@ -18,9 +21,10 @@ const SPINNER = '<div class="modal-body p-5 text-center"><span class="spinner-bo
  * Al guardar no se pinta nada: el servidor deja el flash y se recarga la página,
  * que así trae la tabla al día. Un 422 devuelve el formulario con sus errores.
  *
- * Los disparadores de crear/editar son <a href> de verdad. Si este controlador
- * aún no ha cargado o el AJAX falla, se sigue por la vista de página completa
- * (category/edit.html.twig, en desuso), que hace lo mismo sin modal.
+ * No hay vista de página completa: el formulario solo vive en este modal. Si
+ * falla la carga se avisa dentro del propio modal; si falla el envío, se rescata
+ * con un envío nativo, que el servidor resuelve volviendo al listado con un
+ * flash (p. ej. la sesión caducada acaba en el login).
  */
 /* stimulusFetch: 'lazy' */
 export default class extends Controller {
@@ -47,14 +51,12 @@ export default class extends Controller {
     );
   }
 
-  /** Enlace de crear/editar: abre el formulario en el modal. */
-  form(event) {
-    event.preventDefault();
-    const url = event.currentTarget.href;
+  /** Botón de crear/editar: abre el formulario en el modal. */
+  form({ params }) {
     this.#load(
-      url,
+      params.url,
       async response => (await response.json()).body,
-      () => { window.location.href = url; },
+      () => this.#error('No se pudo cargar el formulario.'),
     );
   }
 

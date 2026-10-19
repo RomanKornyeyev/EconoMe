@@ -15,9 +15,8 @@
     : path('category_create', {account: currentAccount.id}) %}
 
 <div {{ tour.attrs('categories', not isTemplateView) }}>
-{# Crear, editar y ver abren #categoryModal (category_modal_controller.js). Los
-   enlaces de crear/editar son <a href> de verdad: sin JS llevan a la vista de
-   página completa, en desuso. #}
+{# Crear, editar y ver abren #categoryModal (category_modal_controller.js). No
+   hay vista de página completa: el formulario solo vive en el modal. #}
 <div data-controller="category-modal">
 
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
@@ -39,15 +38,16 @@
 
     <div class="d-flex align-items-center gap-2">
         {% if canEdit %}
-            <a href="{{ createUrl }}" class="btn btn-primary btn-sm"
-               data-action="category-modal#form"
-               {% if not isTemplateView %}
-               data-tour-step="2"
-               data-tour-title="Crea categorías"
-               data-tour-text="Añade las categorías que necesites para clasificar tus gastos e ingresos."
-               {% endif %}>
+            <button type="button" class="btn btn-primary btn-sm"
+                    data-action="category-modal#form"
+                    data-category-modal-url-param="{{ createUrl }}"
+                    {% if not isTemplateView %}
+                    data-tour-step="2"
+                    data-tour-title="Crea categorías"
+                    data-tour-text="Añade las categorías que necesites para clasificar tus gastos e ingresos."
+                    {% endif %}>
                 <i class="fa-solid fa-plus me-1"></i>{{ isTemplateView ? 'Nueva categoría (plantilla)' : 'Nueva categoría' }}
-            </a>
+            </button>
         {% endif %}
         {{ tour.help_button() }}
     </div>
@@ -65,9 +65,11 @@
         <i class="fa-solid {{ isTemplateView ? 'fa-layer-group' : 'fa-tags' }} fa-3x text-muted mb-3"></i>
         <h5 class="text-muted">{{ isTemplateView ? 'Tu plantilla de categorías está vacía' : 'Esta cuenta no tiene categorías' }}</h5>
         {% if canEdit %}
-            <a href="{{ createUrl }}" class="btn btn-primary mt-2" data-action="category-modal#form">
+            <button type="button" class="btn btn-primary mt-2"
+                    data-action="category-modal#form"
+                    data-category-modal-url-param="{{ createUrl }}">
                 <i class="fa-solid fa-plus me-1"></i>{{ isTemplateView ? 'Crear categoría (plantilla)' : 'Crear categoría' }}
-            </a>
+            </button>
         {% endif %}
     </div>
 {% else %}
@@ -139,12 +141,13 @@
                                         </button>
                                     {% endif %}
                                     {% if canEdit %}
-                                        <a href="{{ isTemplateView ? path('category_template_edit', {id: item.id}) : path('category_edit', {id: item.id}) }}"
-                                           class="btn btn-sm btn-outline-primary py-0 px-1"
-                                           data-bs-toggle="tooltip" data-bs-title="Editar" aria-label="Editar"
-                                           data-action="category-modal#form">
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-primary py-0 px-1"
+                                                data-bs-toggle="tooltip" data-bs-title="Editar" aria-label="Editar"
+                                                data-action="category-modal#form"
+                                                data-category-modal-url-param="{{ isTemplateView ? path('category_template_edit', {id: item.id}) : path('category_edit', {id: item.id}) }}">
                                             <i class="fa-solid fa-pen fa-sm"></i>
-                                        </a>
+                                        </button>
                                         {% if isTemplateView %}
                                             {% set message = '¿Eliminar la plantilla «' ~ item.name ~ '»?' %}
                                         {% elseif total == 0 %}

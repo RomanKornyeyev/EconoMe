@@ -24,12 +24,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 /**
  * Categorías de cuenta y plantillas de categorías del usuario.
  *
- * Crear y editar se hacen en un modal (category_modal_controller.js): con XHR,
- * las acciones de formulario responden JSON en vez de HTML (ver handleForm()).
- * La vista de página completa category/edit.html.twig queda EN DESUSO, no
- * borrada: cubre las URLs guardadas, el uso sin JavaScript y el fallback si el
- * AJAX falla, porque los «Editar» son <a href> de verdad que el modal intercepta.
- * Al tocar el formulario hay que mirar las dos ramas.
+ * Crear y editar se hacen solo en un modal (category_modal_controller.js): las
+ * acciones de formulario responden JSON al modal (ver handleForm()) y no tienen
+ * vista de página completa propia; la antigua category/edit.html.twig se borró.
  */
 #[IsGranted('ROLE_USER')]
 #[Route('/category', name: 'category_')]
@@ -267,17 +264,20 @@ class CategoryController extends AbstractController
     // ── Privado ──────────────────────────────────────────────────────────────
 
     /**
-     * Flujo común de crear/editar categoría o plantilla, para el modal y para la
-     * vista de página completa (en desuso).
+     * Flujo común de crear/editar categoría o plantilla.
      *
-     * Con XHR (modal) responde JSON:
+     * Con XHR (el modal) responde JSON:
      *   · GET            → 200 {ok: true,  body}: el formulario a pintar en el modal;
      *   · POST inválido  → 422 {ok: false, body}: el formulario con sus errores;
      *   · POST válido    → 200 {ok: true}: sin body; el cliente recarga la página
      *     y ahí aparece el flash, igual que tras un envío normal.
-     * Sin XHR redirige o pinta category/edit.html.twig, como siempre.
      *
-     * @param array<string, mixed> $view  variables de plantilla (ver formView())
+     * Sin XHR no hay página que pintar: el formulario solo vive en el modal. Llega
+     * así una URL abierta a mano (un marcador antiguo de la vista que se borró) o
+     * el envío nativo con que el modal se rescata si su fetch falla. Se guarda si
+     * es válido y, en cualquier caso, se vuelve al listado con un flash.
+     *
+     * @param array<string, mixed> $view  variables de category/_form.html.twig (ver formView())
      * @param callable(): void     $save  persiste el cambio (persist/flush)
      */
     private function handleForm(
@@ -306,12 +306,16 @@ class CategoryController extends AbstractController
             ], $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK);
         }
 
-        return $this->render('category/edit.html.twig', $view + ['form' => $form]);
+        if ($form->isSubmitted()) {
+            $errors = array_map(fn ($error) => $error->getMessage(), iterator_to_array($form->getErrors(true)));
+            $this->addFlash('error', trim('No se pudo guardar. ' . implode(' ', array_unique($errors))));
+        }
+
+        return $this->redirect($backUrl);
     }
 
     /**
-     * Variables que comparten el modal (category/_form.html.twig) y la vista de
-     * página completa (category/edit.html.twig).
+     * Variables del formulario del modal (category/_form.html.twig).
      *
      * @return array<string, mixed>
      */
@@ -328,9 +332,6 @@ class CategoryController extends AbstractController
             // Nombre de antes del envío: si el nuevo no valida, la cabecera no
             // debe enseñar el texto a medio corregir.
             'subtitle'       => $isNew ? null : $entity->getName(),
-            'category'       => $isTemplate ? null : $entity,
-            'template'       => $isTemplate ? $entity : null,
-            'isTemplateView' => $isTemplate,
             'isNew'          => $isNew,
         ];
     }
