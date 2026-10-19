@@ -132,6 +132,19 @@ body {
         border-radius: 1rem 1rem 0 0;
     }
 
+    /* Papelera y «Editar» del resumen: objetivos táctiles de 44 px, como en
+       el resto de la app, y los dos de la misma altura (la papelera, cuadrada) */
+    .category-summary__actions .btn {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .category-summary__actions .btn-outline-danger {
+        min-width: 44px;
+    }
+
     /* Colores más grandes: se eligen con el dedo */
     .category-modal .color-picker-swatch {
         width: 2.5rem;
