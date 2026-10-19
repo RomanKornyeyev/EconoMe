@@ -7,6 +7,12 @@
   La plantilla sigue el mismo flujo que una categoría para no liar al usuario,
   pero no tiene movimientos: las cifras salen con «—» y se explica por qué.
 
+  Dos vistas en el mismo contenido, alternadas por category-modal#showPane:
+  el resumen y la confirmación de borrado. Borrar se confirma aquí dentro y no
+  con el #confirm-modal genérico: Bootstrap no apila modales, y saltar a otro
+  obligaba a cerrar este (en móvil, el panel bajaba y volvía a subir). Así,
+  «Cancelar» vuelve al resumen sin cerrar nada.
+
   Variables:
     - item:        Category o CategoryTemplate
     - isTemplate:  bool
@@ -23,6 +29,8 @@
     ? path('category_template_edit', {id: item.id, back: 1})
     : path('category_edit', {id: item.id, back: 1}) %}
 
+{# ── Resumen ─────────────────────────────────────────────────────────── #}
+<div data-category-pane="summary">
 <div class="modal-header align-items-center gap-3 p-4">
     {{ cat.avatar(item.name, item.color, '3.5rem') }}
     <div class="min-w-0">
@@ -35,20 +43,12 @@
     </div>
     <div class="d-flex align-items-center gap-2 ms-auto align-self-start">
         {% if canEdit %}
-            {# data-bs-dismiss cierra este modal antes de que abra la confirmación:
-               Bootstrap no apila modales. #}
-            <form method="post" class="d-flex"
-                  action="{{ isTemplate ? path('category_template_delete', {id: item.id}) : path('category_delete', {id: item.id}) }}"
-                  data-controller="confirm"
-                  data-action="submit->confirm#submit"
-                  data-confirm-message-value="{{ cat.delete_message(item.name, totalCount, isTemplate) }}"
-                  data-confirm-text-value="Eliminar">
-                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ item.id) }}">
-                <button type="submit" class="btn btn-sm btn-outline-danger" data-bs-dismiss="modal"
-                        aria-label="Eliminar" title="Eliminar">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-            </form>
+            <button type="button" class="btn btn-sm btn-outline-danger"
+                    aria-label="Eliminar" title="Eliminar"
+                    data-action="category-modal#showPane"
+                    data-category-modal-pane-param="delete">
+                <i class="fa-solid fa-trash"></i>
+            </button>
             {# Mismo modal: el controlador cambia el resumen por el formulario #}
             <button type="button" class="btn btn-sm btn-outline-primary text-nowrap"
                     data-action="category-modal#form"
@@ -121,3 +121,33 @@
         {% endif %}
     {% endif %}
 </div>
+</div> {# /summary #}
+
+{# ── Confirmación de borrado ───────────────────────────────────────────── #}
+{% if canEdit %}
+<div data-category-pane="delete" hidden>
+    <div class="modal-header px-4">
+        <h5 class="modal-title fs-6 fw-semibold">{{ isTemplate ? 'Eliminar plantilla' : 'Eliminar categoría' }}</h5>
+        <button type="button" class="btn-close d-none d-md-inline-block" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+    </div>
+    <div class="modal-body p-4">
+        <div class="d-flex align-items-center gap-3">
+            {{ cat.avatar(item.name, item.color, '3.5rem') }}
+            <div class="min-w-0">
+                <p class="mb-1 text-break">{{ cat.delete_message(item.name, totalCount, isTemplate) }}</p>
+                <p class="small text-body-secondary mb-0">Esta acción no se puede deshacer.</p>
+            </div>
+        </div>
+    </div>
+    <form method="post" class="modal-footer border-0 d-flex gap-2 px-4 pb-4 pt-0"
+          action="{{ isTemplate ? path('category_template_delete', {id: item.id}) : path('category_delete', {id: item.id}) }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ item.id) }}">
+        <button type="button" class="btn btn-outline-secondary flex-fill m-0"
+                data-action="category-modal#showPane"
+                data-category-modal-pane-param="summary">Cancelar</button>
+        <button type="submit" class="btn btn-danger flex-fill m-0">
+            <i class="fa-solid fa-trash me-1"></i>Eliminar
+        </button>
+    </form>
+</div>
+{% endif %}

@@ -68,6 +68,17 @@ export default class extends Controller {
     );
   }
 
+  /**
+   * Alterna las vistas del contenido (data-category-pane): en el resumen, la
+   * papelera pasa a la confirmación de borrado y «Cancelar» vuelve. Todo dentro
+   * del mismo modal, sin cerrarlo ni pedir nada al servidor.
+   */
+  showPane({ params }) {
+    for (const pane of this.contentTarget.querySelectorAll('[data-category-pane]')) {
+      pane.hidden = pane.dataset.categoryPane !== params.pane;
+    }
+  }
+
   /** Vista previa del avatar del formulario: inicial del nombre y color. */
   preview() {
     const avatar = this.contentTarget.querySelector('[data-category-preview] .category-avatar');
