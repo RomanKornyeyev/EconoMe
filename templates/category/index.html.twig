@@ -46,6 +46,7 @@
         {{ tour.help_button() }}
     </div>
 
+    {# Sin prefijo en la plantilla: «Cuenta Mi plantilla» no tendría sentido. #}
     <div class="tx-header__account order-2 order-md-1">
         {% include 'partials/_account_selector.html.twig' with {
             accounts: accounts,
@@ -54,6 +55,7 @@
             route: 'category_index',
             withTemplateItem: true,
             withCreateItem: false,
+            labelPrefix: isTemplateView ? '' : 'Cuenta ',
             groupClass: 'w-100',
             tourStep: 1,
             tourTitle: 'Cuenta o plantilla',

@@ -17,22 +17,33 @@
     </ol>
 </nav>
 
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <div class="d-flex align-items-center gap-3">
-        <div class="d-flex align-items-center gap-2 flex-wrap">
-            <h1 class="mb-0 h3">Detalles de la cuenta</h1>
-            {% include 'partials/_account_selector.html.twig' with {
-                accounts: accounts,
-                current: account,
-                route: 'account_show',
-                routeParam: 'id',
-                tourStep: 1,
-                tourTitle: 'Selector de cuenta',
-                tourText: 'Aquí eliges la cuenta que quieres gestionar. Toda la información de esta página pertenece a la cuenta seleccionada.',
-            } only %}
-        </div>
+{# Cabecera con el mismo reparto que movimientos y categorías. En escritorio,
+   una fila: título, cuenta, accesos y ayuda. En móvil, tres: título y ayuda;
+   la cuenta a todo el ancho; y los accesos, también a todo el ancho. El
+   reparto lo hacen los order-*, .tx-header__account y .account-header__links
+   (general.css). #}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+    <h1 class="mb-0 h3 me-1">Detalles de la cuenta</h1>
+
+    <div class="order-1 order-md-3 ms-auto ms-md-0 d-flex align-items-center">
+        {{ tour.help_button() }}
     </div>
-    <div class="d-flex gap-2">
+
+    <div class="tx-header__account order-2 order-md-1">
+        {% include 'partials/_account_selector.html.twig' with {
+            accounts: accounts,
+            current: account,
+            route: 'account_show',
+            routeParam: 'id',
+            labelPrefix: 'Cuenta ',
+            groupClass: 'w-100',
+            tourStep: 1,
+            tourTitle: 'Selector de cuenta',
+            tourText: 'Aquí eliges la cuenta que quieres gestionar. Toda la información de esta página pertenece a la cuenta seleccionada.',
+        } only %}
+    </div>
+
+    <div class="account-header__links order-3 order-md-2 ms-md-auto d-flex gap-2">
         <a href="{{ path('dashboard', {account: account.id}) }}" class="btn btn-sm btn-outline-primary">
             <i class="fa-solid fa-chart-line me-1"></i>Dashboard
         </a>
@@ -42,7 +53,6 @@
            data-tour-text="Cuando quieras, entra aquí para añadir tus primeros movimientos a esta cuenta.">
             <i class="fa-solid fa-arrow-right-arrow-left me-1"></i>Movimientos
         </a>
-        {{ tour.help_button() }}
     </div>
 </div>
 

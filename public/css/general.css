@@ -453,6 +453,13 @@ input.flatpickr-input.form-control[readonly] {
     .tx-header__account { width: auto; }
 }
 
+/* Ficha de cuenta: en móvil, Dashboard y Movimientos van bajo la cuenta y se
+   reparten la fila; en escritorio vuelven a su tamaño. */
+@media (max-width: 767.98px) {
+    .account-header__links      { width: 100%; }
+    .account-header__links .btn { flex: 1 1 0; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+}
+
 /* ---- Buscador y botón de filtros ---- */
 .tx-search { position: relative; }
 .tx-search__icon {
