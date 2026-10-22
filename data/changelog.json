@@ -1,5 +1,16 @@
 [
     {
+        "version": "v1.5.3",
+        "date": "2026-10-22",
+        "title": "Selector de cuenta renovado",
+        "changes": [
+            {
+                "type": "improvement",
+                "text": "Selector de cuentas mejorado."
+            }
+        ]
+    },
+    {
         "version": "v1.5.2",
         "date": "2026-10-19",
         "title": "Mejora UX de las categorías en PC y móvil",

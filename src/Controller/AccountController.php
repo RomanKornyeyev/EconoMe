@@ -110,6 +110,8 @@ class AccountController extends AbstractController
         return $this->render('account/show.html.twig', [
             'account' => $account,
             'accounts' => $this->accountService->getActiveAccountsForUser($this->getUser()),
+            // Solo aquí: el resto de selectores de cuenta no enseñan la papelera.
+            'trashedAccounts' => $this->accountService->getDeletedAccountsOwnedByUser($this->getUser()),
             'members' => $members,
             'balance' => $balance,
             'currentMember' => $currentMember,

@@ -453,6 +453,21 @@ input.flatpickr-input.form-control[readonly] {
     .tx-header__account { width: auto; }
 }
 
+/* ---- Selector de cuenta (partials/_account_selector) ---- */
+/* Bolita con el color de la cuenta. En px enteros y sin sombra: con rem
+   (9,6 px) y un anillo semitransparente el borde salía borroso. */
+.account-selector__dot {
+    flex: none;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+/* Las de la papelera no se pueden usar: van atenuadas, como texto secundario. */
+.account-selector__trashed { color: var(--bs-secondary-color); }
+.account-selector__trashed small { font-size: .75rem; }
+/* Hueco para nombre + «borrable en 14 h» sin que se monten. */
+.account-selector__menu { min-width: 14rem; }
+
 /* Ficha de cuenta: en móvil, Dashboard y Movimientos van bajo la cuenta y se
    reparten la fila; en escritorio vuelven a su tamaño. */
 @media (max-width: 767.98px) {

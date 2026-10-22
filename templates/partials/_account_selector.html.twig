@@ -9,6 +9,9 @@
                         si no, se conserva la query actual añadiendo ?account=
     - routeParam:       nombre del parámetro de la ruta (por defecto 'account')
     - resetParams:      query params a resetear al cambiar de cuenta (p. ej. {page: 1})
+    - trashedAccounts:  cuentas en la papelera. La sección «En papelera» solo se
+                        pinta si llega con datos; por defecto no se muestra.
+                        Cada una enlaza a su ficha, que ofrece restaurarla.
     - withTemplateItem: añade el ítem «Mi plantilla» (categorías)
     - withCreateItem:   muestra el ítem «Añadir cuenta» (por defecto true)
     - menuEnd:          alinea el desplegable a la derecha
@@ -19,6 +22,7 @@
                         para el truncado a 20 caracteres.
     - tourStep / tourTitle / tourText: paso del tour de la página, si aplica
 #}
+{% set trashed = trashedAccounts ?? [] %}
 <div class="btn-group {{ groupClass ?? '' }}" role="group"
      {%- if tourStep is defined %}
      data-tour-step="{{ tourStep }}"
@@ -32,19 +36,52 @@
             {% if buttonLabel|length > 20 %}title="{{ buttonLabel }}"{% endif %}>
         {{ prefix }}{{ buttonLabel|length > 20 ? buttonLabel|slice(0, 20)|trim ~ '…' : buttonLabel }}
     </button>
-    <ul class="dropdown-menu{{ (menuEnd ?? false) ? ' dropdown-menu-end' : '' }}">
+    <ul class="dropdown-menu account-selector__menu{{ (menuEnd ?? false) ? ' dropdown-menu-end' : '' }}">
+        {# Sin papelera hay una sola sección: el título sobraría. #}
+        {% if trashed is not empty and accounts is not empty %}
+            <li><h6 class="dropdown-header">Activas</h6></li>
+        {% endif %}
         {% for acc in accounts %}
             <li>
-                <a class="dropdown-item {{ current and acc.id == current.id ? 'active' : '' }}"
+                <a class="dropdown-item d-flex align-items-center gap-2 {{ current and acc.id == current.id ? 'active' : '' }}"
                    href="{{ route is defined
                         ? path(route, {(routeParam|default('account')): acc.id})
                         : '?' ~ app.request.query.all|merge(resetParams|default({}))|merge({'account': acc.id})|url_encode }}"
                    {% if acc.name|length > 30 %}title="{{ acc.name }}"{% endif %}>
+                    <span class="account-selector__dot" style="background-color:{{ acc.color ?? '#6c757d' }}" aria-hidden="true"></span>
                     {{ acc.name|length > 30 ? acc.name|slice(0, 30)|trim ~ '…' : acc.name }}
                 </a>
             </li>
         {% endfor %}
-        {% if accounts is not empty and ((withTemplateItem ?? false) or (withCreateItem ?? true)) %}
+        {% if trashed is not empty %}
+            {% if accounts is not empty %}<li><hr class="dropdown-divider"></li>{% endif %}
+            <li>
+                <h6 class="dropdown-header d-flex align-items-center justify-content-between gap-3">
+                    En papelera
+                    <span class="badge rounded-pill bg-body-secondary text-body-secondary">{{ trashed|length }}</span>
+                </h6>
+            </li>
+            {% for acc in trashed %}
+                {% if acc.canBePurged %}
+                    {% set purgeText = 'borrable ya' %}
+                {% else %}
+                    {% set secondsLeft = acc.purgeableAt.timestamp - date().timestamp %}
+                    {% set purgeText = secondsLeft < 3600
+                        ? 'borrable en ' ~ (secondsLeft / 60)|round(0, 'ceil') ~ ' min'
+                        : 'borrable en ' ~ (secondsLeft / 3600)|round(0, 'ceil') ~ ' h' %}
+                {% endif %}
+                <li>
+                    <a class="dropdown-item account-selector__trashed d-flex align-items-center gap-2"
+                       href="{{ path('account_show', {id: acc.id}) }}"
+                       {% if acc.name|length > 30 %}title="{{ acc.name }}"{% endif %}>
+                        <i class="fa-solid fa-trash fa-sm" aria-hidden="true"></i>
+                        <span class="text-truncate">{{ acc.name|length > 30 ? acc.name|slice(0, 30)|trim ~ '…' : acc.name }}</span>
+                        <small class="ms-auto ps-2 text-nowrap">{{ purgeText }}</small>
+                    </a>
+                </li>
+            {% endfor %}
+        {% endif %}
+        {% if (accounts is not empty or trashed is not empty) and ((withTemplateItem ?? false) or (withCreateItem ?? true)) %}
             <li><hr class="dropdown-divider"></li>
         {% endif %}
         {% if withTemplateItem ?? false %}
