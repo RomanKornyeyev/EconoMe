@@ -11,6 +11,10 @@
             {
                 "type": "improvement",
                 "text": "Selector de cuentas mejorado para todas las vistas."
+            },
+            {
+                "type": "improvement",
+                "text": "Tutoriales de cuentas y dashboard actualizados y más breves."
             }
         ]
     },

@@ -44,7 +44,7 @@
         <button class="btn btn-primary btn-sm d-none d-lg-inline-flex align-items-center"
                 data-bs-toggle="modal" data-bs-target="#transactionModal"
                 aria-keyshortcuts="N"
-                data-tour-step="6"
+                data-tour-step="5"
                 data-tour-title="Añade movimientos"
                 data-tour-text="Registra un gasto o un ingreso sin salir del dashboard.">
             <i class="fa-solid fa-plus me-1"></i>Nuevo movimiento
@@ -57,8 +57,12 @@
 
     {# Cuenta y período comparten fila: en móvil la suya propia (de ahí el
        ancho completo de .dash-header__controls), en escritorio la de todos,
-       donde quedan igual que antes, a continuación del título. #}
-    <div class="dash-header__controls order-2 d-flex align-items-center gap-2">
+       donde quedan igual que antes, a continuación del título. Son un solo
+       paso del tour: los dos deciden qué datos se ven. #}
+    <div class="dash-header__controls order-2 d-flex align-items-center gap-2"
+         data-tour-step="1"
+         data-tour-title="Cuenta y período"
+         data-tour-text="Todo lo que ves en el dashboard pertenece a la cuenta y al período seleccionados.">
         <div class="dash-header__account flex-grow-1 flex-lg-grow-0">
             {% include 'partials/_account_selector.html.twig' with {
                 accounts: accounts,
@@ -67,18 +71,12 @@
                 groupClass: 'w-100',
                 labelPrefix: 'Cuenta ',
                 resetParams: {page: 1},
-                tourStep: 1,
-                tourTitle: 'Selector de cuenta',
-                tourText: 'Todo lo que ves en el dashboard pertenece a la cuenta seleccionada. Cambia de cuenta desde aquí.',
             } only %}
         </div>
 
         {# Período: mes y año en un único desplegable. Dos desplegables
            contiguos no caben en 390 px sin quedar en dos botones diminutos. #}
-        <div class="dash-header__period btn-group flex-shrink-0" role="group"
-             data-tour-step="2"
-             data-tour-title="Filtra por período"
-             data-tour-text="Navega mes a mes o consulta el año completo. Los meses sin datos aparecen atenuados.">
+        <div class="dash-header__period btn-group flex-shrink-0" role="group">
             {# Desactivada: el período se cambia desde el desplegable.
             <a href="{{ prevUrl }}" class="btn btn-sm btn-outline-primary dash-header__arrow" aria-label="Período anterior">
                 <i class="fa-solid fa-chevron-left fa-sm"></i>
