@@ -2,7 +2,7 @@
     {
         "version": "v1.5.3",
         "date": "2026-10-26",
-        "title": "Selector de cuenta renovado",
+        "title": "Mejora UX de cuentas en móvil y tutoriales actualizados",
         "changes": [
             {
                 "type": "improvement",
