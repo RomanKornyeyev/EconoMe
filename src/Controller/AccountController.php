@@ -30,27 +30,29 @@ class AccountController extends AbstractController
         private EntityManagerInterface $em,
     ) {}
 
+    /**
+     * Ya no hay listado de cuentas: todo se gestiona desde la ficha. Se
+     * conserva la ruta para los enlaces genéricos (menú, «Volver»…) y lleva a
+     * la cuenta recordada en sesión o, si no, a la primera, como el dashboard.
+     */
     #[Route('', name: 'index')]
-    public function index(AccountInvitationRepository $invitationRepository): Response
+    public function index(Request $request, AccountInvitationRepository $invitationRepository): Response
     {
-        $accounts = $this->accountService->getActiveAccountsForUser($this->getUser());
-        $pendingInvitations = $invitationRepository->findPendingReceivedBy($this->getUser());
-        $deletedCount = count($this->accountService->getDeletedAccountsOwnedByUser($this->getUser()));
+        $user = $this->getUser();
+        $accounts = $this->accountService->getActiveAccountsForUser($user);
 
-        return $this->render('account/index.html.twig', [
-            'accounts' => $accounts,
-            'pendingInvitations' => $pendingInvitations,
-            'deletedCount' => $deletedCount,
-        ]);
-    }
+        if ($account = $this->accountService->resolveCurrentAccount($request, $accounts)) {
+            return $this->redirectToRoute('account_show', ['id' => $account->getId()]);
+        }
 
-    #[Route('/trash', name: 'trash')]
-    public function trash(): Response
-    {
-        $deletedAccounts = $this->accountService->getDeletedAccountsOwnedByUser($this->getUser());
+        // Sin cuentas activas, pero con alguna en la papelera: se abre esa,
+        // que es desde donde se restaura.
+        if ($trashed = $this->accountService->getDeletedAccountsOwnedByUser($user)) {
+            return $this->redirectToRoute('account_show', ['id' => $trashed[0]->getId()]);
+        }
 
-        return $this->render('account/trash.html.twig', [
-            'deletedAccounts' => $deletedAccounts,
+        return $this->render('account/empty.html.twig', [
+            'receivedInvitations' => $invitationRepository->findPendingReceivedBy($user),
         ]);
     }
 
@@ -85,41 +87,75 @@ class AccountController extends AbstractController
         RecurringTransactionRepository $recurringRepository,
         TransactionRepository $transactionRepository,
     ): Response {
-        // Cuenta en la papelera: a un miembro se le explica la situación
-        // (al dueño con opción de restaurar); a un extraño, 404 sin filtrar nada.
+        $user = $this->getUser();
+        $common = [
+            'account' => $account,
+            'accounts' => $this->accountService->getActiveAccountsForUser($user),
+            // Solo aquí: el resto de selectores de cuenta no enseñan la papelera.
+            'trashedAccounts' => $this->accountService->getDeletedAccountsOwnedByUser($user),
+            'receivedInvitations' => $invitationRepository->findPendingReceivedBy($user),
+        ];
+
+        // Cuenta en la papelera: la ficha se pinta difuminada, con un panel de
+        // acciones encima. Al dueño, con sus datos y Restaurar/Eliminar; a
+        // otro miembro, sin datos (el voter ya no le deja verla) y solo con el
+        // aviso; a un extraño, 404 sin filtrar nada. No se recuerda en
+        // sesión: /account debe llevar a una cuenta usable.
         if ($account->isDeleted()) {
-            $member = $this->accountService->findActiveMember($account, $this->getUser());
+            $member = $this->accountService->findActiveMember($account, $user);
             if (!$member) {
                 throw $this->createNotFoundException();
             }
 
-            return $this->render('account/trashed.html.twig', [
-                'account' => $account,
-                'isOwner' => $member->isOwner(),
-            ], new Response(status: Response::HTTP_GONE));
+            if (!$member->isOwner()) {
+                $owner = $account->getActiveMembers()->findFirst(fn($k, AccountMember $m) => $m->isOwner());
+
+                return $this->render('account/show.html.twig', $common + [
+                    'isTrashed' => true,
+                    'isOwner' => false,
+                    'ownerName' => $owner?->getUser()->getNickname(),
+                ], new Response(status: Response::HTTP_GONE));
+            }
+
+            return $this->render('account/show.html.twig', $common + [
+                'isTrashed' => true,
+                'isOwner' => true,
+            ] + $this->accountBody($account, $member, $invitationRepository, $categoryRepository, $recurringRepository, $transactionRepository));
         }
 
         $this->denyAccessUnlessGranted('ACCOUNT_VIEW', $account);
         $this->accountService->rememberCurrentAccount($request, $account);
 
-        $members = $account->getActiveMembers();
-        $balance = $this->accountService->getBalance($account);
-        $currentMember = $this->accountService->getMemberRole($account, $this->getUser());
-        $pendingInvitations = $invitationRepository->findPendingByAccount($account);
+        return $this->render('account/show.html.twig', $common + [
+            'isTrashed' => false,
+        ] + $this->accountBody(
+            $account,
+            $this->accountService->getMemberRole($account, $user),
+            $invitationRepository, $categoryRepository, $recurringRepository, $transactionRepository,
+        ));
+    }
 
-        return $this->render('account/show.html.twig', [
-            'account' => $account,
-            'accounts' => $this->accountService->getActiveAccountsForUser($this->getUser()),
-            // Solo aquí: el resto de selectores de cuenta no enseñan la papelera.
-            'trashedAccounts' => $this->accountService->getDeletedAccountsOwnedByUser($this->getUser()),
-            'members' => $members,
-            'balance' => $balance,
+    /**
+     * Datos del cuerpo de la ficha (resumen, miembros, zona de peligro). Los
+     * comparten la cuenta activa y la vista del dueño en la papelera.
+     */
+    private function accountBody(
+        Account $account,
+        ?AccountMember $currentMember,
+        AccountInvitationRepository $invitationRepository,
+        CategoryRepository $categoryRepository,
+        RecurringTransactionRepository $recurringRepository,
+        TransactionRepository $transactionRepository,
+    ): array {
+        return [
+            'members' => $account->getActiveMembers(),
+            'balance' => $this->accountService->getBalance($account),
             'currentMember' => $currentMember,
-            'pendingInvitations' => $pendingInvitations,
+            'pendingInvitations' => $invitationRepository->findPendingByAccount($account),
             'activeRecurrings' => $recurringRepository->countActiveByAccount($account),
             'transactionCount' => $transactionRepository->count(['account' => $account]),
             'categoryCount' => $categoryRepository->count(['account' => $account]),
-        ]);
+        ];
     }
 
     #[Route('/{id}/edit', name: 'edit', requirements: ['id' => '\d+'])]
@@ -150,10 +186,12 @@ class AccountController extends AbstractController
 
         if ($this->isCsrfTokenValid('delete' . $account->getId(), $request->request->get('_token'))) {
             $this->accountService->deleteAccount($account, $this->getUser());
-            $this->addFlash('success', 'Cuenta enviada a la papelera. Podrás recuperarla desde Cuentas > Papelera.');
+            $this->addFlash('success', 'Cuenta enviada a la papelera. Puedes restaurarla desde aquí o desde el selector de cuentas.');
         }
 
-        return $this->redirectToRoute('account_index');
+        // A la misma cuenta, ya en modo papelera: se ve el resultado y
+        // «Restaurar» queda a mano.
+        return $this->redirectToRoute('account_show', ['id' => $account->getId()]);
     }
 
     #[Route('/{id}/restore', name: 'restore', methods: ['POST'], requirements: ['id' => '\d+'])]
@@ -170,7 +208,7 @@ class AccountController extends AbstractController
             }
         }
 
-        return $this->redirectToRoute('account_index');
+        return $this->redirectToRoute('account_show', ['id' => $account->getId()]);
     }
 
     #[Route('/{id}/destroy', name: 'destroy', methods: ['POST'], requirements: ['id' => '\d+'])]
@@ -179,14 +217,14 @@ class AccountController extends AbstractController
         $this->denyAccessUnlessGranted('ACCOUNT_MANAGE_TRASH', $account);
 
         if (!$this->isCsrfTokenValid('destroy' . $account->getId(), $request->request->get('_token'))) {
-            return $this->redirectToRoute('account_index');
+            return $this->redirectToRoute('account_show', ['id' => $account->getId()]);
         }
 
         // Confirmación por nombre: el usuario debe teclear el nombre exacto.
         $confirmName = trim((string) $request->request->get('confirm_name', ''));
         if ($confirmName !== $account->getName()) {
             $this->addFlash('error', 'El nombre no coincide. La cuenta no se ha eliminado.');
-            return $this->redirectToRoute('account_index');
+            return $this->redirectToRoute('account_show', ['id' => $account->getId()]);
         }
 
         try {
@@ -267,9 +305,12 @@ class AccountController extends AbstractController
             $this->addFlash('success', 'Te has unido a ' . $invitation->getAccount()->getName() . '.');
         } catch (\LogicException $e) {
             $this->addFlash('error', $e->getMessage());
+
+            return $this->redirectToRoute('account_index');
         }
 
-        return $this->redirectToRoute('account_index');
+        // Directo a la cuenta a la que acaba de unirse.
+        return $this->redirectToRoute('account_show', ['id' => $invitation->getAccount()->getId()]);
     }
 
     #[Route('/invitation/{id}/reject', name: 'invitation_reject', methods: ['POST'], requirements: ['id' => '\d+'])]

@@ -2,315 +2,203 @@
 
 {% block title %}{{ account.name }}{% endblock %}
 
+{#
+    Ficha de cuenta: la única vista de cuentas. No hay listado ni papelera
+    aparte; se cambia de cuenta, y se llega a las de la papelera, con el
+    selector de la cabecera.
+
+    Dos modos:
+    - Activa: el cuerpo (account/_body) tal cual.
+    - Papelera (isTrashed): el mismo cuerpo, difuminado e inert, con un panel
+      de acciones encima. La cabecera (título, selector y ayuda) sigue usable.
+      El dueño puede restaurarla o, pasado el enfriamiento, eliminarla; a otro
+      miembro solo se le explica la situación, sobre una silueta sin datos.
+#}
 {% block content %}
 {% import 'partials/macros/_tour.html.twig' as tour %}
 
-<div {{ tour.attrs('accounts') }}>
+{% set newAccountTourText = 'Crea tantas cuentas como necesites: personal, conjunta, un viaje…' %}
 
-<nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ path('account_index') }}">Cuentas</a></li>
-        <li class="breadcrumb-item active" aria-current="page"
-            {% if account.name|length > 30 %}title="{{ account.name }}"{% endif %}>
-            {{ account.name|length > 30 ? account.name|slice(0, 30)|trim ~ '…' : account.name }}
-        </li>
-    </ol>
-</nav>
+{# pb-5 en móvil: el FAB flota sobre el final de la página. #}
+<div class="pb-5 pb-md-0" {{ tour.attrs('accounts', not isTrashed) }}>
 
-{# Cabecera con el mismo reparto que movimientos y categorías. En escritorio,
-   una fila: título, cuenta, accesos y ayuda. En móvil, tres: título y ayuda;
-   la cuenta a todo el ancho; y los accesos, también a todo el ancho. El
-   reparto lo hacen los order-*, .tx-header__account y .account-header__links
-   (general.css). #}
-<div class="d-flex flex-wrap align-items-center gap-2 mb-4">
-    <h1 class="mb-0 h3 me-1">Detalles de la cuenta</h1>
+{# Cabecera. Mismo reparto que movimientos y categorías: en escritorio, una
+   fila con título, cuenta y, al otro extremo, las acciones; en móvil, título
+   y ayuda arriba y la cuenta debajo, a todo el ancho. #}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <h1 class="mb-0 h2 me-1">Cuenta</h1>
 
-    <div class="order-1 order-md-3 ms-auto ms-md-0 d-flex align-items-center">
+    <div class="order-1 order-md-2 ms-auto d-flex align-items-center gap-2">
+        {# Una cuenta en la papelera no tiene dashboard que abrir. #}
+        {% if not isTrashed %}
+            <a href="{{ path('dashboard', {account: account.id}) }}" class="btn btn-outline-primary btn-sm d-none d-md-inline-flex align-items-center">
+                <i class="fa-solid fa-chart-line me-1"></i>Dashboard
+            </a>
+        {% endif %}
+        {# En móvil este botón lo sustituye el FAB del final de la página. #}
+        <a href="{{ path('account_create') }}" class="btn btn-primary btn-sm d-none d-md-inline-flex align-items-center"
+           data-tour-step="2"
+           data-tour-title="Nueva cuenta"
+           data-tour-text="{{ newAccountTourText }}">
+            <i class="fa-solid fa-plus me-1"></i>Nueva cuenta
+        </a>
         {{ tour.help_button() }}
     </div>
 
-    <div class="tx-header__account order-2 order-md-1">
+    {# Sin prefijo «Cuenta »: ya lo dice el título. En móvil comparte fila con
+       el botón de Dashboard (.account-header__*), que en escritorio va con las
+       acciones. #}
+    <div class="tx-header__account order-2 order-md-1 d-flex gap-2">
+        <div class="account-header__selector">
         {% include 'partials/_account_selector.html.twig' with {
             accounts: accounts,
             current: account,
             route: 'account_show',
             routeParam: 'id',
             trashedAccounts: trashedAccounts,
-            labelPrefix: 'Cuenta ',
             groupClass: 'w-100',
             tourStep: 1,
             tourTitle: 'Selector de cuenta',
-            tourText: 'Aquí eliges la cuenta que quieres gestionar. Toda la información de esta página pertenece a la cuenta seleccionada.',
+            tourText: 'Aquí eliges la cuenta que quieres gestionar. Las que mandes a la papelera también aparecen aquí, para restaurarlas o borrarlas.',
         } only %}
-    </div>
-
-    <div class="account-header__links order-3 order-md-2 ms-md-auto d-flex gap-2">
-        <a href="{{ path('dashboard', {account: account.id}) }}" class="btn btn-sm btn-outline-primary">
-            <i class="fa-solid fa-chart-line me-1"></i>Dashboard
-        </a>
-        <a href="{{ path('transaction_index', {account: account.id}) }}" class="btn btn-sm btn-primary"
-           data-tour-step="6"
-           data-tour-title="Empieza a registrar"
-           data-tour-text="Cuando quieras, entra aquí para añadir tus primeros movimientos a esta cuenta.">
-            <i class="fa-solid fa-arrow-right-arrow-left me-1"></i>Movimientos
-        </a>
-    </div>
-</div>
-
-{# Balance #}
-<div class="row g-3 mb-4"
-     data-tour-step="2"
-     data-tour-title="Resumen de la cuenta"
-     data-tour-text="El saldo actual y los totales de movimientos y recurrentes activos. Las tarjetas son accesos directos a cada sección.">
-    <div class="col-12 col-md-4">
-        <div class="bg-body-secondary rounded-3 p-3 text-center">
-            <div class="text-muted small text-uppercase mb-1">Saldo actual</div>
-            <div class="fs-5 fw-semibold {{ balance >= 0 ? 'text-success' : 'text-danger' }}">
-                {{ balance|number_format(2, ',', '.') }} {{ account.currency }}
-            </div>
         </div>
-    </div>
-    <div class="col-12 col-md-4">
-        <a href="{{ path('transaction_index', {account: account.id}) }}" class="d-block bg-body-secondary rounded-3 p-3 text-center text-decoration-none">
-            <div class="text-muted small text-uppercase mb-1">Movimientos</div>
-            <div class="fs-5 fw-semibold text-body">{{ transactionCount }}</div>
-        </a>
-    </div>
-    <div class="col-12 col-md-4">
-        <a href="{{ path('recurring_index', {account: account.id}) }}" class="d-block bg-body-secondary rounded-3 p-3 text-center text-decoration-none">
-            <div class="text-muted small text-uppercase mb-1">Movimientos periódicos activos</div>
-            <div class="fs-5 fw-semibold text-body">{{ activeRecurrings }}</div>
-        </a>
-    </div>
-</div>
-
-{# Información de la cuenta y categorías #}
-<div class="row g-3 mb-4">
-    <div class="col-12 col-lg-6"
-         data-tour-step="4"
-         data-tour-title="Datos de la cuenta"
-         data-tour-text="El nombre, la descripción y el color de la cuenta. Con «Editar cuenta» puedes cambiarlos cuando quieras.">
-        <div class="card border shadow-sm h-100 bg-body-tertiary">
-            <div class="card-body">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                         style="width:52px;height:52px;background-color:{{ account.color ?? '#6c757d' }}20;border:2px solid {{ account.color ?? '#6c757d' }}">
-                        <i class="fa-solid fa-wallet fa-lg" style="color:{{ account.color ?? '#6c757d' }}"></i>
-                    </div>
-                    <div class="min-w-0">
-                        <h5 class="mb-0 fw-semibold text-truncate">{{ account.name }}</h5>
-                        {% if account.description %}
-                            <small class="text-muted text-truncate d-block">{{ account.description }}</small>
-                        {% else %}
-                            <small class="text-muted fst-italic">Sin descripción</small>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <div class="d-flex flex-wrap gap-2">
-                    <span class="badge bg-body-secondary text-body-secondary">
-                        <i class="fa-regular fa-calendar me-1"></i>Creada el {{ account.createdAt ? account.createdAt|date('d/m/Y') : '—' }}
-                    </span>
-                </div>
-            </div>
-            {% if currentMember and currentMember.canManageAccount() %}
-                <div class="card-footer bg-transparent d-flex justify-content-end">
-                    <a href="{{ path('account_edit', {id: account.id}) }}" class="btn btn-primary">
-                        Editar cuenta
-                    </a>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <div class="col-12 col-lg-6"
-         data-tour-step="3"
-         data-tour-title="Categorías de la cuenta"
-         data-tour-text="Cada cuenta tiene su propio juego de categorías para clasificar gastos e ingresos. Desde aquí las gestionas.">
-        <div class="card border shadow-sm h-100 bg-body-tertiary">
-            <div class="card-body">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 bg-body-secondary"
-                         style="width:52px;height:52px;">
-                        <i class="fa-solid fa-tags fa-lg text-body-secondary"></i>
-                    </div>
-                    <div class="min-w-0">
-                        <h5 class="mb-0 fw-semibold">Categorías</h5>
-                        <small class="text-muted">{{ categoryCount }} en total</small>
-                    </div>
-                </div>
-                <p class="text-muted mb-0">Ver y modificar las categorías asociadas a esta cuenta.</p>
-            </div>
-            {% if currentMember and currentMember.canManageAccount() %}
-                <div class="card-footer bg-transparent d-flex justify-content-end">
-                    <a href="{{ path('category_index', {account: account.id}) }}" class="btn btn-outline-primary">
-                        Editar categorías
-                    </a>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
-
-{# Members #}
-<div class="card border shadow-sm mb-4 bg-body-tertiary"
-     data-tour-step="5"
-     data-tour-title="Comparte la cuenta"
-     data-tour-text="Puedes invitar a tus amigos a esta cuenta como editores o solo lectores. Ideal para gastos compartidos."
-     data-tour-side="top">
-    <div class="card-header bg-transparent d-flex justify-content-between align-items-center py-3">
-        <h5 class="mb-0 fw-semibold">
-            Miembros
-            <span class="badge rounded-pill bg-secondary align-middle ms-1">{{ members|length }}</span>
-        </h5>
-        {% if currentMember and currentMember.canManageAccount() %}
-            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#inviteMemberModal">
-                <i class="fa-solid fa-user-plus me-1"></i>Invitar
-            </button>
-        {% endif %}
-    </div>
-    <div class="card-body p-0">
-        <ul class="list-group list-group-flush">
-            {% for member in members %}
-                <li class="list-group-item d-flex align-items-center justify-content-between bg-body-tertiary">
-                    <div class="d-flex align-items-center gap-2">
-                        <img src="{{ asset(member.user.profilePhoto) }}" class="rounded-circle" width="32" height="32" style="object-fit:cover" alt="">
-                        <div>
-                            <div class="fw-semibold">{{ member.user.nickname }}</div>
-                            <small class="text-muted">{{ member.user.email }}</small>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="badge {% if member.role == 'owner' %}bg-primary text-dark{% elseif member.role == 'editor' %}bg-info text-dark{% else %}bg-secondary{% endif %}">
-                            {{ member.role|capitalize }}
-                        </span>
-                        {% if currentMember and currentMember.canManageAccount() and member.user != app.user %}
-                            <form method="post" action="{{ path('account_remove_member', {id: account.id, userId: member.user.id}) }}"
-                                  data-controller="confirm"
-                                  data-action="submit->confirm#submit"
-                                  data-confirm-message-value="¿Eliminar a {{ member.user.nickname }} de la cuenta?"
-                                  data-confirm-text-value="Eliminar">
-                                <input type="hidden" name="_token" value="{{ csrf_token('remove' ~ member.user.id) }}">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                    <i class="fa-solid fa-xmark"></i>
-                                </button>
-                            </form>
-                        {% endif %}
-                    </div>
-                </li>
-            {% endfor %}
-        </ul>
-
-        {% if pendingInvitations is not empty %}
-            <div class="px-3 pt-3 pb-1">
-                <small class="text-muted text-uppercase fw-semibold">Invitaciones pendientes</small>
-            </div>
-            <ul class="list-group list-group-flush">
-                {% for invitation in pendingInvitations %}
-                    <li class="list-group-item d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center gap-2">
-                            <img src="{{ asset(invitation.invitee.profilePhoto) }}" class="rounded-circle" width="32" height="32" style="object-fit:cover;opacity:.7" alt="">
-                            <div>
-                                <div class="fw-semibold">{{ invitation.invitee.nickname }}</div>
-                                <small class="text-muted">{{ invitation.invitee.email }}</small>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-body-secondary text-body-secondary">
-                                <i class="fa-solid fa-clock me-1"></i>Pendiente · {{ invitation.role }}
-                            </span>
-                            {% if currentMember and currentMember.canManageAccount() %}
-                                <form method="post" action="{{ path('account_invitation_cancel', {id: invitation.id}) }}"
-                                      data-controller="confirm"
-                                      data-action="submit->confirm#submit"
-                                      data-confirm-message-value="¿Cancelar la invitación a {{ invitation.invitee.nickname }}?"
-                                      data-confirm-text-value="Cancelar invitación">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('invitation_' ~ invitation.id) }}">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        <i class="fa-solid fa-xmark"></i>
-                                    </button>
-                                </form>
-                            {% endif %}
-                        </div>
-                    </li>
-                {% endfor %}
-            </ul>
+        {% if not isTrashed %}
+            <a href="{{ path('dashboard', {account: account.id}) }}" class="account-header__dash btn btn-outline-primary btn-sm d-inline-flex d-md-none align-items-center justify-content-center">
+                <i class="fa-solid fa-chart-line me-1"></i>Dashboard
+            </a>
         {% endif %}
     </div>
 </div>
 
-{# Invite member modal (managers only) #}
-{% if currentMember and currentMember.canManageAccount() %}
-    <div class="modal fade" id="inviteMemberModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-body-tertiary">
-                <div class="modal-header">
-                    <h5 class="modal-title">Invitar miembro</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4"
-                     data-controller="user-search"
-                     data-user-search-url-value="{{ path('account_invite_search', {id: account.id}) }}">
-                    <label class="form-label small text-muted">Busca entre tus amigos por nombre, apodo o email</label>
-                    <input type="text"
-                           class="form-control"
-                           placeholder="Escribe al menos 2 caracteres…"
-                           autocomplete="off"
-                           data-user-search-target="input"
-                           data-action="input->user-search#search">
-                    <div class="mt-2" data-user-search-target="results"></div>
-                </div>
-            </div>
-        </div>
-    </div>
+{% if receivedInvitations is not empty %}
+    {% include 'account/_pending_invitations.html.twig' with {receivedInvitations: receivedInvitations} only %}
 {% endif %}
 
-{# Danger zone #}
-<div class="card border shadow-sm mb-4 bg-body-tertiary">
-    <div class="card-header bg-transparent py-3">
-        <h5 class="mb-0 fw-semibold">Zona de peligro</h5>
+{% if not isTrashed %}
+
+    {% include 'account/_body.html.twig' with {interactive: true} %}
+
+{% else %}
+
+    {# ── Modo papelera ───────────────────────────────────────────────── #}
+    <div class="account-trash">
+        {# inert: ni foco, ni clics, ni lector de pantalla. #}
+        <div class="account-trash__body" inert>
+            {% include 'account/_body.html.twig' with {interactive: false, placeholder: not isOwner} %}
+        </div>
+
+        <div class="account-trash__overlay">
+            <section class="account-trash__panel" aria-labelledby="trashPanelTitle">
+                {% if isOwner %}
+                    <div class="account-trash__icon" aria-hidden="true"><i class="fa-solid fa-trash"></i></div>
+                    <h2 class="h5 fw-normal mb-1" id="trashPanelTitle">En la papelera</h2>
+                    <p class="small text-body-secondary mb-3">
+                        <strong class="text-body">{{ account.name }}</strong> se envió el {{ account.deletedAt|date('d/m') }} a las {{ account.deletedAt|date('H:i') }}.
+                        {% if transactionCount == 0 %}
+                            No tiene movimientos.
+                        {% elseif transactionCount == 1 %}
+                            Su único movimiento se conserva<span class="d-none d-md-inline"> hasta que la elimines</span>.
+                        {% else %}
+                            Sus {{ transactionCount }} movimientos se conservan<span class="d-none d-md-inline"> hasta que la elimines</span>.
+                        {% endif %}
+                    </p>
+
+                    <div class="d-grid gap-2">
+                        <form method="post" action="{{ path('account_restore', {id: account.id}) }}" class="d-grid"
+                              data-controller="confirm"
+                              data-action="submit->confirm#submit"
+                              data-confirm-message-value="La cuenta «{{ account.name }}» volverá a estar activa. Si más adelante quieres eliminarla de forma permanente, tendrás que enviarla de nuevo a la papelera y esperar 24 horas."
+                              data-confirm-text-value="Restaurar"
+                              data-confirm-danger-value="false">
+                            <input type="hidden" name="_token" value="{{ csrf_token('restore' ~ account.id) }}">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-solid fa-rotate-left me-1"></i>Restaurar cuenta
+                            </button>
+                        </form>
+                        {% if account.canBePurged %}
+                            <button type="button" class="btn btn-outline-danger"
+                                    data-bs-toggle="modal" data-bs-target="#purgeModal">
+                                <i class="fa-solid fa-trash me-1"></i>Eliminar definitivamente
+                            </button>
+                        {% else %}
+                            {# En gris hasta que pasa el periodo de seguridad; en
+                               rojo solo cuando de verdad se puede eliminar. #}
+                            <button type="button" class="btn btn-outline-secondary" disabled
+                                    aria-describedby="purgeAvailability">
+                                <i class="fa-solid fa-lock me-1"></i>Eliminar definitivamente
+                            </button>
+                        {% endif %}
+                    </div>
+
+                    {% if not account.canBePurged %}
+                        <p class="small text-body-secondary mt-2 mb-0" id="purgeAvailability">
+                            <i class="fa-regular fa-clock me-1" aria-hidden="true"></i>Disponible el {{ account.purgeableAt|date('d/m') }} a las {{ account.purgeableAt|date('H:i') }}
+                        </p>
+                    {% endif %}
+                {% else %}
+                    <div class="account-trash__icon" aria-hidden="true"><i class="fa-solid fa-ban"></i></div>
+                    <h2 class="h5 fw-normal mb-1" id="trashPanelTitle">Esta cuenta ya no está disponible</h2>
+                    <p class="small text-body-secondary mb-3">
+                        Su propietario{{ ownerName ? ', ' ~ ownerName ~ ',' : '' }} la ha enviado a la papelera.
+                        Podrás volver a usarla si la restaura.
+                    </p>
+                    <div class="d-grid">
+                        <a href="{{ path('account_index') }}" class="btn btn-outline-primary">Ir a otra cuenta</a>
+                    </div>
+                {% endif %}
+            </section>
+        </div>
     </div>
-    <div class="card-body">
-        {% if currentMember and not currentMember.isOwner() %}
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                <div class="min-w-0">
-                    <div class="fw-semibold">Abandonar la cuenta</div>
-                    <small class="text-muted">Dejarás de tener acceso a sus movimientos. Podrás volver si te invitan de nuevo.</small>
+
+    {# Borrado permanente con confirmación por nombre. #}
+    {% if isOwner and account.canBePurged %}
+        <div class="modal fade" id="purgeModal" tabindex="-1" aria-labelledby="purgeModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content bg-body-tertiary">
+                    <form method="post" action="{{ path('account_destroy', {id: account.id}) }}"
+                          data-controller="confirm-match"
+                          data-confirm-match-expected-value="{{ account.name }}">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="purgeModalLabel">Eliminar definitivamente</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <div class="alert alert-danger d-flex align-items-center gap-2 py-2">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                <span>Se borrarán la cuenta y todos sus movimientos. <strong>Esta acción no se puede deshacer.</strong></span>
+                            </div>
+                            <label class="form-label small text-muted" for="purgeConfirmName">
+                                Escribe <strong>{{ account.name }}</strong> para confirmar
+                            </label>
+                            <input type="text" id="purgeConfirmName" name="confirm_name" class="form-control" autocomplete="off" required
+                                   data-confirm-match-target="input"
+                                   data-action="input->confirm-match#check">
+                            <input type="hidden" name="_token" value="{{ csrf_token('destroy' ~ account.id) }}">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger" data-confirm-match-target="submit">
+                                <i class="fa-solid fa-trash me-1"></i>Eliminar para siempre
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <form method="post" action="{{ path('account_leave', {id: account.id}) }}"
-                      data-controller="confirm"
-                      data-action="submit->confirm#submit"
-                      data-confirm-message-value="¿Seguro que quieres abandonar «{{ account.name }}»?"
-                      data-confirm-text-value="Abandonar">
-                    <input type="hidden" name="_token" value="{{ csrf_token('leave' ~ account.id) }}">
-                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                        <i class="fa-solid fa-right-from-bracket me-1"></i>Abandonar
-                    </button>
-                </form>
             </div>
-        {% endif %}
-        {% if currentMember and currentMember.isOwner() %}
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                <div class="min-w-0">
-                    <div class="fw-semibold">Eliminar la cuenta</div>
-                    <small class="text-muted">
-                        La cuenta se enviará a la papelera. Podrás recuperarla en cualquier momento o borrarla permanentemente tras 24 horas.
-                    </small>
-                </div>
-                <form method="post" action="{{ path('account_delete', {id: account.id}) }}"
-                      data-controller="confirm"
-                      data-action="submit->confirm#submit"
-                      data-confirm-message-value="«{{ account.name }}» se enviará a la papelera. Sus movimientos se conservan y podrás restaurarla desde Cuentas > Papelera. Pasadas 24 horas, podrás borrarla de forma permanente."
-                      data-confirm-text-value="Enviar a la papelera">
-                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ account.id) }}">
-                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                        <i class="fa-solid fa-trash me-1"></i>Eliminar
-                    </button>
-                </form>
-            </div>
-        {% endif %}
-    </div>
-</div>
+        </div>
+    {% endif %}
+
+{% endif %}
+
+{# Botón flotante de «Nueva cuenta»: sustituye en móvil al de la cabecera.
+   Lleva su mismo paso del tour; el tour ignora el oculto. #}
+<a href="{{ path('account_create') }}"
+   class="dash-fab btn btn-primary rounded-circle shadow position-fixed bottom-0 end-0 m-3 d-flex d-md-none align-items-center justify-content-center"
+   aria-label="Nueva cuenta"
+   data-tour-step="2"
+   data-tour-title="Nueva cuenta"
+   data-tour-text="{{ newAccountTourText }}">
+    <i class="fa-solid fa-plus"></i>
+</a>
 
 </div> {# /tour #}
 {% endblock %}

@@ -21,7 +21,10 @@
     - titleClass:         clases del <h6> del título. El dashboard lo oculta en
                           móvil (d-none d-lg-block) porque ahí lo dice la pestaña.
     - visibleCategories:  filas visibles antes de desplegar (por defecto, 3)
+    - canEdit:            muestra los botones de alta del estado vacío (por
+                          defecto, ACCOUNT_EDIT sobre currentAccount)
 #}
+{% set canEdit           = canEdit ?? is_granted('ACCOUNT_EDIT', currentAccount) %}
 {% set titleClass        = titleClass|default('') %}
 {% set visibleCategories = visibleCategories|default(3) %}
 {% set nameMaxLength     = 20 %}
@@ -97,6 +100,7 @@
         {% if expensesByCategory is empty %}
             <div class="d-flex flex-column justify-content-center align-items-center text-center h-100 gap-3 py-4">
                 <p class="text-muted small mb-0">No hay {{ categoryType == 'income' ? 'ingresos' : 'gastos' }} en este período.</p>
+                {% if canEdit %}
                 <div class="d-flex flex-column gap-2">
                     <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#transactionModal">
                         <i class="fa-solid fa-plus me-1"></i>Añadir movimiento
@@ -105,6 +109,7 @@
                         <i class="fa-solid fa-rotate me-1"></i>Añadir movimiento recurrente
                     </a>
                 </div>
+                {% endif %}
             </div>
         {% else %}
             <div class="dash-chart dash-chart--doughnut">

@@ -11,7 +11,8 @@
     - resetParams:      query params a resetear al cambiar de cuenta (p. ej. {page: 1})
     - trashedAccounts:  cuentas en la papelera. La sección «En papelera» solo se
                         pinta si llega con datos; por defecto no se muestra.
-                        Cada una enlaza a su ficha, que ofrece restaurarla.
+                        Cada una enlaza a su ficha, en modo papelera, desde
+                        donde se restaura o se borra.
     - withTemplateItem: añade el ítem «Mi plantilla» (categorías)
     - withCreateItem:   muestra el ítem «Añadir cuenta» (por defecto true)
     - menuEnd:          alinea el desplegable a la derecha
@@ -34,6 +35,8 @@
     {% if prefix and buttonLabel|lower starts with prefix|lower %}{% set prefix = '' %}{% endif %}
     <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"
             {% if buttonLabel|length > 20 %}title="{{ buttonLabel }}"{% endif %}>
+        {# La cuenta elegida está en la papelera (solo pasa en la ficha). #}
+        {% if current and current.isDeleted %}<i class="fa-solid fa-trash fa-sm me-1" aria-label="En la papelera:"></i>{% endif %}
         {{ prefix }}{{ buttonLabel|length > 20 ? buttonLabel|slice(0, 20)|trim ~ '…' : buttonLabel }}
     </button>
     <ul class="dropdown-menu account-selector__menu{{ (menuEnd ?? false) ? ' dropdown-menu-end' : '' }}">
@@ -61,22 +64,15 @@
                     <span class="badge rounded-pill bg-body-secondary text-body-secondary">{{ trashed|length }}</span>
                 </h6>
             </li>
+            {% import 'account/_macros.html.twig' as accMacros %}
             {% for acc in trashed %}
-                {% if acc.canBePurged %}
-                    {% set purgeText = 'borrable ya' %}
-                {% else %}
-                    {% set secondsLeft = acc.purgeableAt.timestamp - date().timestamp %}
-                    {% set purgeText = secondsLeft < 3600
-                        ? 'borrable en ' ~ (secondsLeft / 60)|round(0, 'ceil') ~ ' min'
-                        : 'borrable en ' ~ (secondsLeft / 3600)|round(0, 'ceil') ~ ' h' %}
-                {% endif %}
                 <li>
-                    <a class="dropdown-item account-selector__trashed d-flex align-items-center gap-2"
+                    <a class="dropdown-item account-selector__trashed d-flex align-items-center gap-2 {{ current and acc.id == current.id ? 'active' : '' }}"
                        href="{{ path('account_show', {id: acc.id}) }}"
                        {% if acc.name|length > 30 %}title="{{ acc.name }}"{% endif %}>
                         <i class="fa-solid fa-trash fa-sm" aria-hidden="true"></i>
                         <span class="text-truncate">{{ acc.name|length > 30 ? acc.name|slice(0, 30)|trim ~ '…' : acc.name }}</span>
-                        <small class="ms-auto ps-2 text-nowrap">{{ purgeText }}</small>
+                        <small class="ms-auto ps-2 text-nowrap">{{ accMacros.purge_text(acc) }}</small>
                     </a>
                 </li>
             {% endfor %}

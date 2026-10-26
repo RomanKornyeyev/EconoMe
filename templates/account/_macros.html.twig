@@ -1,0 +1,28 @@
+{#
+    Macros de cuentas.
+
+    Uso:
+        {% import 'account/_macros.html.twig' as acc %}
+        {{ acc.purge_text(account) }}
+#}
+
+{# Tiempo que falta para poder borrar definitivamente una cuenta de la
+   papelera: «14 h» o, por debajo de una hora, «10 min». #}
+{% macro purge_eta(account) %}
+    {%- set secondsLeft = account.purgeableAt.timestamp - date().timestamp -%}
+    {%- if secondsLeft < 3600 -%}
+        {{ (secondsLeft / 60)|round(0, 'ceil') }} min
+    {%- else -%}
+        {{ (secondsLeft / 3600)|round(0, 'ceil') }} h
+    {%- endif -%}
+{% endmacro %}
+
+{# «borrable en 14 h», «borrable en 10 min» o «borrable ya». #}
+{% macro purge_text(account) %}
+    {%- import _self as acc -%}
+    {%- if account.canBePurged -%}
+        borrable ya
+    {%- else -%}
+        borrable en {{ acc.purge_eta(account) }}
+    {%- endif -%}
+{% endmacro %}

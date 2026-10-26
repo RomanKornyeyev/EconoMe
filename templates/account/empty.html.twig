@@ -1,0 +1,22 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Cuenta{% endblock %}
+
+{#
+    /account sin ninguna cuenta, ni activa ni en la papelera (si hay alguna,
+    AccountController::index redirige a su ficha). Las invitaciones recibidas
+    se muestran aquí también: aceptar una es otra forma de tener cuenta.
+
+    Espera en contexto: receivedInvitations.
+#}
+{% block content %}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <h1 class="mb-0 h2 me-1">Cuenta</h1>
+</div>
+
+{% if receivedInvitations is not empty %}
+    {% include 'account/_pending_invitations.html.twig' with {receivedInvitations: receivedInvitations} only %}
+{% endif %}
+
+{% include 'partials/_no_account.html.twig' with {message: 'Crea tu primera cuenta para empezar a registrar movimientos.'} only %}
+{% endblock %}

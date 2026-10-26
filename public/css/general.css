@@ -453,6 +453,11 @@ input.flatpickr-input.form-control[readonly] {
     .tx-header__account { width: auto; }
 }
 
+/* Ficha de cuenta en móvil: selector y Dashboard en la misma fila, 65/35.
+   Sin Dashboard (cuenta en la papelera), el selector ocupa la fila entera. */
+.account-header__selector { flex: 1 1 0; min-width: 0; }
+.account-header__dash     { flex: 0 0 calc(35% - .25rem); }
+
 /* ---- Selector de cuenta (partials/_account_selector) ---- */
 /* Bolita con el color de la cuenta. En px enteros y sin sombra: con rem
    (9,6 px) y un anillo semitransparente el borde salía borroso. */
@@ -468,11 +473,222 @@ input.flatpickr-input.form-control[readonly] {
 /* Hueco para nombre + «borrable en 14 h» sin que se monten. */
 .account-selector__menu { min-width: 14rem; }
 
-/* Ficha de cuenta: en móvil, Dashboard y Movimientos van bajo la cuenta y se
-   reparten la fila; en escritorio vuelven a su tamaño. */
+/* ══════════════════════════════════════════════════════════════════════ */
+/*  Ficha de cuenta (account/show)                                        */
+/*                                                                        */
+/*  El color de la cuenta llega en --account-color (style de la tarjeta). */
+/*  Corte en md, como movimientos y categorías.                           */
+/* ══════════════════════════════════════════════════════════════════════ */
+
+/* ---- Tarjeta de la cuenta ---- */
+/* !important: .border también lo lleva y si no se impondría al color. */
+.account-card { border-top: 3px solid var(--account-color) !important; }
+
+.account-card__avatar {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid var(--account-color);
+    background-color: color-mix(in srgb, var(--account-color) 14%, transparent);
+    color: var(--account-color);
+    font-size: 1.1rem;
+}
+
+/* Cabecera de la tarjeta en rejilla para mover la descripción sin duplicarla:
+   en móvil baja bajo el avatar, a todo el ancho; en escritorio queda bajo el
+   nombre, con el avatar ocupando las dos filas. */
+.account-card__head {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+        "avatar name actions"
+        "desc   desc desc";
+    align-items: center;
+    column-gap: 1rem;
+    row-gap: .75rem;
+}
+.account-card__avatar  { grid-area: avatar; }
+.account-card__name    { grid-area: name; }
+/* text-truncate recorta con overflow: hidden, que con el 1.2 de los títulos
+   se come los rabitos (g, p, y). clip solo en horizontal deja los puntos
+   suspensivos y que los rabitos asomen, sin hacer más alta la línea. */
+.account-card .account-card__name { overflow-x: clip; overflow-y: visible; }
+.account-card__actions { grid-area: actions; }
+.account-card__desc    { grid-area: desc; }
+
+/* Móvil: solo el lápiz, cuadrado y con objetivo táctil de 44 px. En
+   escritorio lleva texto y recupera el tamaño normal de btn-sm. */
+.account-card__edit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+}
+
+/* ---- Cifras ---- */
+/* Móvil: saldo a todo el ancho y debajo tres columnas, número sobre etiqueta. */
+.account-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.account-stats__balance {
+    grid-column: 1 / -1;
+    padding-bottom: .75rem;
+    margin-bottom: .75rem;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+.account-stats__amount { font-size: 1.75rem; font-weight: 600; line-height: 1.2; }
+.account-stats__item {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    padding: .25rem;
+    color: var(--bs-body-color);
+    text-decoration: none;
+}
+.account-stats__item + .account-stats__item { border-left: 1px solid var(--bs-border-color); }
+.account-stats__item:hover { color: var(--bs-primary); }
+.account-stats__label { font-size: .8rem; color: var(--bs-secondary-color); }
+.account-stats__value { font-size: 1.1rem; font-weight: 600; }
+
+/* Miembros apilados, solo en escritorio. El borde los separa entre sí. */
+.account-stack { display: flex; }
+.account-stack img {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--bs-tertiary-bg);
+}
+.account-stack img + img { margin-left: -8px; }
+
+/* ---- Miembros ---- */
+/* Rejilla para que nombre, email, rol y acción caigan en columna fila a
+   fila. En móvil el email va bajo el nombre y su columna desaparece. */
+.account-members__row {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr) auto auto;
+    grid-template-areas: "avatar who role action";
+    align-items: center;
+    column-gap: .75rem;
+}
+.account-members__avatar { grid-area: avatar; width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+.account-members__who    { grid-area: who; }
+.account-members__email  { grid-area: email; }
+.account-members__role   { grid-area: role; }
+.account-members__action { grid-area: action; }
+/* Invitación pendiente: avatar atenuado y con contorno discontinuo. */
+.account-members__row--pending .account-members__avatar {
+    opacity: .6;
+    outline: 1px dashed var(--bs-secondary-color);
+    outline-offset: 2px;
+}
+
+/* ---- Zona de peligro ---- */
+.account-danger { display: flex; flex-direction: column; gap: 1rem; }
+
+/* ---- Cuenta en la papelera ---- */
+/* La ficha entera se pinta debajo, difuminada y oscurecida como tras un
+   modal, y el panel de acciones flota encima. Solo cubre el cuerpo: la
+   cabecera (título, selector, ayuda) sigue usable. El min-height da sitio al
+   panel cuando debajo solo está la silueta de la tarjeta (no dueño). */
+/* overflow: clip y no hidden: recorta el desenfoque que se salía por los
+   bordes (el borde de color de la tarjeta hacía un halo encima) sin crear un
+   contenedor de scroll, que rompería el sticky del panel. */
+.account-trash {
+    position: relative;
+    min-height: 22rem;
+    overflow: clip;
+    border-radius: var(--bs-border-radius-lg);
+}
+/* Sin velo: la ficha de detrás solo va borrosa y apagada (gris y atenuada),
+   para que se lea como cuenta inactiva sin taparla con una losa. */
+.account-trash__body { filter: blur(4px) grayscale(.6); opacity: .45; user-select: none; }
+.account-trash__overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 1rem 0;
+}
+/* sticky: en una ficha larga el panel acompaña al scroll en vez de quedarse
+   arriba, fuera de la vista. Tarjeta neutra: el único color es el de las
+   acciones. */
+.account-trash__panel {
+    position: sticky;
+    top: 5.5rem;
+    width: 100%;
+    max-width: 22rem;
+    padding: 1.5rem;
+    text-align: center;
+    background-color: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius-lg);
+    box-shadow: 0 .75rem 2rem rgba(0, 0, 0, .3);
+    animation: account-trash-in .25s ease-out;
+}
+
+@keyframes account-trash-in {
+    from { opacity: 0; transform: translateY(.5rem); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .account-trash__panel { animation: none; }
+}
+
+.account-trash__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin: 0 auto .75rem;
+    border-radius: 50%;
+    background-color: var(--bs-secondary-bg);
+    color: var(--bs-secondary-color);
+}
+
 @media (max-width: 767.98px) {
-    .account-header__links      { width: 100%; }
-    .account-header__links .btn { flex: 1 1 0; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+    .account-danger .btn,
+    .account-trash__panel .btn { min-height: 44px; }
+}
+
+@media (min-width: 768px) {
+    /* 56 px: lo que ocupan el nombre y la primera línea de la descripción. */
+    .account-card__avatar { width: 56px; height: 56px; font-size: 1.4rem; }
+    .account-card__head {
+        grid-template-areas:
+            "avatar name actions"
+            "avatar desc actions";
+        align-items: start;
+        row-gap: .25rem;
+    }
+    .account-card__name { align-self: center; }
+    .account-card__edit { width: auto; height: auto; }
+
+    .account-stats { display: flex; align-items: flex-start; gap: 3rem; }
+    .account-stats__balance { padding: 0; margin: 0; border: 0; min-width: 9rem; }
+    .account-stats__amount { font-size: 2rem; }
+    .account-stats__item { flex-direction: column; align-items: flex-start; padding: 0; gap: .25rem; min-width: 7rem; }
+    .account-stats__item + .account-stats__item { border-left: 0; }
+    .account-stats__label { font-size: .875rem; }
+    .account-stats__members { margin-left: auto; align-self: center; }
+
+    .account-members__row {
+        grid-template-columns: 32px minmax(0, 1.2fr) minmax(0, 1.5fr) 6rem 2.5rem;
+        grid-template-areas: "avatar who email role action";
+    }
+
+    .account-danger { flex-direction: row; align-items: center; justify-content: space-between; }
+    .account-danger form { flex: none; }
+
+    .account-trash__overlay { padding: 2.5rem 1rem; }
+    .account-trash__panel { max-width: 24rem; }
 }
 
 /* ---- Buscador y botón de filtros ---- */

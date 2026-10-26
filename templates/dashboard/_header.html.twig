@@ -9,8 +9,8 @@
     la segunda. En escritorio, todo en una. El botón de «Nuevo movimiento» no se
     pinta aquí en móvil: lo sustituye el FAB.
 
-    Espera en contexto: accounts, currentAccount, year, month, availableYears,
-    availableMonths.
+    Espera en contexto: accounts, currentAccount, canEdit, year, month,
+    availableYears, availableMonths.
 #}
 {% import 'partials/macros/_tour.html.twig' as tour %}
 
@@ -40,6 +40,7 @@
        escritorio se van al extremo opuesto de la única fila que hay. #}
     <div class="order-1 order-lg-4 ms-auto d-flex align-items-center gap-2">
         {# En móvil este botón lo sustituye el FAB de dashboard/index. #}
+        {% if canEdit %}
         <button class="btn btn-primary btn-sm d-none d-lg-inline-flex align-items-center"
                 data-bs-toggle="modal" data-bs-target="#transactionModal"
                 aria-keyshortcuts="N"
@@ -50,6 +51,7 @@
             {# El atajo global lo escucha tx-quick-add; aquí solo se anuncia. #}
             <kbd class="btn-kbd ms-1" aria-hidden="true">N</kbd>
         </button>
+        {% endif %}
         {{ tour.help_button() }}
     </div>
 

@@ -15,6 +15,10 @@
 
 {% import 'partials/macros/_tour.html.twig' as tour %}
 
+{# Un lector solo consulta: sin altas ni ediciones en ningún punto de la
+   página. Lo heredan la cabecera, los gráficos y la tabla. #}
+{% set canEdit = is_granted('ACCOUNT_EDIT', currentAccount) %}
+
 {# pb-5 en móvil: el FAB flota sobre el final de la página. #}
 <div class="pb-5 pb-lg-0" {{ tour.attrs('dashboard') }}>
 
@@ -64,19 +68,22 @@
     itemLabelPlural: 'movimientos',
 } only %}
 
-{# Botón flotante de «Nuevo movimiento»: sustituye en móvil al botón de la
-   cabecera. Lleva su mismo paso del tour; el tour ignora el que esté oculto,
-   así que en cada tamaño se señala el visible. #}
-<button class="dash-fab btn btn-primary rounded-circle shadow position-fixed bottom-0 end-0 m-3 d-lg-none"
-        data-bs-toggle="modal" data-bs-target="#transactionModal"
-        aria-label="Nuevo movimiento"
-        data-tour-step="6"
-        data-tour-title="Añade movimientos"
-        data-tour-text="Registra un gasto o un ingreso sin salir del dashboard.">
-    <i class="fa-solid fa-plus"></i>
-</button>
+{% if canEdit %}
+    {# Botón flotante de «Nuevo movimiento»: sustituye en móvil al botón de la
+       cabecera. Lleva su mismo paso del tour; el tour ignora el que esté oculto,
+       así que en cada tamaño se señala el visible. #}
+    <button class="dash-fab btn btn-primary rounded-circle shadow position-fixed bottom-0 end-0 m-3 d-lg-none"
+            data-bs-toggle="modal" data-bs-target="#transactionModal"
+            aria-label="Nuevo movimiento"
+            data-tour-step="6"
+            data-tour-title="Añade movimientos"
+            data-tour-text="Registra un gasto o un ingreso sin salir del dashboard.">
+        <i class="fa-solid fa-plus"></i>
+    </button>
 
-{% include 'transaction/_modal_transaction.html.twig' %}
+    {# Sin modal tampoco hay atajo «N»: lo escucha tx-quick-add, que vive en él. #}
+    {% include 'transaction/_modal_transaction.html.twig' %}
+{% endif %}
 {% include 'transaction/_modal_summary.html.twig' %}
 
 </div> {# /tour #}

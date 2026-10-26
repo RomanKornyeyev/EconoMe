@@ -1,0 +1,283 @@
+{#
+    Cuerpo de la ficha de cuenta: resumen, miembros y zona de peligro.
+
+    Lo usa la cuenta activa y, difuminado bajo el panel de la papelera, la
+    cuenta borrada (account/show).
+
+    Variables:
+    - account
+    - interactive:  false bajo el panel de la papelera. Quita los pasos del
+                    tour y los modales; el contenedor ya va inert, así que lo
+                    demás se pinta igual pero no responde.
+    - placeholder:  true para un miembro que no es dueño de una cuenta en la
+                    papelera. El voter ya no le deja verla, así que solo se
+                    pinta la silueta, sin cifras ni miembros.
+    - members, balance, currentMember, pendingInvitations, activeRecurrings,
+      transactionCount, categoryCount: datos de la cuenta (no con placeholder)
+#}
+{% set placeholder = placeholder ?? false %}
+{% set color       = account.color ?? '#6c757d' %}
+{% set canManage   = not placeholder and currentMember and currentMember.canManageAccount() %}
+{% set roleBadge   = {owner: 'bg-primary text-dark', editor: 'bg-info text-dark', viewer: 'bg-secondary'} %}
+{% set symbol      = {EUR: '€', USD: '$', GBP: '£'}[account.currency] ?? account.currency %}
+
+{# ── Resumen ─────────────────────────────────────────────────────── #}
+<div class="card border shadow-sm mb-4 bg-body-tertiary account-card" style="--account-color: {{ color }}"
+     {% if interactive %}
+     data-tour-step="3"
+     data-tour-title="Tu cuenta"
+     data-tour-text="Los datos de la cuenta, su saldo y accesos directos a sus movimientos, recurrentes y categorías."
+     {% endif %}>
+    <div class="card-body p-3 p-md-4">
+        {# Rejilla: en escritorio la descripción va bajo el nombre; en móvil,
+           bajo el avatar, a todo el ancho (.account-card__head). #}
+        <div class="account-card__head">
+            <div class="account-card__avatar">
+                <i class="fa-solid fa-wallet"></i>
+            </div>
+            <h2 class="account-card__name h4 mb-0 text-truncate">{{ account.name }}</h2>
+            <div class="account-card__actions d-flex gap-2">
+                {% if canManage %}
+                    {# En móvil, solo el lápiz; en escritorio, «Editar». #}
+                    <a href="{{ path('account_edit', {id: account.id}) }}" class="btn btn-sm btn-outline-primary account-card__edit"
+                       title="Editar cuenta" aria-label="Editar cuenta">
+                        <i class="fa-solid fa-pen"></i><span class="d-none d-md-inline ms-1">Editar</span>
+                    </a>
+                {% endif %}
+            </div>
+            <div class="account-card__desc">
+                {% if account.description and not placeholder %}
+                    <p class="text-body-secondary mb-2">{{ account.description }}</p>
+                {% endif %}
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge bg-body-secondary text-body-secondary">{{ account.currency }}</span>
+                    {% if not placeholder and currentMember %}
+                        <span class="badge {{ roleBadge[currentMember.role] ?? 'bg-secondary' }}">{{ currentMember.role|capitalize }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-3 my-md-4">
+
+        {# Cifras. En escritorio, una fila con los miembros al final; en
+           móvil, el saldo arriba y debajo tres columnas (.account-stats). #}
+        <div class="account-stats">
+            <div class="account-stats__balance">
+                <div class="small text-uppercase text-body-secondary">Saldo actual</div>
+                {% if placeholder %}
+                    <div class="account-stats__amount text-body-secondary">—</div>
+                {% else %}
+                    <div class="account-stats__amount {{ balance >= 0 ? 'text-success' : 'text-danger' }}">
+                        {{ balance|number_format(2, ',', '.') }} {{ symbol }}
+                    </div>
+                {% endif %}
+            </div>
+            <a href="{{ path('transaction_index', {account: account.id}) }}" class="account-stats__item">
+                <span class="account-stats__label">
+                    <span class="d-md-none">Movim.</span><span class="d-none d-md-inline">Movimientos</span>
+                </span>
+                <span class="account-stats__value">{{ placeholder ? '—' : transactionCount }}</span>
+            </a>
+            <a href="{{ path('recurring_index', {account: account.id}) }}" class="account-stats__item">
+                <span class="account-stats__label">
+                    <span class="d-md-none">Recurrentes</span><span class="d-none d-md-inline">Recurrentes activos</span>
+                </span>
+                <span class="account-stats__value">{{ placeholder ? '—' : activeRecurrings }}</span>
+            </a>
+            <a href="{{ path('category_index', {account: account.id}) }}" class="account-stats__item">
+                <span class="account-stats__label">Categorías</span>
+                <span class="account-stats__value">{{ placeholder ? '—' : categoryCount }}</span>
+            </a>
+            {% if not placeholder %}
+                <div class="account-stats__members d-none d-md-flex align-items-center gap-2">
+                    <div class="account-stack" aria-hidden="true">
+                        {% for member in members|slice(0, 4) %}
+                            <img src="{{ asset(member.user.profilePhoto) }}" alt="" title="{{ member.user.nickname }}">
+                        {% endfor %}
+                    </div>
+                    {% if members|length > 4 %}
+                        <small class="text-body-secondary">+{{ members|length - 4 }}</small>
+                    {% endif %}
+                    {% if pendingInvitations is not empty %}
+                        <small class="text-body-secondary">
+                            +{{ pendingInvitations|length }} pendiente{{ pendingInvitations|length != 1 ? 's' : '' }}
+                        </small>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if not placeholder %}
+
+{# ── Miembros ────────────────────────────────────────────────────── #}
+<div class="card border shadow-sm mb-4 bg-body-tertiary"
+     {% if interactive %}
+     data-tour-step="4"
+     data-tour-title="Comparte la cuenta"
+     data-tour-text="Puedes invitar a tus amigos a esta cuenta como editores o solo lectores. Ideal para gastos compartidos."
+     data-tour-side="top"
+     {% endif %}>
+    <div class="card-header bg-transparent d-flex justify-content-between align-items-center py-3">
+        <h2 class="h5 mb-0 fw-semibold">
+            Miembros
+            <span class="badge rounded-pill bg-secondary align-middle ms-1">{{ members|length }}</span>
+        </h2>
+        {% if canManage %}
+            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#inviteMemberModal">
+                <i class="fa-solid fa-user-plus me-1"></i>Invitar
+            </button>
+        {% endif %}
+    </div>
+    <ul class="list-group list-group-flush account-members">
+        {% for member in members %}
+            {% set isMe = member.user == app.user %}
+            <li class="list-group-item bg-transparent account-members__row">
+                <img src="{{ asset(member.user.profilePhoto) }}" class="account-members__avatar" alt="">
+                <div class="account-members__who min-w-0">
+                    <div class="fw-semibold text-truncate">{{ member.user.nickname }}{{ isMe ? ' (tú)' : '' }}</div>
+                    <small class="text-body-secondary text-truncate d-block d-md-none">{{ member.user.email }}</small>
+                </div>
+                <small class="account-members__email text-body-secondary text-truncate d-none d-md-block">{{ member.user.email }}</small>
+                <span class="account-members__role">
+                    <span class="badge {{ roleBadge[member.role] ?? 'bg-secondary' }}">{{ member.role|capitalize }}</span>
+                </span>
+                <span class="account-members__action">
+                    {% if canManage and not isMe %}
+                        <form method="post" action="{{ path('account_remove_member', {id: account.id, userId: member.user.id}) }}"
+                              data-controller="confirm"
+                              data-action="submit->confirm#submit"
+                              data-confirm-message-value="¿Eliminar a {{ member.user.nickname }} de la cuenta?"
+                              data-confirm-text-value="Eliminar">
+                            <input type="hidden" name="_token" value="{{ csrf_token('remove' ~ member.user.id) }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Eliminar a {{ member.user.nickname }}">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </form>
+                    {% endif %}
+                </span>
+            </li>
+        {% endfor %}
+        {% for invitation in pendingInvitations %}
+            <li class="list-group-item bg-transparent account-members__row account-members__row--pending">
+                <img src="{{ asset(invitation.invitee.profilePhoto) }}" class="account-members__avatar" alt="">
+                <div class="account-members__who min-w-0">
+                    <div class="text-truncate">
+                        {{ invitation.invitee.nickname }}<span class="d-none d-md-inline text-body-secondary"> · invitación pendiente</span>
+                    </div>
+                    <small class="text-body-secondary d-block d-md-none">Invitación pendiente</small>
+                </div>
+                <small class="account-members__email text-body-secondary text-truncate d-none d-md-block">{{ invitation.invitee.email }}</small>
+                <span class="account-members__role">
+                    <span class="badge bg-body-secondary text-body-secondary">
+                        <i class="fa-solid fa-clock me-1"></i>{{ invitation.role|capitalize }}
+                    </span>
+                </span>
+                <span class="account-members__action">
+                    {% if canManage %}
+                        <form method="post" action="{{ path('account_invitation_cancel', {id: invitation.id}) }}"
+                              data-controller="confirm"
+                              data-action="submit->confirm#submit"
+                              data-confirm-message-value="¿Cancelar la invitación a {{ invitation.invitee.nickname }}?"
+                              data-confirm-text-value="Cancelar invitación">
+                            <input type="hidden" name="_token" value="{{ csrf_token('invitation_' ~ invitation.id) }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Cancelar la invitación a {{ invitation.invitee.nickname }}">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </form>
+                    {% endif %}
+                </span>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+
+{# Invitar miembro (solo quien gestiona la cuenta). #}
+{% if canManage and interactive %}
+    <div class="modal fade" id="inviteMemberModal" tabindex="-1" aria-labelledby="inviteMemberModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-body-tertiary">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="inviteMemberModalLabel">Invitar miembro</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body p-4"
+                     data-controller="user-search"
+                     data-user-search-url-value="{{ path('account_invite_search', {id: account.id}) }}">
+                    <label class="form-label small text-muted">Busca entre tus amigos por nombre, apodo o email</label>
+                    <input type="text"
+                           class="form-control"
+                           placeholder="Escribe al menos 2 caracteres…"
+                           autocomplete="off"
+                           data-user-search-target="input"
+                           data-action="input->user-search#search">
+                    <div class="mt-2" data-user-search-target="results"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+{# ── Zona de peligro ─────────────────────────────────────────────── #}
+{% if currentMember %}
+    <div class="card border shadow-sm mb-4 bg-body-tertiary"
+         {% if interactive %}
+         data-tour-step="5"
+         data-tour-title="Zona de peligro"
+         data-tour-text="{{ currentMember.isOwner() ? 'Si ya no la necesitas, manda la cuenta a la papelera. Podrás restaurarla desde el selector cuando quieras.' : 'Si ya no quieres participar en esta cuenta, puedes abandonarla.' }}"
+         data-tour-side="top"
+         {% endif %}>
+        <div class="card-header bg-transparent py-3">
+            <h2 class="h5 mb-0 fw-semibold">
+                <i class="fa-solid fa-triangle-exclamation me-1"></i> Zona de peligro
+            </h2>
+        </div>
+        <div class="card-body">
+            {% if currentMember.isOwner() %}
+                <div class="account-danger">
+                    <div class="min-w-0">
+                        <div class="fw-semibold d-none d-md-block">Enviar a la papelera</div>
+                        <small class="text-body-secondary d-none d-md-block">
+                            La cuenta deja de estar disponible para todos los miembros. Sus movimientos se conservan;
+                            podrás restaurarla desde el selector o borrarla definitivamente pasadas 24 h.
+                        </small>
+                        <p class="small text-body-secondary mb-0 d-md-none">
+                            Envía la cuenta a la papelera. Sus movimientos se conservan y podrás restaurarla o borrarla pasadas 24 h.
+                        </p>
+                    </div>
+                    <form method="post" action="{{ path('account_delete', {id: account.id}) }}"
+                          data-controller="confirm"
+                          data-action="submit->confirm#submit"
+                          data-confirm-message-value="«{{ account.name }}» se enviará a la papelera y dejará de estar disponible para todos los miembros. Sus movimientos se conservan y podrás restaurarla desde el selector de cuentas. Pasadas 24 horas, podrás borrarla de forma permanente."
+                          data-confirm-text-value="Enviar a la papelera">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ account.id) }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                            <i class="fa-solid fa-trash me-1"></i>Enviar a la papelera
+                        </button>
+                    </form>
+                </div>
+            {% else %}
+                <div class="account-danger">
+                    <div class="min-w-0">
+                        <div class="fw-semibold d-none d-md-block">Abandonar la cuenta</div>
+                        <small class="text-body-secondary">Dejarás de tener acceso a sus movimientos. Podrás volver si te invitan de nuevo.</small>
+                    </div>
+                    <form method="post" action="{{ path('account_leave', {id: account.id}) }}"
+                          data-controller="confirm"
+                          data-action="submit->confirm#submit"
+                          data-confirm-message-value="¿Seguro que quieres abandonar «{{ account.name }}»?"
+                          data-confirm-text-value="Abandonar">
+                        <input type="hidden" name="_token" value="{{ csrf_token('leave' ~ account.id) }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                            <i class="fa-solid fa-right-from-bracket me-1"></i>Abandonar
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+
+{% endif %}

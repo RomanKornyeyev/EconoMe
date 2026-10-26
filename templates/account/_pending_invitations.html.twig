@@ -1,19 +1,21 @@
 {#
-  Invitaciones a cuentas pendientes de aceptar por el usuario actual.
+  Invitaciones a cuentas pendientes de aceptar por el usuario actual. Se
+  pintan sobre la ficha de cualquier cuenta (y en el estado «sin cuentas»),
+  para que se vean entre en la cuenta que entre.
 
   Variables:
-    - pendingInvitations: AccountInvitation[]
+    - receivedInvitations: AccountInvitation[]
 #}
-<div class="card border shadow-sm mb-4 bg-body-tertiary">
+<div class="card border shadow-sm mb-3 bg-body-tertiary">
     <div class="card-header bg-transparent py-3">
-        <h5 class="mb-0 fw-semibold">
+        <h2 class="h5 mb-0 fw-semibold">
             Invitaciones
-            <span class="badge rounded-pill bg-success align-middle ms-1">{{ pendingInvitations|length }}</span>
-        </h5>
+            <span class="badge rounded-pill bg-success align-middle ms-1">{{ receivedInvitations|length }}</span>
+        </h2>
     </div>
     <div class="card-body p-0">
         <ul class="list-group list-group-flush">
-            {% for invitation in pendingInvitations %}
+            {% for invitation in receivedInvitations %}
                 <li class="list-group-item bg-transparent d-flex align-items-center justify-content-between flex-wrap gap-2">
                     <div class="d-flex align-items-center gap-3 min-w-0">
                         <img src="{{ asset(invitation.inviter.profilePhoto) }}" class="rounded-circle flex-shrink-0"

@@ -1,12 +1,16 @@
 [
     {
         "version": "v1.5.3",
-        "date": "2026-10-22",
+        "date": "2026-10-26",
         "title": "Selector de cuenta renovado",
         "changes": [
             {
                 "type": "improvement",
-                "text": "Selector de cuentas mejorado."
+                "text": "Flujo de cuentas rediseñadas: todo se gestiona desde la ficha, papelera incluida, más sencillo."
+            },
+            {
+                "type": "improvement",
+                "text": "Selector de cuentas mejorado para todas las vistas."
             }
         ]
     },
