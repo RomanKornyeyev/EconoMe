@@ -17,7 +17,9 @@
 {% block content %}
 {% import 'partials/macros/_tour.html.twig' as tour %}
 
-{% set newAccountTourText = 'Crea tantas cuentas como necesites: personal, conjunta, un viaje…' %}
+{# Tour en tres pasos: selector, ficha (resumen, miembros y zona de peligro)
+   y accesos (Dashboard y Nueva cuenta). En móvil el 3 señala el Dashboard
+   de la fila del selector, porque «Nueva cuenta» es el FAB, lejos. #}
 
 {# pb-5 en móvil: el FAB flota sobre el final de la página. #}
 <div class="pb-5 pb-md-0" {{ tour.attrs('accounts', not isTrashed) }}>
@@ -29,19 +31,22 @@
     <h1 class="mb-0 h2 me-1">Cuenta</h1>
 
     <div class="order-1 order-md-2 ms-auto d-flex align-items-center gap-2">
-        {# Una cuenta en la papelera no tiene dashboard que abrir. #}
-        {% if not isTrashed %}
-            <a href="{{ path('dashboard', {account: account.id}) }}" class="btn btn-outline-primary btn-sm d-none d-md-inline-flex align-items-center">
-                <i class="fa-solid fa-chart-line me-1"></i>Dashboard
+        {# Solo escritorio: en móvil, el Dashboard baja junto al selector y
+           «Nueva cuenta» lo sustituye el FAB del final de la página. #}
+        <div class="d-none d-md-flex align-items-center gap-2"
+             data-tour-step="3"
+             data-tour-title="Dashboard y nueva cuenta"
+             data-tour-text="Salta al dashboard de esta cuenta o crea otra: personal, conjunta, un viaje... puedes tener tantas como quieras.">
+            {# Una cuenta en la papelera no tiene dashboard que abrir. #}
+            {% if not isTrashed %}
+                <a href="{{ path('dashboard', {account: account.id}) }}" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center">
+                    <i class="fa-solid fa-chart-line me-1"></i>Dashboard
+                </a>
+            {% endif %}
+            <a href="{{ path('account_create') }}" class="btn btn-primary btn-sm d-inline-flex align-items-center">
+                <i class="fa-solid fa-plus me-1"></i>Nueva cuenta
             </a>
-        {% endif %}
-        {# En móvil este botón lo sustituye el FAB del final de la página. #}
-        <a href="{{ path('account_create') }}" class="btn btn-primary btn-sm d-none d-md-inline-flex align-items-center"
-           data-tour-step="2"
-           data-tour-title="Nueva cuenta"
-           data-tour-text="{{ newAccountTourText }}">
-            <i class="fa-solid fa-plus me-1"></i>Nueva cuenta
-        </a>
+        </div>
         {{ tour.help_button() }}
     </div>
 
@@ -63,7 +68,10 @@
         } only %}
         </div>
         {% if not isTrashed %}
-            <a href="{{ path('dashboard', {account: account.id}) }}" class="account-header__dash btn btn-outline-primary btn-sm d-inline-flex d-md-none align-items-center justify-content-center">
+            <a href="{{ path('dashboard', {account: account.id}) }}" class="account-header__dash btn btn-outline-primary btn-sm d-inline-flex d-md-none align-items-center justify-content-center"
+               data-tour-step="3"
+               data-tour-title="Dashboard y nueva cuenta"
+               data-tour-text="Salta al dashboard de esta cuenta. Para crear otra, usa el botón + de abajo.">
                 <i class="fa-solid fa-chart-line me-1"></i>Dashboard
             </a>
         {% endif %}
@@ -76,7 +84,11 @@
 
 {% if not isTrashed %}
 
-    {% include 'account/_body.html.twig' with {interactive: true} %}
+    <div data-tour-step="2"
+         data-tour-title="Tu cuenta"
+         data-tour-text="Tus datos de la cuenta, los miembros con los que la compartes y la zona de peligro para mandarla a la papelera.">
+        {% include 'account/_body.html.twig' with {interactive: true} %}
+    </div>
 
 {% else %}
 
@@ -189,14 +201,10 @@
 
 {% endif %}
 
-{# Botón flotante de «Nueva cuenta»: sustituye en móvil al de la cabecera.
-   Lleva su mismo paso del tour; el tour ignora el oculto. #}
+{# Botón flotante de «Nueva cuenta»: sustituye en móvil al de la cabecera. #}
 <a href="{{ path('account_create') }}"
    class="dash-fab btn btn-primary rounded-circle shadow position-fixed bottom-0 end-0 m-3 d-flex d-md-none align-items-center justify-content-center"
-   aria-label="Nueva cuenta"
-   data-tour-step="2"
-   data-tour-title="Nueva cuenta"
-   data-tour-text="{{ newAccountTourText }}">
+   aria-label="Nueva cuenta">
     <i class="fa-solid fa-plus"></i>
 </a>
 

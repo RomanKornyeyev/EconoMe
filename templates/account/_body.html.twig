@@ -6,9 +6,10 @@
 
     Variables:
     - account
-    - interactive:  false bajo el panel de la papelera. Quita los pasos del
-                    tour y los modales; el contenedor ya va inert, así que lo
-                    demás se pinta igual pero no responde.
+    - interactive:  false bajo el panel de la papelera. Quita los modales;
+                    el contenedor ya va inert, así que lo demás se pinta igual
+                    pero no responde. El paso del tour que la abarca entera lo
+                    pone account/show.
     - placeholder:  true para un miembro que no es dueño de una cuenta en la
                     papelera. El voter ya no le deja verla, así que solo se
                     pinta la silueta, sin cifras ni miembros.
@@ -22,12 +23,7 @@
 {% set symbol      = {EUR: '€', USD: '$', GBP: '£'}[account.currency] ?? account.currency %}
 
 {# ── Resumen ─────────────────────────────────────────────────────── #}
-<div class="card border shadow-sm mb-4 bg-body-tertiary account-card" style="--account-color: {{ color }}"
-     {% if interactive %}
-     data-tour-step="3"
-     data-tour-title="Tu cuenta"
-     data-tour-text="Los datos de la cuenta, su saldo y accesos directos a sus movimientos, recurrentes y categorías."
-     {% endif %}>
+<div class="card border shadow-sm mb-4 bg-body-tertiary account-card" style="--account-color: {{ color }}">
     <div class="card-body p-3 p-md-4">
         {# Rejilla: en escritorio la descripción va bajo el nombre; en móvil,
            bajo el avatar, a todo el ancho (.account-card__head). #}
@@ -113,13 +109,7 @@
 {% if not placeholder %}
 
 {# ── Miembros ────────────────────────────────────────────────────── #}
-<div class="card border shadow-sm mb-4 bg-body-tertiary"
-     {% if interactive %}
-     data-tour-step="4"
-     data-tour-title="Comparte la cuenta"
-     data-tour-text="Puedes invitar a tus amigos a esta cuenta como editores o solo lectores. Ideal para gastos compartidos."
-     data-tour-side="top"
-     {% endif %}>
+<div class="card border shadow-sm mb-4 bg-body-tertiary">
     <div class="card-header bg-transparent d-flex justify-content-between align-items-center py-3">
         <h2 class="h5 mb-0 fw-semibold">
             Miembros
@@ -222,13 +212,7 @@
 
 {# ── Zona de peligro ─────────────────────────────────────────────── #}
 {% if currentMember %}
-    <div class="card border shadow-sm mb-4 bg-body-tertiary"
-         {% if interactive %}
-         data-tour-step="5"
-         data-tour-title="Zona de peligro"
-         data-tour-text="{{ currentMember.isOwner() ? 'Si ya no la necesitas, manda la cuenta a la papelera. Podrás restaurarla desde el selector cuando quieras.' : 'Si ya no quieres participar en esta cuenta, puedes abandonarla.' }}"
-         data-tour-side="top"
-         {% endif %}>
+    <div class="card border shadow-sm mb-4 bg-body-tertiary">
         <div class="card-header bg-transparent py-3">
             <h2 class="h5 mb-0 fw-semibold">
                 <i class="fa-solid fa-triangle-exclamation me-1"></i> Zona de peligro
