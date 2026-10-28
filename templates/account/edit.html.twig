@@ -11,7 +11,13 @@
             </a>
         </div>
 
-        <div class="card border-0 shadow bg-body-tertiary">
+        {# Filete superior con el color de la cuenta, como la ficha (.account-card):
+           account-form#preview le pone el color que se elija. Sin color aún
+           (cuenta nueva), el gris de la ficha hasta que el color-picker preselecciona. #}
+        <div class="card border-0 shadow bg-body-tertiary account-card"
+             style="--account-color: {{ form.color.vars.value ?: '#6c757d' }}"
+             data-controller="account-form"
+             data-action="input->account-form#preview">
             {{ form_start(form, {attr: {class: 'needs-validation'}}) }}
                 <div class="card-header bg-transparent border-bottom py-3 px-4">
                     <h5 class="mb-0">{{ isNew ? 'Nueva cuenta' : 'Editar cuenta' }}</h5>
@@ -28,23 +34,71 @@
                     </div>
                     {% if form.copyTemplates is defined %}
                         <hr class="my-3">
-                        <div class="row g-3">
-                            <div class="d-flex align-items-start gap-2">
-                                <div class="form-check form-switch mb-0 ps-4">
-                                    {{ form_widget(form.copyTemplates, {attr: {class: 'form-check-input', role: 'switch'}}) }}
-                                    {{ form_label(form.copyTemplates, null, {label_attr: {class: 'form-check-label'}}) }}
+                        {# .account-templates: con el interruptor apagado, la lista
+                           de categorías se atenúa (CSS :has, sin JS) #}
+                        <div class="account-templates">
+                            {% set copy = form.copyTemplates %}
+                            <div class="d-flex align-items-start justify-content-between gap-3">
+                                <div class="flex-grow-1 min-w-0">
+                                    {# El título hace de etiqueta del interruptor, que va a la derecha #}
+                                    <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                                        <label for="{{ copy.vars.id }}" class="fw-semibold mb-0">Plantilla de categorías</label>
+                                        <span class="badge rounded-pill text-bg-success fw-normal account-templates__badge">Recomendado</span>
+                                    </div>
+                                    <p class="small text-body-secondary mb-0">
+                                        {% if templates is not empty %}
+                                            Añade a esta cuenta tus categorías habituales.
+                                        {% else %}
+                                            Tu plantilla está vacía: la cuenta empezará sin categorías.
+                                        {% endif %}
+                                    </p>
                                 </div>
-                                <button type="button"
-                                        class="btn btn-sm btn-outline-info rounded-circle d-inline-flex align-items-center justify-content-center p-0"
-                                        style="width:1.6rem;height:1.6rem;"
-                                        data-bs-toggle="popover"
-                                        data-bs-trigger="focus"
-                                        data-bs-placement="top"
-                                        data-bs-content="Si lo desmarcas, la cuenta empezará sin categorías y podrás crearlas después."
-                                        aria-label="Más información sobre las categorías">
-                                    <i class="fa-solid fa-info"></i>
-                                </button>
+                                {# A mano y no con form_widget: el tema de Bootstrap 5 pinta el
+                                   checkbox con su etiqueta pegada, y aquí la etiqueta es el título.
+                                   d-flex + align-items-center: centrado en el min-height de 1.5rem de
+                                   .form-check, que es lo que mide la línea del título #}
+                                <div class="form-check form-switch m-0 p-0 flex-shrink-0 d-flex align-items-center">
+                                    <input type="checkbox" role="switch"
+                                           class="form-check-input account-templates__switch"
+                                           id="{{ copy.vars.id }}" name="{{ copy.vars.full_name }}"
+                                           value="{{ copy.vars.value }}" {{ copy.vars.checked ? 'checked' }}>
+                                </div>
+                                {% do copy.setRendered %}
                             </div>
+
+                            {# Fuera de la fila del título: la lista ocupa todo el ancho,
+                               también el que queda bajo el interruptor #}
+                            {% if templates is not empty %}
+                                {# Despliegue animado: details-toggle anima la altura del
+                                   target content, que va sin padding (no bajaría de él y
+                                   saltaría al cerrar). La separación con el summary, en el
+                                   div de dentro (pt-2) y no como margen de la lista #}
+                                <details class="account-templates__details mt-2" data-controller="details-toggle">
+                                    <summary class="small" data-action="click->details-toggle#toggle">
+                                        Ver las {{ templates|length }} categorías
+                                        <i class="fa-solid fa-chevron-down ms-1 account-templates__chevron"></i>
+                                    </summary>
+                                    <div data-details-toggle-target="content">
+                                        <div class="pt-2">
+                                            <ul class="account-templates__list list-unstyled mb-0">
+                                                {% for template in templates %}
+                                                    <li class="text-truncate" style="--item-color: {{ template.color ?? '#6c757d' }}">{{ template.name }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                            <div class="d-flex justify-content-between align-items-center gap-2 small mt-2">
+                                                <span class="text-body-secondary">Podrás editarlas después</span>
+                                                <a href="{{ path('category_index', {template: 1}) }}" class="text-decoration-none">
+                                                    <i class="fa-solid fa-pen me-1"></i>Editar plantilla
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </details>
+                            {% else %}
+                                <a href="{{ path('category_index', {template: 1}) }}" class="d-inline-block small mt-2 text-decoration-none">
+                                    <i class="fa-solid fa-pen me-1"></i>Editar plantilla
+                                </a>
+                            {% endif %}
                         </div>
                     {% endif %}
                 </div>

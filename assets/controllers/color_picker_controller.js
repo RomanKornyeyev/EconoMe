@@ -21,10 +21,10 @@ export default class extends Controller {
     palette: {
       type: Array,
       default: [
-        '#94a3b8', // gris azulado
         '#38bdf8', // azul cian claro
-        '#a78bfa', // morado claro
         '#34d399', // verde menta
+        '#a78bfa', // morado claro
+        '#e879f9', // fucsia claro
         '#fbbf24', // ámbar suave
         '#fb7185', // rosa coral
       ],

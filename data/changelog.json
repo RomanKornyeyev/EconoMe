@@ -1,5 +1,20 @@
 [
     {
+        "version": "v1.5.4",
+        "date": "2026-10-28",
+        "title": "Mejora UX al crear cuentas",
+        "changes": [
+            {
+                "type": "improvement",
+                "text": "Al crear o editar una cuenta, el borde de la tarjeta muestra al momento el color elegido."
+            },
+            {
+                "type": "improvement",
+                "text": "Al crear una cuenta puedes ver qué categorías de tu plantilla se van a añadir."
+            }
+        ]
+    },
+    {
         "version": "v1.5.3",
         "date": "2026-10-26",
         "title": "Mejora UX de cuentas en móvil y tutoriales actualizados",

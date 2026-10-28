@@ -589,6 +589,62 @@ input.flatpickr-input.form-control[readonly] {
     outline-offset: 2px;
 }
 
+/* ---- Plantilla de categorías (formulario de nueva cuenta) ---- */
+/* Con el color de los enlaces (y no text-primary, que en oscuro es otro azul):
+   igual que «Editar plantilla» */
+.account-templates__details > summary {
+    cursor: pointer;
+    list-style: none; /* sin el triángulo nativo: ya va el chevron */
+    width: fit-content;
+    color: var(--bs-link-color);
+    user-select: none; /* varios clics seguidos no seleccionan el texto */
+}
+.account-templates__details > summary:hover { color: var(--bs-link-hover-color); }
+
+.account-templates__details > summary::-webkit-details-marker { display: none; }
+/* El despliegue lo anima details-toggle; al cerrar, el <details> sigue [open]
+   hasta que termina, pero con is-closing el chevron ya gira de vuelta */
+.account-templates__chevron { font-size: .7em; transition: transform .28s cubic-bezier(.2, 0, 0, 1); }
+.account-templates__details[open]:not(.is-closing) .account-templates__chevron { transform: rotate(180deg); }
+
+/* Algo mayor que el de Bootstrap (sus medidas van en em, así conserva la
+   proporción) y sin su margen negativo, que espera la etiqueta al lado.
+   .form-switch delante para ganar a «.form-switch .form-check-input» de Bootstrap */
+.form-switch .account-templates__switch { font-size: 1.125rem; margin: 0; cursor: pointer; }
+
+/* Centrado, el texto del badge queda algo más alto que el del título: se baja
+   el badge entero sin cambiar su tamaño ni empujar lo de alrededor */
+.account-templates__badge { position: relative; top: 2px; }
+
+/* Rejilla de nombres con su punto de color: 2 columnas en móvil, 4 a partir de sm */
+.account-templates__list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .45rem 1rem;
+    padding: .75rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+    background-color: var(--bs-body-bg);
+    font-size: .8rem;
+}
+.account-templates__list li::before {
+    content: "";
+    display: inline-block;
+    width: .45rem;
+    height: .45rem;
+    margin-right: .5rem;
+    border-radius: 50%;
+    vertical-align: .1em;
+    background-color: var(--item-color);
+}
+@media (min-width: 576px) {
+    .account-templates__list { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* Interruptor apagado: la plantilla no se copiará */
+.account-templates__list { transition: opacity .2s; }
+.account-templates:has(.form-check-input:not(:checked)) .account-templates__list { opacity: .4; }
+
 /* ---- Zona de peligro ---- */
 .account-danger { display: flex; flex-direction: column; gap: 1rem; }
 

@@ -44,7 +44,7 @@ class AccountType extends AbstractType
 
         if ($options['with_template_choice']) {
             $builder->add('copyTemplates', CheckboxType::class, [
-                'label' => 'Agregar mi plantilla de categorías a esta cuenta',
+                'label' => 'Agregar mi plantilla de categorías a esta cuenta (recomendado)',
                 'required' => false,
                 'mapped' => false,
                 'data' => true,

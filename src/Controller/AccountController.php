@@ -9,6 +9,7 @@ use App\Entity\User;
 use App\Form\AccountType;
 use App\Repository\AccountInvitationRepository;
 use App\Repository\CategoryRepository;
+use App\Repository\CategoryTemplateRepository;
 use App\Repository\FriendshipRepository;
 use App\Repository\RecurringTransactionRepository;
 use App\Repository\TransactionRepository;
@@ -57,7 +58,7 @@ class AccountController extends AbstractController
     }
 
     #[Route('/create', name: 'create')]
-    public function create(Request $request): Response
+    public function create(Request $request, CategoryTemplateRepository $templateRepository): Response
     {
         $account = new Account();
         $form = $this->createForm(AccountType::class, $account, ['with_template_choice' => true]);
@@ -75,6 +76,8 @@ class AccountController extends AbstractController
             'form' => $form,
             'account' => $account,
             'isNew' => true,
+            // Vista previa de la plantilla que se copiará, bajo el interruptor
+            'templates' => $templateRepository->findAllByUser($this->getUser()),
         ]);
     }
 
