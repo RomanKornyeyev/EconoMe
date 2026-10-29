@@ -98,7 +98,7 @@ export default class extends Controller {
     if (event.key !== 'Enter' || event.shiftKey || event.altKey) return;
     if (event.target.tagName === 'TEXTAREA') return;
     // Con el foco en un botón o enlace, Enter tiene que hacer lo que ponga ahí
-    // («Guardar», «Cerrar»…), no encadenar por nuestra cuenta.
+    // («Guardar», «Más opciones», «Añadir descripción»…), no encadenar por nuestra cuenta.
     if (['BUTTON', 'A'].includes(event.target.tagName)) return;
     // Si alguien ya se ha quedado con este Enter (flatpickr con el calendario
     // abierto, un desplegable…), es suyo: no se le roba para guardar.
@@ -271,6 +271,7 @@ export default class extends Controller {
     this.#setField('name', data.txName ?? '');
     this.#setField('description', data.txDescription ?? '');
     this.#setField('category', data.txCategory ?? '');
+    this.#syncDescription();
 
     if (data.txDate) {
       this.#setField('date', data.txDate);
@@ -388,6 +389,7 @@ export default class extends Controller {
     this.#setField('name', '');
     this.#setField('description', '');
     this.#setField('category', '');
+    this.#syncDescription();
 
     // Que category-suggest se entere de que el nombre está vacío y retire su
     // chip; es su propio `request()` quien limpia también el estado interno.
@@ -505,6 +507,15 @@ export default class extends Controller {
     }
 
     el.value = value;
+  }
+
+  /**
+   * La descripción va plegada tras un enlace: tras escribir en ella por código,
+   * description-toggle tiene que abrirla o plegarla según quede con texto o no.
+   */
+  #syncDescription() {
+    const wrapper = this.#field('description')?.closest('[data-controller~="description-toggle"]');
+    wrapper && this.application.getControllerForElementAndIdentifier(wrapper, 'description-toggle')?.sync();
   }
 
   #chainButton() {

@@ -2,30 +2,31 @@
     Sugerencia de categoría inyectada por el controlador Stimulus
     "category-suggest".
 
-    Dos líneas (flex-column) para caber en la columna estrecha de categoría:
-      · Línea 1: el badge (borde verde, no clicable) con la categoría sugerida.
-      · Línea 2: "✓ Rellenada automáticamente", que aparece solo cuando esa
-        categoría es la que está puesta en el <select>. El controlador lo
+    Una sola línea (sin salto) para caber en la columna estrecha de categoría:
+      · Icono de varita (con tooltip "Sugerido") + badge (borde verde, no
+        clicable) con la categoría sugerida, recortada a 15 caracteres con
+        elipsis; el nombre completo va en el title.
+      · "✓ Aplicada", que aparece solo cuando esa categoría es la que está
+        puesta en el <select>; si no, el enlace "Aplicar". El controlador los
         muestra/oculta alternando d-none/d-inline-flex (el atributo hidden pierde
         ante el !important de las utilidades de Bootstrap).
 
     El cambio de categoría se hace con el propio campo, no desde aquí.
     El id de la categoría propuesta viaja en data-category-id del contenedor.
 #}
+{% set name = suggestion.category.name %}
 <span data-category-id="{{ suggestion.category.id }}"
-      class="d-flex flex-column align-items-start gap-1 text-body-secondary">
-    <span class="d-inline-flex align-items-center gap-2">
-        <span><i class="fa-solid fa-wand-magic-sparkles me-1"></i>Sugerido:</span>
-        <span class="cat-suggest-badge d-inline-flex align-items-center gap-1">
+      class="d-inline-flex flex-nowrap align-items-center gap-2 text-body-secondary text-nowrap">
+    <span><i class="fa-solid fa-wand-magic-sparkles me-0"></i></span>
+    <span class="cat-suggest-badge d-inline-flex align-items-center gap-1" title="{{ name }}">
             {% if suggestion.category.color %}
                 <span class="d-inline-block rounded-circle"
                       style="width:.55rem;height:.55rem;background-color:{{ suggestion.category.color }}"></span>
             {% endif %}
-            <span>{{ suggestion.category.name }}</span>
-        </span>
+        <span>{{ name|length > 15 ? name|slice(0, 15)|trim ~ '…' : name }}</span>
     </span>
     <span class="cat-suggest-selected text-success align-items-center gap-1 d-none">
-        <i class="fa-solid fa-check"></i>Autocompletado
+        <i class="fa-solid fa-check"></i>Aplicada
     </span>
     <button type="button"
             class="cat-suggest-apply btn btn-link btn-sm p-0 align-baseline d-none"

@@ -8,8 +8,8 @@ import { Controller } from '@hotwired/stimulus';
  *   · muestra un badge (borde verde, informativo) con esa categoría;
  *   · aplica SIEMPRE esa categoría en el campo, con un resaltado breve — el
  *     "humano perezoso" no hace nada;
- *   · en la línea 2 marca "✓ Rellenada automáticamente" si la sugerida es la que
- *     está puesta, o el enlace "Aplicar" si el usuario cambió a otra.
+ *   · junto al badge marca "✓ Aplicada" si la sugerida es la que está puesta,
+ *     o el enlace "Aplicar" si el usuario cambió a otra.
  *
  * El cambio manual es SIEMPRE libre y nunca desactiva el automático: cada nueva
  * sugerencia (nombre/tipo distinto) se vuelve a aplicar. Solo deshacemos lo que
@@ -85,7 +85,7 @@ export default class extends Controller {
     }
   }
 
-  /** Aplica la sugerencia actual (siempre) y refresca el estado de la línea 2. */
+  /** Aplica la sugerencia actual (siempre) y refresca el estado (aplicada / aplicar). */
   #present() {
     const suggestedId = this.#suggestedId();
 
@@ -118,8 +118,8 @@ export default class extends Controller {
   }
 
   /**
-   * Línea 2 del chip: "✓ Rellenada automáticamente" si la categoría puesta es la
-   * sugerida; si no, el enlace "Aplicar". Alterna d-none/d-inline-flex (ambas
+   * Estado del chip: "✓ Aplicada" si la categoría puesta es la sugerida; si no,
+   * el enlace "Aplicar". Alterna d-none/d-inline-flex (ambas
    * !important) en lugar del atributo hidden, que pierde ante el !important de
    * las utilidades de Bootstrap.
    */

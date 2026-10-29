@@ -382,6 +382,40 @@ span.flatpickr-weekday { color: var(--bs-secondary-color); }
     color: var(--bs-body-color);
 }
 
+/* ── Descripción plegable del movimiento ──────────────────────────────────── */
+/* El enlace se sube hacia Nombre: debajo de este ya se suman su mb-3 (del tema)
+   y el gutter de la fila, y el hueco hacía que el enlace pareciera suelto.
+   Bloque (flex) y no inline-block para que el margen negativo actúe limpio. */
+.tx-desc-toggle {
+    display: flex;
+    align-items: center;
+    width: fit-content;
+    margin-top: -1.25rem;
+}
+/* En móvil se toca con el dedo: área táctil de al menos 44px. Al crecer la caja
+   el texto queda centrado y baja, así que se compensa subiéndola algo más. */
+@media (max-width: 767.98px) {
+    .tx-desc-toggle {
+        min-height: 44px;
+        margin-top: -1.75rem;
+    }
+}
+
+/* Flotante sobre textarea: se deja la altura que Bootstrap le da (la de un input,
+   igual que Nombre); si hace falta más, el usuario la estira (resize vertical).
+   Hueco a la derecha para la X. */
+.form-floating > .tx-desc-input {
+    padding-right: 2.5rem;
+}
+/* Centrada en vertical: sigue al centro también si el usuario estira el campo. */
+.tx-desc-close {
+    position: absolute;
+    top: 50%;
+    right: .75rem;
+    transform: translateY(-50%);
+    z-index: 3; /* por encima de la etiqueta flotante, que ocupa todo el ancho */
+}
+
 /* Resaltado breve del select al autorrellenarse: refuerza que el campo cambió
    solo; se aplica una vez y se desvanece. */
 @keyframes catAutofillFlash {
@@ -403,7 +437,7 @@ span.flatpickr-weekday { color: var(--bs-secondary-color); }
 }
 
 /* ── Botón discreto (aspecto de enlace, comportamiento de botón) ──────────── */
-/* Para acciones secundarias que no deben competir con las primarias: «Cerrar»,
+/* Para acciones secundarias que no deben competir con las primarias, como
    «Más opciones». En reposo es texto atenuado; al pasar por encima aparece un
    fondo suave y el texto sube a color pleno.
 
@@ -436,6 +470,24 @@ span.flatpickr-weekday { color: var(--bs-secondary-color); }
 .btn-quiet.show {
     color: var(--bs-body-color);
     background-color: var(--bs-secondary-bg);
+}
+
+/* «Más opciones» del modal de movimientos en móvil: botón cuadrado con borde y
+   solo «⋯», de la misma altura que los de guardar (la de un .btn normal). */
+@media (max-width: 767.98px) {
+    .tx-more-btn {
+        --tx-more-size: calc(1.5rem + .75rem + 2 * var(--bs-border-width));
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: var(--tx-more-size);
+        height: var(--tx-more-size);
+        padding: 0;
+        border: var(--bs-border-width) solid var(--bs-border-color);
+    }
+    .tx-more-btn::after {
+        display: none; /* sin el triángulo de dropdown-toggle */
+    }
 }
 
 /* Tecla rápida anunciada dentro del propio botón que dispara. Va sobre botones

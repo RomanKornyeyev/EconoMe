@@ -1,5 +1,5 @@
 {# Importe y tipo (gasto/ingreso) de un movimiento, en dos columnas que se apilan
-   en móvil.
+   en móvil. Cada segmento lleva su «−/+» encima del texto (ver general.css).
 
    El tipo se elige con un control segmentado; el <select> real va oculto, sigue
    siendo la fuente de verdad del formulario y conserva los atributos que le haya
@@ -36,9 +36,15 @@
         <div class="btn-group w-100 mb-3 amount-type-group" role="group" aria-label="{{ type.vars.label }}">
             {% for choice in choices %}
                 {%- set isActive = choice.value == current.value -%}
-                <button type="button" class="btn btn-outline-secondary {{ isActive ? activeClass }}"
+                {# El «−/+» es lo único con tono (rojo/verde, solo en el activo); el
+                   fondo activo sigue siendo neutro. Lo pinta el CSS a partir de
+                   data-value y aria-pressed, que el controlador ya mantiene. #}
+                <button type="button" class="btn btn-outline-secondary amount-type-btn {{ isActive ? activeClass }}"
                         data-amount-type-target="item" data-action="amount-type#choose"
-                        data-value="{{ choice.value }}" aria-pressed="{{ isActive ? 'true' : 'false' }}">{{ choice.label }}</button>
+                        data-value="{{ choice.value }}" aria-pressed="{{ isActive ? 'true' : 'false' }}">
+                    <i class="fa-solid {{ choice.value == 'income' ? 'fa-plus' : 'fa-minus' }} amount-type-sign" aria-hidden="true"></i>
+                    <span>{{ choice.label }}</span>
+                </button>
             {% endfor %}
         </div>
         {{ form_widget(type, { attr: type.vars.attr|merge({

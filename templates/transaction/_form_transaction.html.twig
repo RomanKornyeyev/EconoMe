@@ -5,16 +5,37 @@
     <div class="col-md-12">
         {{ form_row(form.name) }}
     </div>
-    <div class="col-md-12">
-        {{ form_row(form.description) }}
+    {# Descripción plegada tras un enlace (ver description_toggle_controller.js).
+       Abierta de partida si ya trae texto o un error que enseñar. #}
+    {% set descOpen = form.description.vars.value is not empty or form.description.vars.errors|length > 0 %}
+    <div class="col-md-12" data-controller="description-toggle">
+        <button type="button"
+                class="btn btn-link btn-sm p-0 text-decoration-none tx-desc-toggle {{ descOpen ? 'd-none' }}"
+                data-description-toggle-target="link"
+                data-action="description-toggle#open">
+            <i class="fa-solid fa-plus fa-sm me-1"></i>Añadir descripción
+        </button>
+        <div class="form-floating mb-3 {{ descOpen ? '' : 'd-none' }}" data-description-toggle-target="field">
+            {# El placeholder no se ve, pero el flotante lo necesita (como en el tema). #}
+            {{ form_widget(form.description, {attr: {
+                class: 'tx-desc-input',
+                placeholder: form.description.vars.label,
+                'data-description-toggle-target': 'input',
+            }}) }}
+            {{ form_label(form.description) }}
+            <button type="button" class="btn-close tx-desc-close"
+                    aria-label="Quitar descripción"
+                    data-action="description-toggle#close"></button>
+            {{ form_errors(form.description) }}
+        </div>
     </div>
-    <div class="col-md-6">
+    <div class="col-8 col-md-6">
         {{ form_row(form.category) }}
         {% if suggest|default(false) %}
             <div class="mt-1 small" data-category-suggest-target="hint" aria-live="polite"></div>
         {% endif %}
     </div>
-    <div class="col-md-6">
-        {{ form_row(form.date, { attr: { 'data-controller': 'date-picker' } }) }}
+    <div class="col-4 col-md-6">
+        {{ form_row(form.date,{ attr: { 'data-controller': 'date-picker' } }) }}
     </div>
 </div>

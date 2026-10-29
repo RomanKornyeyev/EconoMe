@@ -435,6 +435,36 @@ input.flatpickr-input.form-control[readonly] {
     min-height: calc(3.5rem + calc(var(--bs-border-width) * 2));
 }
 
+/* «−/+» encima del texto. Apagado mientras el segmento no está elegido; en el
+   activo toma tono (rojo gasto, verde ingreso). El fondo activo es el mismo
+   neutro para los dos: solo el signo distingue el tipo.
+
+   Apilado en todos los anchos y no solo en móvil: en el modal (630px) la
+   columna del tipo deja ~85px por botón, y «+ Ingreso» en línea no cabe. */
+.amount-type-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .15rem;
+    padding-inline: .25rem;
+    font-size: .75rem;
+    line-height: 1.2;
+}
+.amount-type-sign {
+    font-size: .875rem;
+    opacity: .6;
+}
+.amount-type-btn[aria-pressed="true"] .amount-type-sign {
+    opacity: 1;
+}
+.amount-type-btn[data-value="expense"][aria-pressed="true"] .amount-type-sign {
+    color: var(--bs-danger);
+}
+.amount-type-btn[data-value="income"][aria-pressed="true"] .amount-type-sign {
+    color: var(--bs-success);
+}
+
 
 /* ══════════════════════════════════════════════════════════════════════ */
 /*  Movimientos en móvil                                                  */

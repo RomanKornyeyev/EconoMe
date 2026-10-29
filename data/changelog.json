@@ -1,5 +1,24 @@
 [
     {
+        "version": "v1.5.5",
+        "date": "2026-10-29",
+        "title": "Mejora UX al crear movimientos",
+        "changes": [
+            {
+                "type": "improvement",
+                "text": "La sugerencia de categoría es más compacta."
+            },
+            {
+                "type": "improvement",
+                "text": "La descripción de un movimiento queda plegada tras «Añadir descripción» y solo se abre cuando la necesitas."
+            },
+            {
+                "type": "improvement",
+                "text": "El selector de gasto/ingreso muestra un «−/+» con color para distinguir el tipo elegido."
+            }
+        ]
+    },
+    {
         "version": "v1.5.4",
         "date": "2026-10-28",
         "title": "Mejora UX al crear cuentas",

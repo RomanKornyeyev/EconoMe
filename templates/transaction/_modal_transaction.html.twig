@@ -83,9 +83,14 @@
                        opción que contiene es esta; si algún día se añaden más, ocultar
                        al editar tendrá que pasar a ser cosa del item, no del menú. #}
                     <div class="dropdown me-auto" data-tx-quick-add-target="recurring">
+                        {# En móvil se queda en un botón cuadrado con «⋯» para dejar
+                           sitio a los de guardar (ver .tx-more-btn en app.css). #}
                         <button type="button"
-                                class="btn btn-sm btn-link btn-quiet px-2 text-decoration-none dropdown-toggle"
-                                data-bs-toggle="dropdown" aria-expanded="false">Más opciones</button>
+                                class="btn btn-sm btn-link btn-quiet px-md-2 text-decoration-none dropdown-toggle tx-more-btn"
+                                data-bs-toggle="dropdown" aria-expanded="false" aria-label="Más opciones">
+                            <span class="d-none d-md-inline">Más opciones</span>
+                            <i class="fa-solid fa-ellipsis d-md-none" aria-hidden="true"></i>
+                        </button>
                         <ul class="dropdown-menu">
                             {# <li><h6 class="dropdown-header">¿Se repite cada mes?</h6></li> #}
                             <li>
@@ -95,14 +100,8 @@
                             </li>
                         </ul>
                     </div>
-                    {# Cerrar es la salida sin consecuencias: mismo aspecto de enlace que
-                       «Más opciones», para que el peso visual se lo lleven las acciones
-                       que sí guardan.
-                       type="button" obligatorio: dentro de un <form>, un botón sin
-                       type es submit, y cerrar acabaría guardando. #}
-                    <button type="button"
-                            class="btn btn-link btn-quiet px-3 text-decoration-none"
-                            data-bs-dismiss="modal">Cerrar</button>
+                    {# Sin botón «Cerrar» en el pie: para salir ya están la X de la
+                       cabecera y Esc, y así el pie queda solo con lo que guarda. #}
                     <button type="submit" class="btn btn-outline-primary"
                             data-tx-quick-add-target="saveButton">Guardar</button>
                     {# Encadenar es la acción primaria: si estás en este modal metiendo una
