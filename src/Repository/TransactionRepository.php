@@ -267,6 +267,39 @@ class TransactionRepository extends ServiceEntityRepository
     }
 
     /**
+     * Nombres de movimientos de la cuenta que empiezan por `$prefix`, para
+     * sugerirlos al escribir el nombre de uno nuevo. Los más usados primero y,
+     * a igualdad, los más recientes.
+     *
+     * Como en {@see topCategoriesByName}, la collation de MySQL hace el trabajo
+     * de normalizar: el GROUP BY junta "alcampo", "Alcampo" y "ALCAMPO" en una
+     * sola fila (con una de esas grafías, la que MySQL elija), y el `<>` deja
+     * fuera el nombre que ya está escrito, que no tiene nada que sugerir.
+     *
+     * @return list<string>
+     */
+    public function topNamesByPrefix(Account $account, string $prefix, int $limit): array
+    {
+        $rows = $this->createQueryBuilder('t')
+            ->select('t.name AS name', 'COUNT(t.id) AS HIDDEN cnt', 'MAX(t.date) AS HIDDEN lastDate')
+            ->where('t.account = :account')
+            ->andWhere('t.name LIKE :prefix')
+            ->andWhere('t.name <> :typed')
+            ->setParameter('account', $account)
+            // Los comodines de LIKE que escriba el usuario se buscan como texto
+            ->setParameter('prefix', addcslashes($prefix, '%_\\') . '%')
+            ->setParameter('typed', $prefix)
+            ->groupBy('t.name')
+            ->orderBy('cnt', 'DESC')
+            ->addOrderBy('lastDate', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getScalarResult();
+
+        return array_column($rows, 'name');
+    }
+
+    /**
      * Nº de movimientos de cada categoría de la cuenta por tipo (gasto/ingreso),
      * en todo el historial.
      *

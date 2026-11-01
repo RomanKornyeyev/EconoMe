@@ -41,8 +41,9 @@
             </div>
             {{ form_start(transactionForm, {attr: {
                 class: 'needs-validation',
-                'data-controller': 'category-suggest',
+                'data-controller': 'category-suggest name-suggest',
                 'data-category-suggest-url-value': path('transaction_suggest_category', {account: currentAccount.id}),
+                'data-name-suggest-url-value': path('transaction_suggest_names', {account: currentAccount.id}),
                 'data-tx-quick-add-target': 'form',
                 'data-action': 'submit->tx-quick-add#submit keydown->tx-quick-add#onKeydown',
             }}) }}

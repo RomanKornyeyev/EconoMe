@@ -11,6 +11,10 @@
             {
                 "type": "improvement",
                 "text": "Un solo botón «Guardar» al crear movimientos. Para meter varios seguidos, activa «Seguir añadiendo» y la ventana se queda abierta tras cada guardado; cuando acabes, pulsa «Terminar» o cierra la ventana."
+            },
+            {
+                "type": "improvement",
+                "text": "Autocompletado más preciso en el nombre de movimiento. Se quitan el autocompletado de importe y descripción, que casi nunca se repiten y no aportan nada."
             }
         ]
     },

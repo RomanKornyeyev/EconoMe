@@ -35,8 +35,9 @@
             {% set formAttr = {class: 'needs-validation'} %}
             {% if isNew %}
                 {% set formAttr = formAttr|merge({
-                    'data-controller': 'category-suggest',
+                    'data-controller': 'category-suggest name-suggest',
                     'data-category-suggest-url-value': path('transaction_suggest_category', {account: account.id}),
+                    'data-name-suggest-url-value': path('transaction_suggest_names', {account: account.id}),
                 }) %}
             {% endif %}
             {{ form_start(form, {attr: formAttr}) }}

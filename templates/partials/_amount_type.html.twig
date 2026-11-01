@@ -54,8 +54,11 @@
         {{ form_errors(type) }}
     </div>
     <div class="col-md-8">
+        {# Sin autocompletado: el importe cambia casi siempre, y el desplegable
+           del navegador solo estorba. #}
         {{ form_row(amount, { attr: amount.vars.attr|merge({
             'data-amount-type-target': 'amount',
+            autocomplete: 'off',
         }) }) }}
     </div>
 </div>

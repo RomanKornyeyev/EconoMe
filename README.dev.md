@@ -6,6 +6,77 @@ Formato changelog: lo más reciente arriba.
 
 ---
 
+## v1.5.5 — Mejora UX al crear movimientos
+
+### Un solo botón de guardar, encadenar es un interruptor
+
+Hubo dos botones, «Guardar» y «Guardar y añadir otro», con el segundo como
+primario. Se unificaron en un único «Guardar ↵» y un interruptor «Seguir
+añadiendo» al lado que decide si el modal se queda abierto o se cierra. Lo normal
+es meter un movimiento y salir, así que el interruptor viene apagado en cada
+apertura (también al duplicar) y dentro de una tanda se queda como esté.
+
+El interruptor no lleva `name`: no viaja en el envío, solo lo lee el controlador.
+Sin JS no hace nada y el formulario se envía como siempre.
+
+Accesibilidad y teclado:
+
+- Enter sobre el interruptor lo conmuta en vez de guardar (patrón *switch* de
+  ARIA: Espacio y Enter). Quien va solo con teclado y pulsa Enter ahí quiere
+  encenderlo, no guardar y cerrar el modal.
+- Lleva una descripción oculta (`aria-describedby`) para lectores de pantalla.
+  En PC, además, un tooltip con el mismo texto (sale de ese mismo nodo, target
+  `chainHint`), por hover y por foco, con 400 ms de retraso para que no salte al
+  cruzar el ratón hacia «Guardar».
+- El tooltip no usa `data-bs-toggle` (tooltips.js los crea en todos lados): lo
+  crea el controlador solo si `(hover: hover) and (pointer: fine)`. En táctil el
+  primer toque abriría el tooltip en vez de conmutar.
+
+### Franja de la tanda: nombre, importe y «Terminar»
+
+La franja quedó en `✓ Alcampo −15,00 € ··· 2 en esta tanda [Terminar]`: fuera
+«Registrado», la fecha y el punto de categoría. Es un acuse de recibo, basta con
+reconocer el movimiento. El signo es el menos tipográfico (−), como en el
+selector de tipo, y la moneda sale de la cuenta. `_added_item.html.twig` ya no
+recibe `updated`.
+
+«Terminar» (`btn-outline-success`) cierra el modal con `data-bs-dismiss`; la
+recarga de detrás la sigue haciendo `hidden.bs.modal`. Con el interruptor
+encendido el modal no se cierra solo, y la X no comunica «ya he acabado».
+
+Se descartó rellenar el botón cuando el formulario está vacío: en una tanda de
+N, «Terminar» solo es lo probable tras el último guardado, y el botón
+parpadearía en cada alta compitiendo con el pulso de la franja.
+
+La región `aria-live` envuelve solo el texto de la franja, no el botón: si no,
+el lector anunciaría «Terminar» en cada alta.
+
+### Sugerencias de nombre propias en vez del autocompletado del navegador
+
+El autocompletado nativo no se puede limitar y repetía cada variante de
+mayúsculas («alcampo», «Alcampo», «ALCAMPO»). Ahora el nombre va con
+`autocomplete="off"` y, al crear, un `<datalist>` que rellena
+`name_suggest_controller.js` desde `GET /transaction/suggest-names`:
+
+- como mucho 2 nombres de la cuenta que empiezan por lo escrito (mínimo 2
+  caracteres), los más usados primero y, a igualdad, los más recientes;
+- agrupados por la collation de MySQL (insensible a mayúsculas y acentos), igual
+  que la sugerencia de categoría; la grafía que sale la elige MySQL;
+- sin el nombre ya escrito entero, y con `%`/`_` escapados en el `LIKE`;
+- debounce de 200 ms (más corto que los 350 de categoría: tiene que llegar
+  mientras se escribe) y `AbortController` para que una respuesta lenta no pise
+  a la siguiente.
+
+Sale del historial de la cuenta, no del navegador, así que es igual en cualquier
+dispositivo. El desplegable lo sigue pintando el navegador: su aspecto no se
+controla. Editando no hay sugerencias.
+
+Importe y descripción también van sin autocompletado: el importe cambia casi
+siempre y la descripción es texto libre. El del importe está en
+`partials/_amount_type.html.twig`, así que aplica también a recurrentes.
+
+---
+
 ## v1.4.0 — Registrar y editar movimientos, mucho más rápido
 
 Esta versión junta dos trabajos que salieron seguidos: exprimir el flujo de meter
@@ -50,17 +121,6 @@ token es el nombre del formulario (`transaction`) y es el mismo creando y editan
 
 Editando se ocultan el interruptor de encadenar y el enlace a recurrentes: son
 piezas de "meter una tanda", y editar es una acción única.
-
-### Un solo botón de guardar, encadenar es un interruptor
-
-Hubo dos botones, «Guardar» y «Guardar y añadir otro», con el segundo como
-primario. Se unificaron en un único «Guardar ↵» y un interruptor «Seguir
-añadiendo» al lado que decide si el modal se queda abierto o se cierra. Lo normal
-es meter un movimiento y salir, así que el interruptor viene apagado en cada
-apertura (también al duplicar) y dentro de una tanda se queda como esté.
-
-El interruptor no lleva `name`: no viaja en el envío, solo lo lee el controlador.
-Sin JS no hace nada y el formulario se envía como siempre.
 
 ### Los atajos se anuncian en su propio botón
 

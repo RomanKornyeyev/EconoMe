@@ -411,6 +411,31 @@ class TransactionController extends AbstractController
         ]);
     }
 
+    /**
+     * Nombres ya usados en la cuenta que empiezan por lo escrito, para el
+     * <datalist> del campo nombre (ver name_suggest_controller.js). Sustituye al
+     * autocompletado del navegador, que no se puede limitar y repite cada
+     * variante de mayúsculas por separado.
+     */
+    #[Route('/suggest-names', name: 'suggest_names', methods: ['GET'])]
+    public function suggestNames(Request $request, TransactionRepository $transactionRepo): JsonResponse
+    {
+        $account = $this->em->getRepository(Account::class)->find($request->query->getInt('account'));
+        if (!$account) {
+            return new JsonResponse([]);
+        }
+        // Mismo criterio que la sugerencia de categoría: no filtrar nombres de
+        // cuentas ajenas.
+        $this->denyAccessUnlessGranted('ACCOUNT_EDIT', $account);
+
+        $prefix = trim((string) $request->query->get('q', ''));
+        if (mb_strlen($prefix) < 2) {
+            return new JsonResponse([]);
+        }
+
+        return new JsonResponse($transactionRepo->topNamesByPrefix($account, $prefix, 2));
+    }
+
     #[Route('/{id}/summary', name: 'summary', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function summary(Transaction $transaction, Request $request): Response
     {

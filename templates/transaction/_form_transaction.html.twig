@@ -6,6 +6,10 @@
     </div>
     <div class="col-md-12">
         {{ form_row(form.name) }}
+        {% if suggest|default(false) %}
+            {# Lo rellena name-suggest con como mucho dos nombres ya usados #}
+            <datalist id="tx-name-suggestions" data-name-suggest-target="list"></datalist>
+        {% endif %}
     </div>
     {# Descripción plegada tras un enlace (ver description_toggle_controller.js).
        Abierta de partida si ya trae texto o un error que enseñar. #}

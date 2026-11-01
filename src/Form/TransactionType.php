@@ -29,7 +29,9 @@ class TransactionType extends AbstractType
         // El data-controller y el url-value van en el <form> desde la plantilla;
         // aquí se marcan los campos que el controlador observa y actualiza.
         $suggest = $options['suggest'];
-        $nameAttr = ['class' => 'form-control'];
+        // Sin el autocompletado del navegador: no se puede limitar y repite cada
+        // variante de mayúsculas. Al crear lo sustituye name-suggest.
+        $nameAttr = ['class' => 'form-control', 'autocomplete' => 'off'];
         $typeAttr = [];
         // category-order agrupa las categorías según el tipo elegido (ver
         // category_order_controller.js); va con o sin sugerencia.
@@ -37,7 +39,11 @@ class TransactionType extends AbstractType
         if ($suggest) {
             $nameAttr += [
                 'data-category-suggest-target' => 'name',
-                'data-action' => 'input->category-suggest#request',
+                'data-action' => 'input->category-suggest#request input->name-suggest#request',
+                // Nombres ya usados (ver name_suggest_controller.js); el
+                // <datalist> lo pinta _form_transaction.html.twig
+                'data-name-suggest-target' => 'input',
+                'list' => 'tx-name-suggestions',
             ];
             $typeAttr += [
                 'data-category-suggest-target' => 'type',
@@ -99,7 +105,8 @@ class TransactionType extends AbstractType
             ->add('description', TextareaType::class, [
                 'label' => 'Descripción',
                 'required' => false,
-                'attr' => ['rows' => 2, 'placeholder' => 'Descripción o notas adicionales...'],
+                // Texto libre que casi nunca se repite: el autocompletado no aporta
+                'attr' => ['rows' => 2, 'placeholder' => 'Descripción o notas adicionales...', 'autocomplete' => 'off'],
             ])
         ;
     }
