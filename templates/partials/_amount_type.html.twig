@@ -15,19 +15,16 @@
 #}
 {%- set choices = type.vars.choices -%}
 {%- set current = choices|filter(c => c.value == type.vars.value)|first ?: choices|first -%}
-{# Aspecto del segmento seleccionado. Igual para los dos tipos: el color no
-   distingue gasto de ingreso, solo marca cuál está elegido. Se declara aquí y el
-   controlador lo lee del data-attribute, para no tenerlo en dos sitios. #}
+{# Aspecto del segmento seleccionado. Igual para los dos tipos: el fondo no
+   distingue gasto de ingreso, solo marca cuál está elegido (el tipo lo dice el
+   «−/+»). Se declara aquí y el controlador lo lee del data-attribute, para no
+   tenerlo en dos sitios. #}
 {%- set activeClass = 'bg-body-secondary text-body-emphasis fw-semibold' -%}
-{# g-3 y no gx-3: el gutter vertical solo se nota al apilarse en móvil, y ahí es lo
-   que suma al mb-3 del importe los mismos 32px que separan al resto de campos. En
-   escritorio no cambia nada, porque el margen negativo de .row lo compensa.
-
-   pt-3 y no mt-3: al ser el bloque sin etiquetas visibles, arranca más pegado al
-   borde superior que el resto de campos. Se compensa con padding porque un margen
-   pisaría el -1rem que el gutter le pone a .row (las utilidades llevan !important)
-   y desplazaría de más. #}
-<div class="row g-3 pt-3" data-controller="amount-type" data-amount-type-active-class="{{ activeClass }}">
+{# gx-3 y no g-3: la separación vertical ya la pone el mb-3 de cada campo, como en
+   el resto de formularios; con gutter vertical, al apilarse en móvil se sumaba y
+   quedaba el doble. Sin padding arriba: el del contenedor (modal-body, card-body)
+   ya separa del borde. #}
+<div class="row gx-3" data-controller="amount-type" data-amount-type-active-class="{{ activeClass }}">
     <div class="col-md-4">
         {# Sin etiqueta visible: la del importe va dentro del campo (flotante), así que
            una encima de los botones descuadraría la fila. El grupo conserva su nombre

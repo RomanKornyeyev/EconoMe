@@ -1,4 +1,6 @@
-<div class="row g-3">
+{# gx-3 y no g-3: entre filas basta el mb-3 que ya trae cada campo; el gutter
+   vertical lo duplicaba (igual que en el formulario de movimientos). #}
+<div class="row gx-3">
     <div class="col-12">
         {% include 'partials/_amount_type.html.twig' with {amount: form.amount, type: form.type} only %}
     </div>

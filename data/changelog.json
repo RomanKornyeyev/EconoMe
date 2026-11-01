@@ -6,15 +6,7 @@
         "changes": [
             {
                 "type": "improvement",
-                "text": "La sugerencia de categoría es más compacta."
-            },
-            {
-                "type": "improvement",
-                "text": "La descripción de un movimiento queda plegada tras «Añadir descripción» y solo se abre cuando la necesitas."
-            },
-            {
-                "type": "improvement",
-                "text": "El selector de gasto/ingreso muestra un «−/+» con color para distinguir el tipo elegido."
+                "text": "Mejoras en la experiencia de usuario al crear movimientos (normales y recurrentes). Modal en general más compacto. La descripción sale como un añadido totalmente opcional."
             }
         ]
     },

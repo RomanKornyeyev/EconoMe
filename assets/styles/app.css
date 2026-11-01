@@ -372,6 +372,12 @@ span.flatpickr-weekday { color: var(--bs-secondary-color); }
 [data-category-suggest-target="hint"]:empty {
     display: none;
 }
+/* Pegado al select, comiéndose parte de su mb-3, y con la separación de siempre
+   debajo. Margen negativo a mano: el Bootstrap del CDN no trae mt-n*. */
+[data-category-suggest-target="hint"] {
+    margin-top: -.5rem;
+    margin-bottom: 1rem;
+}
 
 /* Badge de la categoría sugerida: informativo, borde verde, no clicable. */
 .cat-suggest-badge {
@@ -383,21 +389,24 @@ span.flatpickr-weekday { color: var(--bs-secondary-color); }
 }
 
 /* ── Descripción plegable del movimiento ──────────────────────────────────── */
-/* El enlace se sube hacia Nombre: debajo de este ya se suman su mb-3 (del tema)
-   y el gutter de la fila, y el hueco hacía que el enlace pareciera suelto.
+/* El enlace se arrima a Nombre (algo menos que el mb-3 de este) para que se lea
+   como parte suya, y deja poco hueco hasta Categoría.
    Bloque (flex) y no inline-block para que el margen negativo actúe limpio. */
 .tx-desc-toggle {
     display: flex;
     align-items: center;
     width: fit-content;
-    margin-top: -1.25rem;
+    margin-top: -.25rem;
+    margin-bottom: .5rem;
 }
-/* En móvil se toca con el dedo: área táctil de al menos 44px. Al crecer la caja
-   el texto queda centrado y baja, así que se compensa subiéndola algo más. */
+/* En móvil se toca con el dedo: área táctil de al menos 44px. La caja crece por
+   arriba y por abajo (~12px) con el texto centrado, así que se compensa con los
+   márgenes para que el texto quede a la misma distancia que en escritorio. */
 @media (max-width: 767.98px) {
     .tx-desc-toggle {
         min-height: 44px;
-        margin-top: -1.75rem;
+        margin-top: -1rem;
+        margin-bottom: 0;
     }
 }
 
@@ -434,6 +443,12 @@ span.flatpickr-weekday { color: var(--bs-secondary-color); }
    media query. */
 .tx-quick-add-dialog {
     max-width: 630px;
+}
+
+/* Franja «Registrado»: algo más pegada a los campos. Margen negativo a mano: el
+   Bootstrap del CDN no trae las utilidades mt-n*. */
+.tx-added-panel {
+    margin-top: -.5rem;
 }
 
 /* ── Botón discreto (aspecto de enlace, comportamiento de botón) ──────────── */

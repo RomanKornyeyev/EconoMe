@@ -1,4 +1,6 @@
-<div class="row g-3">
+{# gx-3 y no g-3: entre filas basta el mb-3 que ya trae cada campo (como en el
+   formulario de cuenta); el gutter vertical lo duplicaba. #}
+<div class="row gx-3">
     <div class="col-md-12">
         {% include 'partials/_amount_type.html.twig' with {amount: form.amount, type: form.type} only %}
     </div>
@@ -32,7 +34,9 @@
     <div class="col-8 col-md-6">
         {{ form_row(form.category) }}
         {% if suggest|default(false) %}
-            <div class="mt-1 small" data-category-suggest-target="hint" aria-live="polite"></div>
+            {# Se arrima al select comiéndose parte de su mb-3 (margen en app.css) y
+               deja debajo la separación de siempre. #}
+            <div class="small" data-category-suggest-target="hint" aria-live="polite"></div>
         {% endif %}
     </div>
     <div class="col-4 col-md-6">

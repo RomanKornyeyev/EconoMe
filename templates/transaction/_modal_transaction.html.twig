@@ -46,7 +46,9 @@
                 'data-action': 'submit->tx-quick-add#submit keydown->tx-quick-add#onKeydown',
             }}) }}
                 <input type="hidden" name="_redirect_url" value="{{ redirectUrl }}">
-                <div class="modal-body p-4">
+                {# pb-2: los campos de la última fila ya traen su mb-3; con p-4 entero
+                   el hueco hasta el pie quedaba bastante mayor que el de arriba. #}
+                <div class="modal-body p-4 pb-2">
                     {# El target `body` envuelve SOLO el formulario: es lo que el
                        controlador sustituye al editar. Todo lo que deba sobrevivir
                        al cambio de modo tiene que quedarse fuera de este div. #}
@@ -59,7 +61,9 @@
                    la tanda entera hacía crecer el modal sin techo (con 5 movimientos
                    ya no cabía en pantalla). Aquí la altura es constante, y el contador
                    cubre lo que aportaba la lista: saber cuántos llevas. #}
-                <div class="px-4 pb-3 d-none" data-tx-quick-add-target="addedPanel">
+                {# .tx-added-panel la sube un poco (app.css): encima ya quedan el mb-3
+                   de los campos y el pb-2 del cuerpo, y parecía suelta. #}
+                <div class="px-4 pb-3 tx-added-panel d-none" data-tx-quick-add-target="addedPanel">
                     <div class="tx-added-bar d-flex align-items-center gap-2 rounded-3 px-3 py-2"
                          data-tx-quick-add-target="addedBar" role="status" aria-live="polite">
                         <i class="fa-solid fa-circle-check flex-shrink-0"></i>
