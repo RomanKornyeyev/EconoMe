@@ -4,11 +4,12 @@
 
   Tiene dos modos, que gobierna tx_quick_add_controller.js:
 
-    · alta (el que se renderiza aquí) — encadenado: intercepta el envío, lo manda
-      por fetch y deja el modal abierto para el siguiente movimiento.
+    · alta (el que se renderiza aquí) — intercepta el envío y lo manda por fetch.
+      Con el interruptor «Seguir añadiendo» encendido deja el modal abierto para
+      el siguiente movimiento; apagado, guarda y cierra.
     · edición — al pulsar «Editar» se pide el formulario del movimiento por AJAX,
       se sustituye el cuerpo y se reapunta la `action`. Se ocultan las piezas que
-      solo tienen sentido creando: encadenar (con su atajo) y el enlace a
+      solo tienen sentido creando: el interruptor de encadenar y el enlace a
       recurrentes.
 
   Los elementos que cambian entre modos llevan target para que el controlador no
@@ -79,7 +80,7 @@
                 </div>
 
                 <div class="modal-footer">
-                    {# Salida a recurrentes, plegada para no competir con los botones de
+                    {# Salida a recurrentes, plegada para no competir con el botón de
                        guardar. Menú hacia abajo: el `.modal` desborda con scroll, no
                        recorta, y Popper lo voltea solo si no cupiera en pantalla.
 
@@ -88,7 +89,7 @@
                        al editar tendrá que pasar a ser cosa del item, no del menú. #}
                     <div class="dropdown me-auto" data-tx-quick-add-target="recurring">
                         {# En móvil se queda en un botón cuadrado con «⋯» para dejar
-                           sitio a los de guardar (ver .tx-more-btn en app.css). #}
+                           sitio al interruptor y al de guardar (ver .tx-more-btn en app.css). #}
                         <button type="button"
                                 class="btn btn-sm btn-link btn-quiet px-md-2 text-decoration-none dropdown-toggle tx-more-btn"
                                 data-bs-toggle="dropdown" aria-expanded="false" aria-label="Más opciones">
@@ -104,17 +105,27 @@
                             </li>
                         </ul>
                     </div>
+                    {# Encadenar es una opción del único botón, no un botón aparte: lo
+                       normal es meter un movimiento y cerrar. Viene apagado cada vez que
+                       se abre el modal (lo apaga el controlador), y dentro de una tanda
+                       se queda como esté. Sin `name` a propósito: no viaja en el envío,
+                       solo lo lee el controlador. Sin JS no pinta nada: se guarda y ya. #}
+                    <div class="form-check form-switch tx-chain-switch m-0 me-2 p-0 d-flex align-items-center gap-2"
+                         data-tx-quick-add-target="chainSwitch">
+                        <input type="checkbox" role="switch" class="form-check-input m-0"
+                               id="txChainSwitch" data-tx-quick-add-target="chain"
+                               aria-describedby="txChainHint">
+                        <label class="form-check-label text-body-secondary" for="txChainSwitch">Seguir añadiendo</label>
+                        {# Descripción para lectores de pantalla en cualquier dispositivo; en
+                           PC el controlador saca de aquí también el texto del tooltip. #}
+                        <span id="txChainHint" class="visually-hidden"
+                              data-tx-quick-add-target="chainHint">Al guardar, el formulario se vacía para añadir otro.</span>
+                    </div>
                     {# Sin botón «Cerrar» en el pie: para salir ya están la X de la
                        cabecera y Esc, y así el pie queda solo con lo que guarda. #}
-                    <button type="submit" class="btn btn-outline-primary"
-                            data-tx-quick-add-target="saveButton">Guardar</button>
-                    {# Encadenar es la acción primaria: si estás en este modal metiendo una
-                       tanda, seguir es lo que quieres casi siempre. «Guardar» queda para el
-                       último de la tanda, que es el que cierra. #}
                     <button type="submit" class="btn btn-primary"
-                            data-tx-quick-add-chain data-tx-quick-add-target="chainButton"
-                            aria-keyshortcuts="Enter">
-                        Guardar y añadir otro
+                            data-tx-quick-add-target="saveButton" aria-keyshortcuts="Enter">
+                        <span data-tx-quick-add-target="saveLabel">Guardar</span>
                         <kbd class="btn-kbd" aria-hidden="true">
                             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor"
                                  stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">

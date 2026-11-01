@@ -7,6 +7,10 @@
             {
                 "type": "improvement",
                 "text": "Mejoras en la experiencia de usuario al crear movimientos (normales y recurrentes). Modal en general más compacto. La descripción sale como un añadido totalmente opcional."
+            },
+            {
+                "type": "improvement",
+                "text": "Un solo botón «Guardar» al crear movimientos. Para meter varios seguidos, activa «Seguir añadiendo» y la ventana se queda abierta tras cada guardado."
             }
         ]
     },

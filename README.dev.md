@@ -48,19 +48,31 @@ Solo se sustituye el **cuerpo**, nunca el `<form>`. El `_token` vive en el
 `form_start`/`form_end` del modal y sobrevive al cambio de modo, porque el id del
 token es el nombre del formulario (`transaction`) y es el mismo creando y editando.
 
-Editando se ocultan encadenar y el enlace a recurrentes: son piezas de "meter una
-tanda", y editar es una acción única.
+Editando se ocultan el interruptor de encadenar y el enlace a recurrentes: son
+piezas de "meter una tanda", y editar es una acción única.
+
+### Un solo botón de guardar, encadenar es un interruptor
+
+Hubo dos botones, «Guardar» y «Guardar y añadir otro», con el segundo como
+primario. Se unificaron en un único «Guardar ↵» y un interruptor «Seguir
+añadiendo» al lado que decide si el modal se queda abierto o se cierra. Lo normal
+es meter un movimiento y salir, así que el interruptor viene apagado en cada
+apertura (también al duplicar) y dentro de una tanda se queda como esté.
+
+El interruptor no lleva `name`: no viaja en el envío, solo lo lee el controlador.
+Sin JS no hace nada y el formulario se envía como siempre.
 
 ### Los atajos se anuncian en su propio botón
 
 Había una línea de pistas al pie del modal («Enter guarda y sigue · N abre esta
 ventana»). Se cambió por un distintivo `.btn-kbd` dentro del botón que dispara
-cada atajo: `↵` en «Guardar y añadir otro», `N` en los dos «Nuevo movimiento».
+cada atajo: `↵` en «Guardar», `N` en los dos «Nuevo movimiento».
 
-Sale gratis en mantenimiento: el `↵` vive dentro del botón de encadenar, así que
-se oculta con él en modo edición sin código extra —antes había que acordarse de
-ocultar la pista aparte, y de hecho el controlador tenía un target `hint` solo
-para eso—.
+Sale gratis en mantenimiento: el `↵` vive dentro del botón, así que siempre dice
+la verdad sin código extra —antes había que acordarse de ocultar la pista aparte,
+y de hecho el controlador tenía un target `hint` solo para eso—. Editando solo
+cambia la etiqueta (target `saveLabel`), no el botón entero, para no perder el
+distintivo.
 
 El `N` se oculta por debajo de `md` (`d-none d-md-inline-flex`): sin teclado
 físico el aviso engaña. Los botones llevan `aria-keyshortcuts` y el distintivo va

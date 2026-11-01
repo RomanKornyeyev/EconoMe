@@ -8,10 +8,11 @@ import { Controller } from '@hotwired/stimulus';
  * él. El formulario es el target `form`, y sus `data-action` llegan igual porque
  * el controlador está en un ancestro.
  *
- * Envía el formulario por fetch y, si se ha pedido encadenar, deja el modal
- * abierto: limpia importe, nombre y descripción, conserva fecha y tipo, y
- * devuelve el foco al importe. Así meter un extracto entero son N tabuladas en
- * vez de N recargas de página.
+ * Envía el formulario por fetch y, con el interruptor «Seguir añadiendo»
+ * encendido, deja el modal abierto: limpia importe, nombre y descripción,
+ * conserva fecha y tipo, y devuelve el foco al importe. Así meter un extracto
+ * entero son N tabuladas en vez de N recargas de página. Apagado (como viene
+ * siempre al abrir), guarda y cierra.
  *
  * El servidor responde `{ok: true, item}` con la confirmación a pintar en la
  * franja «Registrado», o `{ok: false, body}` con el cuerpo del formulario
@@ -19,8 +20,8 @@ import { Controller } from '@hotwired/stimulus';
  * sobrevive).
  *
  * En modo edición el cuerpo del formulario se pide por AJAX y se sustituye, y
- * se ocultan las piezas que solo valen creando (encadenar y enlace a
- * recurrentes). Al volver a crear se restaura el cuerpo original, que se
+ * se ocultan las piezas que solo valen creando (interruptor de encadenar y
+ * enlace a recurrentes). Al volver a crear se restaura el cuerpo original, que se
  * guarda tal cual llegó del servidor en connect().
  *
  * Al cerrar el modal después de haber guardado algo, se recarga la página una
@@ -32,7 +33,7 @@ import { Controller } from '@hotwired/stimulus';
 export default class extends Controller {
   static targets = [
     'form', 'body', 'addedPanel', 'addedBar', 'addedLast', 'addedCount',
-    'title', 'accountName', 'saveButton', 'chainButton', 'recurring',
+    'title', 'accountName', 'saveButton', 'saveLabel', 'chain', 'chainSwitch', 'chainHint', 'recurring',
   ];
 
   #added = 0;
@@ -45,6 +46,7 @@ export default class extends Controller {
   // Cada apertura de edición lleva número: sirve para descartar una respuesta
   // que llegue tarde, cuando el usuario ya ha cerrado o abierto otra cosa.
   #loadSeq = 0;
+  #chainTooltip = null;
 
   // Estado de partida del modo alta, para poder volver a él tras editar
   #createBody = null;
@@ -64,9 +66,13 @@ export default class extends Controller {
     this.#modalEl?.addEventListener('hidden.bs.modal', this.#onModalHidden);
     document.addEventListener('keydown', this.#onGlobalKeydown);
     document.addEventListener('click', this.#onDocumentClick);
+
+    this.#chainTooltip = this.#createChainTooltip();
   }
 
   disconnect() {
+    this.#chainTooltip?.dispose();
+    this.#chainTooltip = null;
     this.#modalEl?.removeEventListener('show.bs.modal', this.#onModalShow);
     this.#modalEl?.removeEventListener('hidden.bs.modal', this.#onModalHidden);
     document.removeEventListener('keydown', this.#onGlobalKeydown);
@@ -75,38 +81,48 @@ export default class extends Controller {
 
   // ── Envío ─────────────────────────────────────────────────────────────────
 
-  /** submit del formulario, venga del botón que venga. */
+  /**
+   * submit del formulario. Hay un único botón: encadenar o cerrar lo decide el
+   * interruptor, que editando está oculto y no cuenta.
+   */
   submit(event) {
     event.preventDefault();
-    // `data-tx-quick-add-chain` distingue «Guardar y añadir otro» de «Guardar».
-    // Sin submitter (envío implícito) se encadena, que es el caso frecuente.
-    const chain = event.submitter ? event.submitter.hasAttribute('data-tx-quick-add-chain') : true;
-    this.#send(chain, event.submitter);
+    const chain = !this.#editing && this.chainTarget.checked;
+    this.#send(chain, this.saveButtonTarget);
   }
 
   /**
-   * Enter guarda y sigue, sin tener que llegar al botón. Se excluye el textarea
-   * de descripción, donde Enter tiene que seguir siendo un salto de línea.
+   * Enter guarda, sin tener que llegar al botón. Se excluye el textarea de
+   * descripción, donde Enter tiene que seguir siendo un salto de línea.
    *
-   * En vez de llamar a #send directamente, se pulsa el botón de encadenar: así
-   * el teclado y el ratón recorren exactamente el mismo camino (un único
-   * `submit`, con su `submitter`) en lugar de dos rutas parecidas que pueden
-   * divergir. También deja que el resto de listeners del submit —el de
-   * `needs-validation` de app.js— se enteren igual que con un clic.
+   * En vez de llamar a #send directamente, se pulsa el botón: así el teclado y
+   * el ratón recorren exactamente el mismo camino (un único `submit`) en lugar
+   * de dos rutas parecidas que pueden divergir. También deja que el resto de
+   * listeners del submit —el de `needs-validation` de app.js— se enteren igual
+   * que con un clic.
    */
   onKeydown(event) {
     if (event.key !== 'Enter' || event.shiftKey || event.altKey) return;
     if (event.target.tagName === 'TEXTAREA') return;
     // Con el foco en un botón o enlace, Enter tiene que hacer lo que ponga ahí
-    // («Guardar», «Más opciones», «Añadir descripción»…), no encadenar por nuestra cuenta.
+    // («Guardar», «Más opciones», «Añadir descripción»…), no guardar por nuestra cuenta.
     if (['BUTTON', 'A'].includes(event.target.tagName)) return;
     // Si alguien ya se ha quedado con este Enter (flatpickr con el calendario
     // abierto, un desplegable…), es suyo: no se le roba para guardar.
     if (event.defaultPrevented) return;
 
     event.preventDefault();
-    // Editando no hay botón de encadenar: Enter guarda y cierra, como el botón
-    (this.#editing ? this.saveButtonTarget : this.#chainButton())?.click();
+
+    // En el interruptor, Enter lo conmuta en vez de guardar (patrón «switch» de
+    // ARIA: Espacio y Enter). Quien va solo con teclado y le da a Enter ahí
+    // quiere encenderlo, no que se guarde y se cierre el modal. Con click() y
+    // no tocando `checked`, para que salten sus eventos como con el ratón.
+    if (event.target === this.chainTarget) {
+      this.chainTarget.click();
+      return;
+    }
+
+    this.saveButtonTarget.click();
   }
 
   async #send(chain, button) {
@@ -331,7 +347,7 @@ export default class extends Controller {
   /**
    * Pasa el modal a edición: cuerpo del movimiento, destino del envío y fuera
    * todo lo que solo tiene sentido creando. Editar es una acción única, así que
-   * encadenar, el atajo que lo anuncia y el enlace a recurrentes sobran.
+   * el interruptor de encadenar y el enlace a recurrentes sobran.
    */
   #toEditMode(action) {
     this.#editing = true;
@@ -339,12 +355,10 @@ export default class extends Controller {
 
     this.formTarget.action = action;
     this.titleTarget.textContent = 'Editar movimiento';
-    this.saveButtonTarget.textContent = 'Guardar cambios';
-    this.saveButtonTarget.classList.replace('btn-outline-primary', 'btn-primary');
+    // Solo la etiqueta: el ↵ del botón sigue valiendo, Enter también guarda aquí
+    this.saveLabelTarget.textContent = 'Guardar cambios';
 
-    // El atajo de Enter se anuncia dentro del propio botón de encadenar, así que
-    // se va con él sin tener que ocultarlo aparte.
-    this.#toggle(this.chainButtonTarget, false);
+    this.#toggle(this.chainSwitchTarget, false);
     this.#toggle(this.recurringTarget, false);
     // La franja es un contador de tanda; editando no hay tanda que contar
     this.#toggle(this.addedPanelTarget, false);
@@ -363,12 +377,36 @@ export default class extends Controller {
 
     this.titleTarget.textContent = 'Nuevo movimiento';
     this.accountNameTarget.textContent = this.#createAccount;
-    this.saveButtonTarget.textContent = 'Guardar';
-    this.saveButtonTarget.classList.replace('btn-primary', 'btn-outline-primary');
+    this.saveLabelTarget.textContent = 'Guardar';
 
-    this.#toggle(this.chainButtonTarget, true);
+    this.#toggle(this.chainSwitchTarget, true);
     this.#toggle(this.recurringTarget, true);
     this.formTarget.classList.remove('was-validated');
+  }
+
+  /**
+   * Tooltip de «Seguir añadiendo», solo con ratón. No pasa por el
+   * `data-bs-toggle` de tooltips.js porque ese los crea en todos lados, y en
+   * táctil el primer toque abriría el tooltip en vez de conmutar sin más.
+   *
+   * Cuelga del contenedor y no del input: así sale tanto al pasar por la
+   * etiqueta como por el interruptor, y por foco también, porque Bootstrap
+   * escucha `focusin`, que sí sube desde el input.
+   *
+   * El texto sale de `chainHint`, la descripción oculta del input: Bootstrap
+   * enlaza la suya al contenedor, y un lector de pantalla no la leería al
+   * enfocar el interruptor.
+   */
+  #createChainTooltip() {
+    if (!this.hasChainSwitchTarget || !window.bootstrap?.Tooltip) return null;
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return null;
+
+    return new window.bootstrap.Tooltip(this.chainSwitchTarget, {
+      title: this.chainHintTarget.textContent,
+      trigger: 'hover focus',
+      // Que no salte al cruzar el ratón de camino a «Guardar»; al irse, sin espera
+      delay: { show: 400, hide: 0 },
+    });
   }
 
   #toggle(el, visible) {
@@ -450,8 +488,13 @@ export default class extends Controller {
    * Abrir «Nuevo movimiento» tiene que dar un formulario en blanco, aunque la
    * vez anterior se cerrara a medias o con un duplicado dentro. Se exceptúa la
    * apertura que viene de duplicar, que acaba de rellenarlo a propósito.
+   *
+   * El interruptor de encadenar se apaga en todas las aperturas, duplicar
+   * incluido: lo normal es guardar uno y cerrar, y encadenar se pide cada vez.
    */
   #onModalShow = () => {
+    this.chainTarget.checked = false;
+
     // Duplicar y editar dejan el formulario listo antes de abrir; no se toca.
     if (this.#prefilled) {
       this.#prefilled = false;
@@ -516,10 +559,6 @@ export default class extends Controller {
   #syncDescription() {
     const wrapper = this.#field('description')?.closest('[data-controller~="description-toggle"]');
     wrapper && this.application.getControllerForElementAndIdentifier(wrapper, 'description-toggle')?.sync();
-  }
-
-  #chainButton() {
-    return this.formTarget.querySelector('[data-tx-quick-add-chain]');
   }
 
   /**

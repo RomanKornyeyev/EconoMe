@@ -505,6 +505,13 @@ span.flatpickr-weekday { color: var(--bs-secondary-color); }
     }
 }
 
+/* «Seguir añadiendo» del modal de movimientos: mano en el interruptor y en su
+   etiqueta, que también lo conmuta. Bootstrap deja el cursor por defecto. */
+.tx-chain-switch .form-check-input,
+.tx-chain-switch .form-check-label {
+    cursor: pointer;
+}
+
 /* Tecla rápida anunciada dentro del propio botón que dispara. Va sobre botones
    sólidos (btn-primary), así que se tiñe con negro translúcido y se perfila con
    blanco translúcido: así funciona igual en claro y en oscuro sin declarar
