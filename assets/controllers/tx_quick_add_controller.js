@@ -15,7 +15,7 @@ import { Controller } from '@hotwired/stimulus';
  * siempre al abrir), guarda y cierra.
  *
  * El servidor responde `{ok: true, item}` con la confirmación a pintar en la
- * franja «Registrado», o `{ok: false, body}` con el cuerpo del formulario
+ * franja de la tanda, o `{ok: false, body}` con el cuerpo del formulario
  * re-renderizado con errores (solo el cuerpo: el _token vive fuera y así
  * sobrevive).
  *

@@ -1,7 +1,7 @@
 [
     {
         "version": "v1.5.5",
-        "date": "2026-10-29",
+        "date": "2026-11-01",
         "title": "Mejora UX al crear movimientos",
         "changes": [
             {
@@ -10,7 +10,7 @@
             },
             {
                 "type": "improvement",
-                "text": "Un solo botón «Guardar» al crear movimientos. Para meter varios seguidos, activa «Seguir añadiendo» y la ventana se queda abierta tras cada guardado."
+                "text": "Un solo botón «Guardar» al crear movimientos. Para meter varios seguidos, activa «Seguir añadiendo» y la ventana se queda abierta tras cada guardado; cuando acabes, pulsa «Terminar» o cierra la ventana."
             }
         ]
     },

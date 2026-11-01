@@ -21,7 +21,7 @@ bajo demanda, cada pantalla se habría llevado el peso del modal.
 
 El modal ya no se cierra al guardar. `TransactionController::edit()` detecta XHR en el alta y responde JSON en vez de redirigir:
 
-- válido → `200 {ok: true, item}` con la confirmación ya renderizada para la franja «Registrado»;
+- válido → `200 {ok: true, item}` con la confirmación ya renderizada para la franja de la tanda;
 - inválido → `422 {ok: false, body}` con **solo el cuerpo** del formulario re-renderizado.
 
 Que vuelva solo el cuerpo y no el `<form>` entero es deliberado: el `_token` vive en el `form_start`/`form_end` del modal, así sobrevive al re-render y el siguiente envío sigue siendo válido.

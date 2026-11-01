@@ -1,23 +1,25 @@
 {#
   Confirmación de un movimiento recién registrado. La devuelve
   TransactionController::edit() como JSON cuando la petición es XHR, y
-  tx_quick_add_controller.js la pinta en la franja «Registrado» del modal.
+  tx_quick_add_controller.js la pinta en la franja de la tanda del modal.
 
   Es una sola línea porque la franja tiene altura fija: el modal no puede crecer
-  con cada alta de la tanda.
+  con cada alta de la tanda. Solo nombre e importe: es un acuse de recibo, lo
+  justo para reconocer el movimiento de un vistazo.
 
-  Se emiten varios elementos hermanos, no un bloque de texto: el contenedor es un
-  flex y solo el nombre debe encogerse (`min-width:0` es lo que permite que
-  `text-truncate` funcione dentro de un flex). El importe y la fecha van con
-  text-nowrap para que sobrevivan a un concepto de banco largo.
+  Se emiten elementos hermanos, no un bloque de texto: el contenedor es un flex y
+  solo el nombre debe encogerse (`min-width:0` es lo que permite que
+  `text-truncate` funcione dentro de un flex). El importe va con text-nowrap para
+  que sobreviva a un concepto de banco largo.
+
+  El signo es el menos tipográfico (−), el mismo que el del selector de tipo del
+  formulario.
 
   Variables:
-    - tx:      Transaction (ya persistida)
-    - updated: bool — false al crear, true al editar
+    - tx: Transaction (ya persistida)
 #}
-<span class="text-truncate" style="min-width:0">{{ updated|default(false) ? 'Actualizado' : 'Registrado' }} <strong>{{ tx.name }}</strong></span>
-{%- if tx.category %}
-    <span class="d-inline-block rounded-circle flex-shrink-0" style="width:6px;height:6px;background:{{ tx.category.color }}"></span>
-{%- endif %}
-<span class="fw-semibold text-nowrap">{{ tx.isExpense() ? '-' : '+' }}{{ tx.amount|number_format(2, ',', '.') }}</span>
-<span class="text-nowrap opacity-75">· {{ tx.date|date('d/m') }}</span>
+{% set currencySymbol = {EUR: '€', USD: '$', GBP: '£'}[tx.account.currency] ?? tx.account.currency %}
+<span class="text-truncate" style="min-width:0">{{ tx.name }}</span>
+<span class="fw-semibold text-nowrap {{ tx.isExpense() ? 'text-danger' : 'text-success' }}">
+    {{- tx.isExpense() ? '−' : '+' }}{{ tx.amount|number_format(2, ',', '.') }} {{ currencySymbol -}}
+</span>

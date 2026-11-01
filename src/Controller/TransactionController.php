@@ -284,8 +284,7 @@ class TransactionController extends AbstractController
                 return new JsonResponse([
                     'ok'   => true,
                     'item' => $this->renderView('transaction/_added_item.html.twig', [
-                        'tx'      => $transaction,
-                        'updated' => !$isNew,
+                        'tx' => $transaction,
                     ]),
                 ]);
             }
