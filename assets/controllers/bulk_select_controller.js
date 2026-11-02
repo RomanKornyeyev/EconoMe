@@ -13,7 +13,10 @@ import { Controller } from '@hotwired/stimulus';
  * Targets en _table_desktop.html.twig:
  *   checkbox            — cada checkbox de fila
  *   selectAll           — checkbox del thead
- *   bulkForm            — form compartido por las acciones en bloque
+ *
+ * Targets en _table_modals.html.twig (fuera de los wrappers d-none, para que
+ * los modales se vean también en mobile):
+ *   bulkForm           — form compartido por las acciones en bloque
  *   bulkToken           — input _token del form (se reescribe según la acción)
  *   bulkCategory        — input hidden con la categoría a aplicar
  *   confirmCount        — texto "N movimientos" en el modal de confirmación bulk

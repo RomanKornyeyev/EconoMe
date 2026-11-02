@@ -1,0 +1,105 @@
+{#
+    Forms y modales de bulk-select, compartidos por la tabla desktop y las cards
+    mobile. Debe incluirse dentro del wrapper con data-controller="bulk-select"
+    pero FUERA de los contenedores d-none/d-md-none: un modal dentro de un padre
+    oculto solo muestra el backdrop y bloquea la página.
+#}
+{% set canEdit = canEdit ?? is_granted('ACCOUNT_EDIT', currentAccount) %}
+{% if canEdit %}
+	{# Form de acciones en bloque: fuera de la tabla para evitar anidamiento. Los
+	   checkboxes se asocian via form="bulkForm". Un único form para eliminar y
+	   categorizar; el controller reescribe action y _token antes de enviar, así
+	   no hay dos juegos de checkboxes que mantener sincronizados. #}
+	<form id="bulkForm" data-bulk-select-target="bulkForm"
+	      method="post" action="{{ path('transaction_bulk_delete') }}"
+	      data-delete-url="{{ path('transaction_bulk_delete') }}"
+	      data-delete-token="{{ csrf_token('bulk_delete') }}"
+	      data-categorize-url="{{ path('transaction_bulk_categorize') }}"
+	      data-categorize-token="{{ csrf_token('bulk_categorize') }}">
+		<input type="hidden" name="_token" value="{{ csrf_token('bulk_delete') }}"
+		       data-bulk-select-target="bulkToken">
+		<input type="hidden" name="_redirect_url" value="{{ app.request.requestUri }}">
+		<input type="hidden" name="category" data-bulk-select-target="bulkCategory">
+	</form>
+
+	{# Form single delete: action y token se inyectan dinámicamente desde el controller. #}
+	<form data-bulk-select-target="singleDeleteForm" method="post">
+		<input type="hidden" name="_token" data-bulk-select-target="singleDeleteToken">
+		<input type="hidden" name="_redirect_url" value="{{ app.request.requestUri }}">
+	</form>
+
+	{# Modal de confirmación — bulk delete #}
+	<div class="modal fade" id="bulkConfirmModal" tabindex="-1" aria-labelledby="bulkConfirmModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header border-0 pb-0">
+					<h5 class="modal-title" id="bulkConfirmModalLabel">Eliminar movimientos</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+				</div>
+				<div class="modal-body">
+					¿Eliminar <strong data-bulk-select-target="confirmCount"></strong>? Esta acción no se puede deshacer.
+				</div>
+				<div class="modal-footer border-0 pt-0">
+					<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+					<button type="button" class="btn btn-danger" data-action="bulk-select#submitBulk">
+						<i class="fa-solid fa-trash fa-xs me-1"></i>Eliminar
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	{# Modal — categorizar en bloque #}
+	<div class="modal fade" id="bulkCategorizeModal" tabindex="-1" aria-labelledby="bulkCategorizeModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header border-0 pb-0">
+					<h5 class="modal-title" id="bulkCategorizeModalLabel">Categorizar movimientos</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+				</div>
+				<div class="modal-body">
+					<p class="text-muted small">
+						Se aplicará a <strong data-bulk-select-target="categorizeCount"></strong>.
+					</p>
+					<select class="form-select" data-bulk-select-target="categorySelect" aria-label="Categoría">
+						<option value="">Sin categoría</option>
+						{# Lista plana: la selección puede mezclar gastos e ingresos, y
+						   cualquier categoría vale para ambos. #}
+						{% for cat in categories %}
+							<option value="{{ cat.id }}">{{ cat.name }}</option>
+						{% endfor %}
+					</select>
+				</div>
+				<div class="modal-footer border-0 pt-0">
+					<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+					<button type="button" class="btn btn-primary" data-action="bulk-select#submitCategorize">
+						<i class="fa-solid fa-tag fa-xs me-1"></i>Aplicar
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	{# Modal de confirmación — borrado individual #}
+	<div class="modal fade" id="singleConfirmModal"
+	     data-bulk-select-target="singleDeleteModal"
+	     tabindex="-1" aria-labelledby="singleConfirmModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header border-0 pb-0">
+					<h5 class="modal-title" id="singleConfirmModalLabel">Eliminar movimiento</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+				</div>
+				<div class="modal-body">
+					¿Eliminar <strong data-bulk-select-target="singleDeleteName"></strong>? Esta acción no se puede deshacer.
+				</div>
+				<div class="modal-footer border-0 pt-0">
+					<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+					<button type="button" class="btn btn-danger" data-action="bulk-select#submitSingleDelete">
+						<i class="fa-solid fa-trash fa-xs me-1"></i>Eliminar
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+{% endif %}

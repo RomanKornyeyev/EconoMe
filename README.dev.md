@@ -6,6 +6,19 @@ Formato changelog: lo más reciente arriba.
 
 ---
 
+## v1.5.6 — Corrección al eliminar movimientos en móvil
+
+### Los modales de bulk-select salen de la tabla desktop
+
+Borrar un movimiento desde las cards de móvil dejaba la página bloqueada con el
+backdrop y sin modal: los forms y modales de `bulk-select` vivían en
+`_table_desktop.html.twig`, que se incluye dentro de un `d-none d-md-block`, y un
+modal con un padre oculto no se ve aunque Bootstrap lo abra. Ahora están en
+`transaction/_table_modals.html.twig`, incluido en el wrapper del controller pero
+fuera de los contenedores responsive (dashboard y Movimientos).
+
+---
+
 ## v1.5.5 — Mejora UX al crear movimientos
 
 ### Un solo botón de guardar, encadenar es un interruptor
