@@ -30,11 +30,11 @@ security:
                 path: app_logout
             remember_me:
                 secret: "%kernel.secret%"
-                lifetime: 604800 # 7 días
+                lifetime: 1814400 # 21 días
                 path: / # Aplica a toda la web
                 always_remember_me: false # Solo si el user lo marca
             login_throttling:
-                max_attempts: 5
+                max_attempts: 7
                 interval: '3 minutes' 
 
             # Activate different ways to authenticate:

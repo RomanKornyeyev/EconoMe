@@ -6,7 +6,7 @@ Formato changelog: lo más reciente arriba.
 
 ---
 
-## v1.5.6 — Corrección al eliminar movimientos en móvil
+## v1.5.6 — Eliminar en móvil, duración de sesión y límites de intentos
 
 ### Los modales de bulk-select salen de la tabla desktop
 
@@ -16,6 +16,22 @@ backdrop y sin modal: los forms y modales de `bulk-select` vivían en
 modal con un padre oculto no se ve aunque Bootstrap lo abra. Ahora están en
 `transaction/_table_modals.html.twig`, incluido en el wrapper del controller pero
 fuera de los contenedores responsive (dashboard y Movimientos).
+
+### Duración de la sesión
+
+Sin «Recuérdame» la sesión dependía del `php.ini` (24 min de inactividad en
+local, y en producción lo que tocase). Ahora `framework.session.gc_maxlifetime`
+la fija en 60 min; `session: true` pasa a ser un bloque, pero el resto de
+opciones sigue con sus valores por defecto. Es un mínimo, no un corte exacto: la
+sesión caducada se borra cuando salta el GC de PHP (`gc_probability` /
+`gc_divisor` del `php.ini`), así que puede durar algo más.
+
+Con «Recuérdame» la cookie pasa de 7 a 21 días (`remember_me.lifetime: 1814400`).
+
+### Más margen en los límites de intentos
+
+El login (`login_throttling.max_attempts`) y el cambio de contraseña
+(`rate_limiter.change_password.limit`) pasan de 5 a 7 intentos por cada 3 minutos.
 
 ---
 

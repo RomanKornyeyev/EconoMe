@@ -3,7 +3,8 @@ framework:
     secret: '%env(APP_SECRET)%'
 
     # Note that the session will be started ONLY if you read or write from it.
-    session: true
+    session:
+        gc_maxlifetime: 3600 # 60 min de inactividad sin «Recuérdame»
 
     #esi: true
     #fragments: true
@@ -11,7 +12,7 @@ framework:
     rate_limiter:
         change_password:
             policy: 'sliding_window'
-            limit: 5
+            limit: 7
             interval: '3 minutes'
 
 when@test:

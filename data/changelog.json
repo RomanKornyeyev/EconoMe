@@ -2,11 +2,23 @@
     {
         "version": "v1.5.6",
         "date": "2026-11-02",
-        "title": "Corrección al eliminar movimientos en móvil",
+        "title": "Corrección de errores y mejoras de experiencia general",
         "changes": [
             {
                 "type": "fix",
                 "text": "En móvil, eliminar un movimiento desde el menú de tres puntos ya muestra la confirmación; antes la página se quedaba bloqueada con un fondo oscuro."
+            },
+            {
+                "type": "improvement",
+                "text": "La sesión dura más: sin «Recuérdame» sigue abierta hasta 1 hora sin actividad (antes 24min), y con «Recuérdame» te mantiene dentro 21 días (antes 7)."
+            },
+            {
+                "type": "improvement",
+                "text": "Texto más claro al borrar una cuenta contable."
+            },
+            {
+                "type": "improvement",
+                "text": "Más margen al equivocarte de contraseña (el throttling es ligeramente más permisivo)."
             }
         ]
     },
