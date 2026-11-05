@@ -16,7 +16,9 @@
     perPage.
 #}
 {% set q = app.request.query.all|merge({account: currentAccount.id}) %}
-{% set clearUrl = path('transaction_index', {account: currentAccount.id, perPage: perPage}) %}
+{# date_from vacío: sin ningún filtro en la URL se abre el mes en curso, y
+   «Limpiar» es verlo todo (ver TransactionController::index). #}
+{% set clearUrl = path('transaction_index', {account: currentAccount.id, perPage: perPage, date_from: ''}) %}
 {% set currencySymbol = {EUR: '€', USD: '$', GBP: '£'}[currentAccount.currency] ?? currentAccount.currency %}
 
 {# ---- Etiquetas de filtros aplicados: texto y parámetros que retira ---- #}
@@ -38,7 +40,9 @@
     {% else %}
         {% set dateLabel = 'Hasta ' ~ toLabel %}
     {% endif %}
-    {% set chips = chips|merge([{label: dateLabel, remove: ['date_from', 'date_to']}]) %}
+    {# Se vacían en vez de quitarse: si era el único filtro, la URL sin
+       ninguno volvería al mes en curso en lugar de enseñarlo todo. #}
+    {% set chips = chips|merge([{label: dateLabel, remove: ['date_from', 'date_to'], set: {date_from: ''}}]) %}
 {% endif %}
 
 {% if currentCategory %}
@@ -69,7 +73,8 @@
       data-controller="tx-filters"
       data-tx-filters-count-url-value="{{ path('transaction_count') }}"
       data-tx-filters-count-value="{{ pagination.getTotalItemCount() }}"
-      data-action="input->tx-filters#refresh change->tx-filters#refresh submit->tx-filters#submit"
+      data-tx-filters-date-range-outlet="#mf-dates"
+      data-action="input->tx-filters#refresh change->tx-filters#refresh date-range:change->tx-filters#refresh submit->tx-filters#submit"
       data-tour-step="2"
       data-tour-title="Filtros"
       data-tour-text="Busca por nombre o abre «Filtros» para acotar por tipo, fechas, categoría o importe.">
@@ -100,7 +105,7 @@
         <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
             {% for chip in chips %}
                 <a class="tx-chip"
-                   href="{{ path('transaction_index') }}?{{ q|filter((v, k) => k not in chip.remove and k != 'page')|url_encode }}"
+                   href="{{ path('transaction_index') }}?{{ q|filter((v, k) => k not in chip.remove and k != 'page')|merge(chip.set ?? {})|url_encode }}"
                    aria-label="Quitar filtro: {{ chip.label }}">
                     {{ chip.label }}<i class="fa-solid fa-xmark" aria-hidden="true"></i>
                 </a>
@@ -133,24 +138,14 @@
                 </select>
             </div>
 
-            <div class="mb-3">
+            {# Rango con atajos y «Limpiar» dentro del calendario, debajo de los
+               días (date_range_controller.js). Los hidden son los que viajan. #}
+            <div class="mb-3" id="mf-dates" data-controller="date-range" data-date-range-layout-value="bottom">
                 <label class="form-label" for="mf-range">Fechas</label>
-                <div class="d-flex flex-wrap gap-2 mb-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill tx-sheet__preset"
-                            data-tx-filters-target="preset" data-tx-filters-range-param="month"
-                            data-action="tx-filters#preset">Este mes</button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill tx-sheet__preset"
-                            data-tx-filters-target="preset" data-tx-filters-range-param="lastMonth"
-                            data-action="tx-filters#preset">Mes pasado</button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill tx-sheet__preset"
-                            data-tx-filters-target="preset" data-tx-filters-range-param="last3"
-                            data-action="tx-filters#preset">Últimos 3 meses</button>
-                </div>
-                {# Un campo visible; los hidden son los que viajan al backend. #}
                 <input type="text" id="mf-range" class="form-control" placeholder="Selecciona un rango…"
-                       autocomplete="off" data-tx-filters-target="range">
-                <input type="hidden" name="date_from" value="{{ dateFrom ? dateFrom|date('Y-m-d') }}" data-tx-filters-target="dateFrom">
-                <input type="hidden" name="date_to" value="{{ dateTo ? dateTo|date('Y-m-d') }}" data-tx-filters-target="dateTo">
+                       autocomplete="off" data-date-range-target="input">
+                <input type="hidden" name="date_from" value="{{ dateFrom ? dateFrom|date('Y-m-d') }}" data-date-range-target="from">
+                <input type="hidden" name="date_to" value="{{ dateTo ? dateTo|date('Y-m-d') }}" data-date-range-target="to">
             </div>
 
             <div class="mb-3">

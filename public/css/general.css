@@ -420,6 +420,71 @@ span.flatpickr-weekday { background: var(--bs-secondary-bg); color: var(--bs-sec
 .numInputWrapper span.arrowUp:after   { border-bottom-color: var(--bs-body-color); }
 .numInputWrapper span.arrowDown:after { border-top-color: var(--bs-body-color); }
 
+/* Atajos y «Limpiar» del selector de rango (date_range_controller.js).
+   Dos layouts: panel lateral en escritorio (--side) y rejilla debajo de los
+   días en móvil (--bottom). Mismo marcado de botones en los dos. */
+.fp-presets__item,
+.fp-presets__clear {
+    border: 1px solid transparent;
+    border-radius: .375rem;
+    background: transparent;
+    color: var(--bs-body-color);
+    font-size: .875rem;
+    line-height: 1.25;
+    padding: .5rem .75rem;
+}
+.fp-presets__item:hover          { background: var(--bs-tertiary-bg); }
+.fp-presets__item:focus-visible,
+.fp-presets__clear:focus-visible { outline: 2px solid var(--bs-primary); outline-offset: 1px; }
+.fp-presets__item.active,
+.fp-presets__item.active:hover   { background: var(--bs-primary); border-color: var(--bs-primary); color: #fff; }
+.fp-presets__clear               { color: var(--bs-link-color); }
+.fp-presets__clear:hover         { color: var(--bs-link-hover-color); }
+.fp-presets__clear .fa-eraser    { margin-right: .375rem; }
+
+/* Escritorio: el calendario de siempre a la derecha, atajos a la izquierda. */
+.flatpickr-calendar.fp-has-side  { width: auto; }
+.fp-has-side .flatpickr-months   { border-top-left-radius: 0; }
+.fp-layout                       { display: flex; }
+/* El ancho fijo de flatpickr. Y relative: las flechas de mes van en absolute y,
+   sin esto, se colocan respecto al calendario entero, encima de los atajos. */
+.fp-main                         { width: 307.875px; position: relative; }
+.fp-presets--side {
+    display: flex;
+    flex-direction: column;
+    width: 10.5rem;
+    padding: .5rem;
+    border-right: 1px solid var(--bs-border-color);
+}
+.fp-presets--side .fp-presets__title {
+    padding: .25rem .5rem .5rem;
+    font-size: .75rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--bs-secondary-color);
+}
+.fp-presets--side .fp-presets__list  { display: flex; flex-direction: column; gap: .25rem; }
+.fp-presets--side .fp-presets__item  { text-align: left; }
+.fp-presets--side .fp-presets__clear {
+    margin-top: auto;
+    text-align: left;
+    border-top-color: var(--bs-border-color);
+    border-radius: 0;
+    padding-top: .75rem;
+}
+
+/* Móvil: rejilla de 2 columnas bajo los días y «Limpiar» a la derecha. */
+.fp-presets--bottom {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    padding: .75rem .5rem .5rem;
+    border-top: 1px solid var(--bs-border-color);
+}
+.fp-presets--bottom .fp-presets__list  { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.fp-presets--bottom .fp-presets__item  { border-color: var(--bs-border-color); text-align: center; }
+.fp-presets--bottom .fp-presets__clear { align-self: flex-end; padding-block: .25rem; }
+
 /* Input visible (altInput) con apariencia Bootstrap */
 input.flatpickr-input.form-control[readonly] {
     background-color: var(--bs-body-bg);
@@ -858,15 +923,6 @@ input.flatpickr-input.form-control[readonly] {
 .tx-sheet .offcanvas-header { padding-top: .75rem; border-bottom: 1px solid var(--bs-border-color); }
 .tx-sheet__footer           { padding: 1rem; border-top: 1px solid var(--bs-border-color); }
 .tx-sheet__footer .btn[aria-busy="true"] { opacity: .75; }
-
-/* Atajos de fecha: el marcado va relleno en primario, no en el gris que
-   Bootstrap da a .btn-outline-secondary.active. */
-.tx-sheet__preset.active,
-.tx-sheet__preset.active:hover {
-    color: #fff;
-    background-color: var(--bs-primary);
-    border-color: var(--bs-primary);
-}
 
 /* Objetivos táctiles de 44 px, como en el dashboard. */
 @media (max-width: 767.98px) {

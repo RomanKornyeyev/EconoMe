@@ -6,6 +6,42 @@ Formato changelog: lo más reciente arriba.
 
 ---
 
+## v1.5.7 — Filtro de fechas en Movimientos
+
+### Movimientos abre el mes en curso
+
+`TransactionController::index` aplica del día 1 al último del mes **solo si la
+query no trae ningún parámetro de filtro** (`FILTER_PARAMS`). Basta uno, aunque
+venga vacío, para respetarlo. Por eso los enlaces que quieren «todo» llevan
+`date_from=` vacío: los dos «Limpiar», la etiqueta de fecha del móvil al
+quitarla y el contador «Movimientos» de la tarjeta de cuenta. El drill-down de
+categoría (`?category=X`) y el del dashboard ya traen filtro y no se recortan.
+`/transaction/count` no aplica el defecto: el panel le manda siempre las fechas.
+
+### Rango de fechas: `date_range_controller.js`
+
+Los filtros de escritorio (un `<script>` suelto en `transaction/index`) y los
+del panel móvil (`tx-filters`) montaban cada uno su flatpickr de rango con la
+misma lógica copiada. Ahora los dos usan `date-range`, que además pone los
+atajos («Este mes», «Mes anterior», «Últimos 3 meses», «Año actual») y
+«Limpiar» dentro del calendario. flatpickr no trae nada de esto: se construye en
+`onReady` sobre `calendarContainer`.
+
+- `layout: side` (escritorio): mueve los nodos de flatpickr a `.fp-main` y pone
+  los atajos en un panel a la izquierda.
+- `layout: bottom` (móvil): rejilla de 2 columnas bajo los días. Los botones que
+  había encima del campo en el panel se quitan.
+
+Dentro de un `.offcanvas`, el calendario cuelga del panel y se coloca a mano
+(ver `#placeInSheet`). `tx-filters` lo maneja por outlet (`clear()` y `reload()`)
+y recalcula el recuento con el evento `date-range:change`.
+
+Reparto de flatpickr desde aquí: **fecha suelta** (formularios, modal de
+movimiento) → `date_picker_controller.js`; **rango** (filtros) →
+`date_range_controller.js`. Ninguno se inicializa desde un `<script>` inline.
+
+---
+
 ## v1.5.6 — Eliminar en móvil, duración de sesión y límites de intentos
 
 ### Los modales de bulk-select salen de la tabla desktop

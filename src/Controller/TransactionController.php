@@ -35,6 +35,9 @@ class TransactionController extends AbstractController
     /** Listado completo: se asume que se viene a revisar movimientos en bloque. */
     private const PER_PAGE_DEFAULT = 25;
 
+    /** Parámetros de la query que son filtros (los lee {@see readFilters()}). */
+    private const FILTER_PARAMS = ['date_from', 'date_to', 'type', 'category', 'search', 'amount_from', 'amount_to'];
+
     /** Nº de altas de la tanda en curso del modal. Ver {@see flashModalSave()}. */
     private const FLASH_BATCH_KEY = 'tx.flash_batch';
 
@@ -62,6 +65,16 @@ class TransactionController extends AbstractController
 
         $categories = $this->categoryRepo->findAllByAccount($account);
         $filters = $this->readFilters($request, $categories);
+
+        // Entrar sin ningún filtro en la URL (menú, pestañas, tras guardar)
+        // abre el mes en curso. Basta con que venga uno, aunque sea vacío, para
+        // respetarlo: así «Limpiar» (que manda date_from vacío) enseña todo, y
+        // el drill-down de una categoría no se queda recortado a este mes.
+        // Solo en el listado: /count recibe siempre las fechas explícitas.
+        if (!array_intersect(self::FILTER_PARAMS, array_keys($request->query->all()))) {
+            $filters['dateFrom'] = new \DateTime('first day of this month 00:00:00');
+            $filters['dateTo']   = new \DateTime('last day of this month 23:59:59');
+        }
 
         $allowedSorts = ['date', 'name', 'amount', 'type', 'category'];
         $sortField = $request->query->getString('sortBy', 'date');

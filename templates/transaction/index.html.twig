@@ -85,13 +85,15 @@
                            placeholder="Buscar por nombre o descripción…" value="{{ currentSearch ?? '' }}">
                 </div>
 
-                {# Rango de fechas: un solo campo visible; los hidden alimentan al backend #}
-                <div class="col-md-3">
-                    <label class="form-label small mb-1">Fechas</label>
+                {# Rango de fechas: un solo campo visible; los hidden alimentan al
+                   backend. Atajos y «Limpiar» en un panel a la izquierda del
+                   calendario (date_range_controller.js). #}
+                <div class="col-md-3" data-controller="date-range" data-date-range-layout-value="side">
+                    <label class="form-label small mb-1" for="f-daterange">Fechas</label>
                     <input type="text" id="f-daterange" class="form-control form-control-sm"
-                           placeholder="Selecciona un rango…" autocomplete="off">
-                    <input type="hidden" name="date_from" id="f-date-from" value="{{ dateFrom ? dateFrom|date('Y-m-d') : '' }}">
-                    <input type="hidden" name="date_to" id="f-date-to" value="{{ dateTo ? dateTo|date('Y-m-d') : '' }}">
+                           placeholder="Selecciona un rango…" autocomplete="off" data-date-range-target="input">
+                    <input type="hidden" name="date_from" value="{{ dateFrom ? dateFrom|date('Y-m-d') : '' }}" data-date-range-target="from">
+                    <input type="hidden" name="date_to" value="{{ dateTo ? dateTo|date('Y-m-d') : '' }}" data-date-range-target="to">
                 </div>
             </div>
 
@@ -135,8 +137,10 @@
 
             {# Fila 3: acciones #}
             <div class="d-flex justify-content-end gap-3">
-                {# «Limpiar» borra filtros, no la preferencia de tamaño de página #}
-                <a href="{{ path('transaction_index', {account: currentAccount.id, perPage: perPage}) }}" class="btn btn-sm btn-outline-primary">
+                {# «Limpiar» borra filtros, no la preferencia de tamaño de página.
+                   El date_from vacío es a propósito: sin ningún filtro en la URL
+                   el listado abre el mes en curso, y limpiar es verlo todo. #}
+                <a href="{{ path('transaction_index', {account: currentAccount.id, perPage: perPage, date_from: ''}) }}" class="btn btn-sm btn-outline-primary">
                     <i class="fa-solid fa-eraser"></i>Limpiar
                 </a>
                 <button type="submit" class="btn btn-sm btn-primary px-4">
@@ -167,51 +171,6 @@
     });
 
     filterCats(document.getElementById('f-type').value);
-
-    // Flatpickr en modo rango: un campo visible, dos hidden (date_from/date_to)
-    const hiddenFrom = document.getElementById('f-date-from');
-    const hiddenTo = document.getElementById('f-date-to');
-
-    function syncHidden(dates, dateStr, fp) {
-        hiddenFrom.value = dates[0] ? fp.formatDate(dates[0], 'Y-m-d') : '';
-        // Con un solo día seleccionado, filtramos exactamente ese día
-        hiddenTo.value = dates[1] ? fp.formatDate(dates[1], 'Y-m-d')
-                       : (dates[0] ? fp.formatDate(dates[0], 'Y-m-d') : '');
-    }
-
-    // Si inicio y fin coinciden, muestra la fecha una sola vez (en vez de "X a X")
-    function tidyDisplay(fp) {
-        const d = fp.selectedDates;
-        if (d.length === 2 && d[0].getTime() === d[1].getTime()) {
-            fp.altInput.value = fp.formatDate(d[0], 'd/m/Y');
-        }
-    }
-
-    flatpickr('#f-daterange', {
-        mode: 'range',
-        locale: 'es',
-        dateFormat: 'Y-m-d',
-        altInput: true,
-        altFormat: 'd/m/Y',
-        altInputClass: 'form-control form-control-sm',
-        defaultDate: [
-            {% if dateFrom %}'{{ dateFrom|date('Y-m-d') }}',{% endif %}
-            {% if dateTo %}'{{ dateTo|date('Y-m-d') }}',{% endif %}
-        ],
-        onChange: syncHidden,
-        onClose: function (dates, dateStr, fp) {
-            // Rango a medias (1 sola fecha): consolidarlo como día único
-            // también a nivel visual, no solo en los hidden
-            if (dates.length === 1) {
-                fp.setDate([dates[0], dates[0]], false);
-            }
-            syncHidden(fp.selectedDates, dateStr, fp);
-            tidyDisplay(fp);
-        },
-        onReady: function (dates, dateStr, fp) {
-            tidyDisplay(fp);
-        },
-    });
 })();
 </script>
 

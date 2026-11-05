@@ -8,7 +8,11 @@
     - route:            si se define, los enlaces usan path(route, {routeParam: id});
                         si no, se conserva la query actual añadiendo ?account=
     - routeParam:       nombre del parámetro de la ruta (por defecto 'account')
-    - resetParams:      query params a resetear al cambiar de cuenta (p. ej. {page: 1})
+    - resetParams:      query params a resetear al cambiar de cuenta (p. ej. {page: 1}).
+                        Solo se resetean los que ya vienen en la URL: los que
+                        no están no se añaden. Así la vista sin filtros sigue
+                        siéndolo (?account=N), y en Movimientos un `category=`
+                        vacío contaría como filtro y quitaría el mes en curso.
     - trashedAccounts:  cuentas en la papelera. La sección «En papelera» solo se
                         pinta si llega con datos; por defecto no se muestra.
                         Cada una enlaza a su ficha, en modo papelera, desde
@@ -24,6 +28,11 @@
     - tourStep / tourTitle / tourText: paso del tour de la página, si aplica
 #}
 {% set trashed = trashedAccounts ?? [] %}
+{# Enlace de cada cuenta (sin `route`): la query actual, con los resetParams
+   que ya vengan en ella pisados por su valor y, al final, el account nuevo.
+   Qué se resetea lo decide cada vista al incluir este parcial. #}
+{% set query = app.request.query.all %}
+{% set reset = (resetParams ?? {})|filter((v, k) => k in query|keys) %}
 <div class="btn-group {{ groupClass ?? '' }}" role="group"
      {%- if tourStep is defined %}
      data-tour-step="{{ tourStep }}"
@@ -49,7 +58,7 @@
                 <a class="dropdown-item d-flex align-items-center gap-2 {{ current and acc.id == current.id ? 'active' : '' }}"
                    href="{{ route is defined
                         ? path(route, {(routeParam|default('account')): acc.id})
-                        : '?' ~ app.request.query.all|merge(resetParams|default({}))|merge({'account': acc.id})|url_encode }}"
+                        : '?' ~ query|merge(reset)|merge({'account': acc.id})|url_encode }}"
                    {% if acc.name|length > 30 %}title="{{ acc.name }}"{% endif %}>
                     <span class="account-selector__dot" style="background-color:{{ acc.color ?? '#6c757d' }}" aria-hidden="true"></span>
                     {{ acc.name|length > 30 ? acc.name|slice(0, 30)|trim ~ '…' : acc.name }}

@@ -12,19 +12,19 @@ import { Controller } from '@hotwired/stimulus';
  * Cerrar el panel sin aplicar descarta lo tocado: al volver a abrirlo se ve lo
  * que está aplicado de verdad, que es lo que dicen las etiquetas.
  *
- * Fechas con flatpickr en modo rango (partials/assets/_flatpickr.html.twig).
- * Si no está cargado, el campo de rango se queda inerte y siguen valiendo los
- * atajos «Este mes», «Mes pasado» y «Últimos 3 meses».
+ * Las fechas las lleva el controller date-range (calendario con atajos y
+ * «Limpiar»), compartido con escritorio. Aquí solo se le escucha
+ * (`date-range:change` → recuento) y se le pide limpiar o restaurar.
  */
 /* stimulusFetch: 'lazy' */
 export default class extends Controller {
-  static targets = ['sheet', 'type', 'category', 'range', 'dateFrom', 'dateTo', 'preset', 'submit'];
+  static targets = ['sheet', 'type', 'category', 'submit'];
   static values  = { countUrl: String, count: Number };
+  static outlets = ['date-range'];
 
   /** Píxeles que hay que arrastrar el panel hacia abajo para cerrarlo. */
   static DRAG_CLOSE = 80;
 
-  #picker = null;
   #timer = null;
   #request = null;
   #applying = false;
@@ -40,9 +40,7 @@ export default class extends Controller {
       this.#initial.set(field, field.value);
     }
 
-    this.#initPicker();
     this.#filterCategories();
-    this.#markPreset();
 
     this.onHidden = () => this.#discard();
     this.sheetTarget.addEventListener('hidden.bs.offcanvas', this.onHidden);
@@ -52,8 +50,6 @@ export default class extends Controller {
     this.sheetTarget.removeEventListener('hidden.bs.offcanvas', this.onHidden);
     clearTimeout(this.#timer);
     this.#request?.abort();
-    this.#picker?.destroy();
-    this.#picker = null;
   }
 
   // ── Acciones ──────────────────────────────────────────────────────────
@@ -78,21 +74,13 @@ export default class extends Controller {
   clear() {
     this.typeTarget.value = '';
     this.categoryTarget.value = '';
-    this.#setRange([]);
+    if (this.hasDateRangeOutlet) {
+      this.dateRangeOutlet.clear();
+    }
     for (const input of this.sheetTarget.querySelectorAll('input[type="number"]')) {
       input.value = '';
     }
     this.#filterCategories();
-    this.#scheduleCount();
-  }
-
-  /** Atajo de fechas. Pulsar el que ya está marcado lo desmarca. */
-  preset({ params: { range }, currentTarget }) {
-    if (currentTarget.classList.contains('active')) {
-      this.#setRange([]);
-    } else {
-      this.#setRange(this.#presetDates(range));
-    }
     this.#scheduleCount();
   }
 
@@ -184,10 +172,12 @@ export default class extends Controller {
     for (const [field, value] of this.#initial) {
       field.value = value;
     }
-    this.#picker?.setDate(this.#hiddenDates(), false);
-    this.#tidyDisplay();
+    // Los hidden de las fechas ya están restaurados con el resto; falta
+    // que el calendario los vuelva a pintar.
+    if (this.hasDateRangeOutlet) {
+      this.dateRangeOutlet.reload();
+    }
     this.#filterCategories();
-    this.#markPreset();
     this.#renderCount(this.countValue);
   }
 
@@ -214,139 +204,5 @@ export default class extends Controller {
     if (selected?.disabled) {
       this.categoryTarget.value = '';
     }
-  }
-
-  // ── Fechas ────────────────────────────────────────────────────────────
-
-  #initPicker() {
-    if (typeof window.flatpickr !== 'function') {
-      this.rangeTarget.disabled = true;
-      return;
-    }
-
-    this.#picker = window.flatpickr(this.rangeTarget, {
-      mode: 'range',
-      locale: 'es',
-      dateFormat: 'Y-m-d',
-      altInput: true,
-      altFormat: 'd/m/Y',
-      altInputClass: 'form-control',
-      defaultDate: this.#hiddenDates(),
-      // Dentro del panel y no en el body: el offcanvas atrapa el foco, y desde
-      // fuera no se podría ni cambiar de mes en el desplegable.
-      appendTo: this.sheetTarget,
-      position: (fp) => this.#placeCalendar(fp),
-      onChange: (dates) => {
-        this.#syncHidden(dates);
-        this.#markPreset();
-      },
-      onClose: (dates, dateStr, fp) => {
-        // Rango a medias (una sola fecha): se consolida como día único.
-        if (dates.length === 1) {
-          fp.setDate([dates[0], dates[0]], false);
-        }
-        this.#syncHidden(fp.selectedDates);
-        this.#tidyDisplay();
-        this.#markPreset();
-        this.#scheduleCount();
-      },
-      onReady: () => this.#tidyDisplay(),
-    });
-  }
-
-  /**
-   * Coloca el calendario respecto al campo. El panel es `position: fixed`, así
-   * que las coordenadas de documento que calcula flatpickr no valen dentro de
-   * él. Va encima del campo si cabe —el panel está pegado al fondo de la
-   * pantalla— y debajo si no.
-   */
-  #placeCalendar(fp) {
-    const calendar = fp.calendarContainer;
-    const field = (fp.altInput || fp.input).getBoundingClientRect();
-    const sheet = this.sheetTarget.getBoundingClientRect();
-    const height = calendar.offsetHeight;
-    const above = field.top - height - 4 >= 0;
-
-    const top = above ? field.top - sheet.top - height - 4 : field.bottom - sheet.top + 4;
-    const maxLeft = sheet.width - calendar.offsetWidth - 8;
-    const left = Math.max(8, Math.min(field.left - sheet.left, maxLeft));
-
-    calendar.style.top = `${top}px`;
-    calendar.style.left = `${left}px`;
-    calendar.style.right = 'auto';
-    calendar.classList.toggle('arrowBottom', above);
-    calendar.classList.toggle('arrowTop', !above);
-  }
-
-  #setRange(dates) {
-    if (this.#picker) {
-      this.#picker.setDate(dates, false);
-      this.#tidyDisplay();
-    }
-    this.#syncHidden(dates);
-    this.#markPreset();
-  }
-
-  #syncHidden(dates) {
-    const from = dates[0] ? this.#ymd(dates[0]) : '';
-    // Con un solo día seleccionado se filtra exactamente ese día.
-    const to = dates[1] ? this.#ymd(dates[1]) : from;
-    this.dateFromTarget.value = from;
-    this.dateToTarget.value = to;
-  }
-
-  #hiddenDates() {
-    return [this.dateFromTarget.value, this.dateToTarget.value].filter(Boolean);
-  }
-
-  /** Si inicio y fin coinciden, muestra la fecha una vez en vez de «X a X». */
-  #tidyDisplay() {
-    const fp = this.#picker;
-    const dates = fp?.selectedDates ?? [];
-    if (dates.length === 2 && dates[0].getTime() === dates[1].getTime()) {
-      fp.altInput.value = fp.formatDate(dates[0], 'd/m/Y');
-    }
-  }
-
-  /** Marca el atajo cuyo rango coincide con el elegido, si alguno. */
-  #markPreset() {
-    const from = this.dateFromTarget.value;
-    const to = this.dateToTarget.value;
-    for (const button of this.presetTargets) {
-      const [start, end] = this.#presetDates(button.dataset.txFiltersRangeParam).map((d) => this.#ymd(d));
-      const active = from !== '' && from === start && to === end;
-      button.classList.toggle('active', active);
-      button.setAttribute('aria-pressed', String(active));
-    }
-  }
-
-  #presetDates(range) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const y = today.getFullYear();
-    const m = today.getMonth();
-
-    switch (range) {
-      case 'month':
-        return [new Date(y, m, 1), today];
-      case 'lastMonth':
-        // Día 0 del mes en curso = último día del anterior.
-        return [new Date(y, m - 1, 1), new Date(y, m, 0)];
-      case 'last3': {
-        // Mismo día de hace tres meses. Si ese mes es más corto (31 de mayo →
-        // 31 de febrero), se queda en su último día en vez de desbordar.
-        const start = new Date(y, m - 3, 1);
-        const lastDay = new Date(y, m - 2, 0).getDate();
-        start.setDate(Math.min(today.getDate(), lastDay));
-        return [start, today];
-      }
-      default:
-        return [];
-    }
-  }
-
-  #ymd(date) {
-    const pad = (n) => String(n).padStart(2, '0');
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
   }
 }

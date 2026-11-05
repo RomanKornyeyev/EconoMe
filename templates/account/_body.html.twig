@@ -69,7 +69,9 @@
                     </div>
                 {% endif %}
             </div>
-            <a href="{{ path('transaction_index', {account: account.id}) }}" class="account-stats__item">
+            {# date_from vacío: la cifra es el total, así que enlaza al listado
+               completo y no al mes en curso con que se abre por defecto. #}
+            <a href="{{ path('transaction_index', {account: account.id, date_from: ''}) }}" class="account-stats__item">
                 <span class="account-stats__label">
                     <span class="d-md-none">Movim.</span><span class="d-none d-md-inline">Movimientos</span>
                 </span>

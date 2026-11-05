@@ -1,5 +1,20 @@
 [
     {
+        "version": "v1.5.7",
+        "date": "2026-11-05",
+        "title": "Filtro de fechas en Movimientos",
+        "changes": [
+            {
+                "type": "improvement",
+                "text": "Movimientos se abre mostrando el mes en curso. «Limpiar» sigue enseñándolo todo."
+            },
+            {
+                "type": "improvement",
+                "text": "El calendario de fechas de los filtros trae atajos («Este mes», «Mes anterior», «Últimos 3 meses», «Año actual») y un botón para limpiar las fechas: en ordenador, en un panel a la izquierda; en móvil, debajo de los días."
+            }
+        ]
+    },
+    {
         "version": "v1.5.6",
         "date": "2026-11-03",
         "title": "Corrección de errores y mejoras de experiencia general",
