@@ -29,10 +29,14 @@ use App\Service\UserService;
 use App\Service\EmailChangeService;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Service\ProfilePhotoManager;
+use App\Security\RememberMeRenewer;
 
 #[Route('/perfil')]
 class ProfileController extends AbstractController
 {
+    // Al bloquearse el cambio por intentos fallidos: el botón de enlace está en la misma pantalla
+    private const CHANGE_PASSWORD_LOCKED_MSG = 'Demasiados intentos. Vuelve a intentarlo en unos minutos o usa «Envíame un enlace para restablecerla».';
+
     private UserService $userService;
     private EmailChangeService $emailChangeService;
 
@@ -127,7 +131,8 @@ class ProfileController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
         #[\Symfony\Component\DependencyInjection\Attribute\Autowire(service: 'limiter.change_password')]
         RateLimiterFactory $changePasswordLimiter,
-        CacheInterface $cache
+        CacheInterface $cache,
+        RememberMeRenewer $rememberMeRenewer
     ): Response {
         $user = $this->getUser();
 
@@ -149,10 +154,7 @@ class ProfileController extends AbstractController
             $blockedUntilTs = $cache->get($lockKey, fn() => 0);
 
             if (is_int($blockedUntilTs) && $blockedUntilTs > time()) {
-                $this->addFlash(
-                    'danger_html',
-                    'Demasiados intentos. Vuelve a intentarlo en unos minutos o <a href="'.$this->generateUrl('app_forgot_password').'">recupera tu contraseña</a>.'
-                );
+                $this->addFlash('danger', self::CHANGE_PASSWORD_LOCKED_MSG);
                 return $this->redirectToRoute('app_profile_password');
             }
         }
@@ -170,10 +172,7 @@ class ProfileController extends AbstractController
                         fn() => $retryAfter->getTimestamp()
                     );
 
-                    $this->addFlash(
-                        'danger_html',
-                        'Demasiados intentos. Vuelve a intentarlo en unos minutos o <a href="'.$this->generateUrl('app_forgot_password').'">recupera tu contraseña</a>.'
-                    );
+                    $this->addFlash('danger', self::CHANGE_PASSWORD_LOCKED_MSG);
                     return $this->redirectToRoute('app_profile_password');
                 }
             }
@@ -188,14 +187,54 @@ class ProfileController extends AbstractController
             }
 
             $this->userService->changePassword($user, $plainNew);
+            $rememberMeRenewer->renewIfPresent($user);
 
-            $this->addFlash('success', 'Contraseña actualizada correctamente.');
+            $this->addFlash('success', 'Contraseña actualizada. Se han cerrado las sesiones en otros dispositivos.');
             return $this->redirectToRoute('app_profile_index');
         }
 
         return $this->render('profile/password.html.twig', [
             'form' => $form,
         ]);
+    }
+
+    /**
+     * «¿No la recuerdas?» de Cambiar contraseña: manda el enlace de restablecer
+     * a la cuenta con la sesión iniciada. Comparte el límite de 1 por minuto con
+     * «Recuperar contraseña» (UserService::requestPasswordReset).
+     */
+    #[Route('/password/enlace', name: 'app_profile_password_reset_link', methods: ['POST'])]
+    public function sendPasswordResetLink(Request $request, CsrfTokenManagerInterface $csrf): RedirectResponse
+    {
+        $user = $this->getUser();
+
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException('Debes iniciar sesión para acceder a tu perfil.');
+        }
+
+        if (!$csrf->isTokenValid(new CsrfToken('account_password_reset_link', (string) $request->request->get('_token')))) {
+            $this->addFlash('danger', 'Token CSRF inválido.');
+            return $this->redirectToRoute('app_profile_password');
+        }
+
+        $retryAfter = $this->userService->requestPasswordReset($user);
+
+        if ($retryAfter !== null) {
+            $seconds = max(1, $retryAfter->getTimestamp() - time());
+            $this->addFlash('warning', sprintf('Ya te hemos enviado un enlace hace poco. Podrás pedir otro en %d s.', $seconds));
+            return $this->redirectToRoute('app_profile_password');
+        }
+
+        $this->addFlash('success', sprintf('Te hemos enviado un enlace a %s. Caduca en 3 horas.', self::maskEmail((string) $user->getEmail())));
+        return $this->redirectToRoute('app_profile_password');
+    }
+
+    /** r***@gmail.com: el usuario reconoce su email sin exponerlo entero en pantalla. */
+    private static function maskEmail(string $email): string
+    {
+        [$local, $domain] = array_pad(explode('@', $email, 2), 2, '');
+
+        return mb_substr($local, 0, 1).'***@'.$domain;
     }
 
     #[Route('/privacidad', name: 'app_profile_privacy', methods: ['GET', 'POST'])]

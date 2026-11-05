@@ -28,6 +28,17 @@ html{
   padding: .65rem 0;
 }
 
+/* <button> que se lee como un enlace dentro de un texto: hereda letra y línea
+   del párrafo en vez de los de .btn (p. ej. «Envíame un enlace» en Cambiar contraseña) */
+.btn-inline-link {
+  --bs-btn-padding-x: 0;
+  --bs-btn-padding-y: 0;
+  --bs-btn-font-size: inherit;
+  --bs-btn-line-height: inherit;
+  --bs-btn-border-width: 0;
+  vertical-align: baseline;
+}
+
 /* aparición alert */
 .alert-slide-in {
   animation: slide-in 0.5s forwards;

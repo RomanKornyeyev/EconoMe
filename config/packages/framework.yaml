@@ -14,6 +14,12 @@ framework:
             policy: 'sliding_window'
             limit: 7
             interval: '3 minutes'
+        # Emails de restablecer contraseña, por usuario. Lo comparten
+        # «Recuperar contraseña» y el botón del perfil (UserService::requestPasswordReset)
+        reset_password_email:
+            policy: 'fixed_window'
+            limit: 1
+            interval: '1 minute'
 
 when@test:
     framework:

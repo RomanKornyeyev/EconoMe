@@ -40,7 +40,7 @@ class EmailChangeService
 
         $this->mailService->sendEmailChangeAuthorizeToCurrentEmail(
             (string) $user->getEmail(),
-            $token->getToken(),
+            $token->getPlainToken(),
             (string) $user->getName(),
             $newEmail
         );
@@ -77,7 +77,7 @@ class EmailChangeService
 
         $this->mailService->sendEmailChangeConfirmToNewEmail(
             $newEmail,
-            $confirmToken->getToken(),
+            $confirmToken->getPlainToken(),
             (string) $user->getName()
         );
     }
@@ -136,7 +136,7 @@ class EmailChangeService
             $this->em->flush();
             $this->mailService->sendEmailChangeAuthorizeToCurrentEmail(
                 (string) $user->getEmail(),
-                $token->getToken(),
+                $token->getPlainToken(),
                 (string) $user->getName(),
                 $newEmail
             );
@@ -146,7 +146,7 @@ class EmailChangeService
             $this->em->flush();
             $this->mailService->sendEmailChangeConfirmToNewEmail(
                 $newEmail,
-                $token->getToken(),
+                $token->getPlainToken(),
                 (string) $user->getName()
             );
         }

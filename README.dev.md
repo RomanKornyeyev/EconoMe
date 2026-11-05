@@ -6,7 +6,7 @@ Formato changelog: lo más reciente arriba.
 
 ---
 
-## v1.5.7 — Filtro de fechas en Movimientos
+## v1.5.7 — Filtro de fechas en Movimientos y recuperación de contraseña
 
 ### Movimientos abre el mes en curso
 
@@ -39,6 +39,78 @@ y recalcula el recuento con el evento `date-range:change`.
 Reparto de flatpickr desde aquí: **fecha suelta** (formularios, modal de
 movimiento) → `date_picker_controller.js`; **rango** (filtros) →
 `date_range_controller.js`. Ninguno se inicializa desde un `<script>` inline.
+
+### Restablecer contraseña con sesión iniciada
+
+`SecurityController::resetPassword` ya no redirige al inicio si hay sesión: el
+token del enlace es la prueba de identidad, no la sesión. Tres casos:
+
+- **Sin sesión**: igual que antes. Al terminar, al login.
+- **Sesión de la misma cuenta**: se cambia y se sigue dentro (redirige al perfil).
+- **Sesión de otra cuenta**: `$security->logout(false)`, flash y se recarga el
+  mismo enlace ya como anónimo. Así nunca se trabaja con una sesión de A sobre la
+  cuenta de B.
+
+**Por qué las demás sesiones se cierran solas.** `User` no implementa
+`EquatableInterface`, así que en cada petición Symfony compara el hash de la
+contraseña guardado en sesión con el de BD; si no coincide, desautentica. La
+sesión desde la que se cambia sobrevive porque Doctrine comparte la instancia de
+`User` (identity map) entre la sesión y `$token->getUser()`, y al final de la
+petición se serializa ya con el hash nuevo. Si algún día se implementa
+`EquatableInterface` o se cambia cómo se serializa el usuario, esto deja de ser
+gratis: hay que revisarlo.
+
+**«Recuérdame» tras el cambio** (`App\Security\RememberMeRenewer`). La firma de
+la cookie incluye el hash, así que también caducaba la del propio dispositivo.
+Si la petición trae `REMEMBERME`, se hace `Security::login()` con
+`RememberMeBadge` activado para emitirla firmada con la contraseña nueva. Lo usan
+el cambio desde el perfil y el reset con sesión.
+
+**Enlace no válido** → `security/reset_password_invalid.html.twig` con motivo:
+`invalid` (404), `used` o `expired` (410). Antes un token caducado lanzaba
+`AccessDenied`, que para un anónimo acaba en el login sin mensaje. Ojo con el
+orden: el token se marca usado y se hace `flush()` **antes** de
+`UserService::changePassword()`, porque ese método borra los tokens de reset sin
+usar y, si no, el enlace pasaría de «ya usado» a «no válido».
+
+### Enlace de restablecer desde el perfil
+
+`POST /perfil/password/enlace` (`app_profile_password_reset_link`), con CSRF
+`account_password_reset_link`. Es un POST a propósito: con un GET, el prefetch
+del navegador o un `<img>` en otra web dispararían emails. El `<form>` está fuera
+del de cambiar contraseña (no se pueden anidar) y el botón lo envía con el
+atributo `form="password-reset-link-form"`. Clase `.btn-inline-link` en
+`general.css`: un `<button>` que se lee como enlace dentro de un texto.
+
+**Límite compartido**: `UserService::requestPasswordReset()` consume
+`limiter.reset_password_email` (1 por minuto, clave `user_<id>`) tanto desde el
+perfil como desde «Recuperar contraseña». Devuelve `null` si envió o el
+`DateTimeImmutable` del siguiente intento. El perfil lo enseña; el formulario
+público lo ignora y responde lo mismo siempre.
+
+### «Recuperar contraseña» no revela qué emails existen
+
+Antes, un email inexistente daba flash `danger` y se quedaba en la página, y uno
+existente daba `success` y redirigía al login. Ahora los dos casos (y el de
+límite superado) dan el mismo flash y la misma redirección. Queda una diferencia
+de tiempo de respuesta (el envío del email es síncrono); pasarlo a Messenger la
+quitaría.
+
+### Tokens hasheados en BD
+
+`user_token.token` guarda `sha256` del token del enlace (`UserToken::hash()`).
+El token en claro solo existe en memoria al crearlo: `getPlainToken()` para el
+email y lanza `LogicException` en un token cargado de BD. `getToken()` devuelve
+el hash. Toda búsqueda por token tiene que pasar por `UserToken::hash()`
+(`confirmEmail`, `resetPassword`, `UserTokenRepository::findValidToken`). La
+migración `Version20261105120000` hashea los existentes para no romper enlaces ya
+enviados. Su `down()` no hace nada y solo avisa: no hay esquema que deshacer y
+un hash no se puede revertir, así que no bloquea bajar a migraciones anteriores.
+Tras un rollback (con el código anterior), los enlaces pendientes dejan de valer.
+
+Caducidad por tipo en `UserToken::LIFETIMES`: reset de contraseña 3 h, el resto
+24 h. Además, `confirmEmail` ahora filtra por `TYPE_REGISTRATION`: antes
+cualquier token (p. ej. uno de reset) confirmaba la cuenta.
 
 ---
 

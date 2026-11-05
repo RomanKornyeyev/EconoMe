@@ -40,7 +40,7 @@ class UserTokenRepository extends ServiceEntityRepository
             ->andWhere('t.type = :type')
             ->andWhere('t.used = false')
             ->andWhere('t.expiresAt > :now')
-            ->setParameter('token', $token)
+            ->setParameter('token', UserToken::hash($token))
             ->setParameter('type', $type)
             ->setParameter('now', new \DateTime())
             ->getQuery()

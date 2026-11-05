@@ -7,6 +7,7 @@ use App\Entity\UserToken;
 use App\Form\RegisterType;
 use App\Form\ResetPasswordType;
 use App\Service\UserService;
+use App\Security\RememberMeRenewer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -99,7 +100,11 @@ class SecurityController extends AbstractController
         }
 
         // Buscar el token en la base de datos
-        $token = $em->getRepository(UserToken::class)->findOneBy(['token' => $tokenValue]);
+        // Filtrando por tipo: si no, un enlace de restablecer contraseña también confirmaría la cuenta
+        $token = $em->getRepository(UserToken::class)->findOneBy([
+            'token' => UserToken::hash((string) $tokenValue),
+            'type' => UserToken::TYPE_REGISTRATION,
+        ]);
 
         if (!$token) {
             throw $this->createNotFoundException('Token inválido.');
@@ -211,15 +216,13 @@ class SecurityController extends AbstractController
 
             $user = $em->getRepository(User::class)->findOneBy(['email' => $email]);
 
-            if (!$user) {
-                $this->addFlash('danger', 'Si el email existe en nuestro sistema, recibirás un enlace para restablecer tu contraseña.');
-                return $this->redirectToRoute('app_forgot_password');
+            // Misma respuesta exista o no la cuenta, y aunque salte el límite de
+            // envíos: así no se puede averiguar qué emails están registrados
+            if ($user) {
+                $userService->requestPasswordReset($user);
             }
 
-            // Generar token de recuperación
-            $userService->generateResetPasswordToken($user);
-
-            $this->addFlash('success', 'Si el email es válido, recibirás un enlace para restablecer tu contraseña.');
+            $this->addFlash('success', 'Si el email está registrado, recibirás un enlace para restablecer tu contraseña. Caduca en 3 horas.');
             return $this->redirectToRoute('app_login');
         }
 
@@ -227,31 +230,47 @@ class SecurityController extends AbstractController
     }
 
     #[Route('/restablecer-contrasena', name: 'app_reset_password')]
-    public function resetPassword(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher, CsrfTokenManagerInterface $csrfTokenManager): Response
+    public function resetPassword(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher, Security $security, RememberMeRenewer $rememberMeRenewer): Response
     {
-        // Si el usuario ya está autenticado, redirigir a la página de inicio
-        if ($this->getUser()) {
-            return $this->redirectToRoute('app_index');
-        }
+        // El enlace vale con o sin sesión iniciada: quien lo abre demuestra tener acceso al email
+        $tokenValue = (string) $request->query->get('token', '');
 
-        $tokenValue = $request->query->get('token');
+        $token = $tokenValue === '' ? null : $em->getRepository(UserToken::class)->findOneBy([
+            'token' => UserToken::hash($tokenValue),
+            'type' => UserToken::TYPE_PASSWORD_RESET,
+        ]);
 
-        if (!$tokenValue) {
-            throw $this->createNotFoundException('Token no proporcionado.');
-        }
+        // Enlace roto, usado o caducado: página propia que lo explica. Con un
+        // AccessDenied el anónimo acabaría en el login sin saber por qué.
+        $invalidReason = match (true) {
+            $token === null => 'invalid',
+            $token->isUsed() => 'used',
+            $token->isExpired() => 'expired',
+            default => null,
+        };
 
-        // Buscar el token en la base de datos
-        $token = $em->getRepository(UserToken::class)->findOneBy(['token' => $tokenValue, 'type' => UserToken::TYPE_PASSWORD_RESET, 'used' => false]);
-
-        if (!$token) {
-            throw $this->createNotFoundException('Token inválido o ya utilizado.');
-        }
-
-        if ($token->isExpired()) {
-            throw $this->createAccessDeniedException('El token ha expirado.');
+        if ($invalidReason !== null) {
+            return $this->render('security/reset_password_invalid.html.twig', [
+                'reason' => $invalidReason,
+            ], new Response('', $invalidReason === 'invalid' ? Response::HTTP_NOT_FOUND : Response::HTTP_GONE));
         }
 
         $user = $token->getUser();
+        $sessionUser = $this->getUser();
+
+        // Sesión de otra cuenta (p. ej. dispositivo compartido): se cierra para no
+        // mezclar identidades y se recarga el enlace ya sin sesión
+        if ($sessionUser instanceof User && $sessionUser->getId() !== $user->getId()) {
+            $security->logout(false);
+            $this->addFlash('info', sprintf(
+                'Se ha cerrado la sesión de %s para restablecer la contraseña de %s.',
+                $sessionUser->getEmail(),
+                $user->getEmail()
+            ));
+            return $this->redirectToRoute('app_reset_password', ['token' => $tokenValue]);
+        }
+
+        $isLoggedIn = $sessionUser instanceof User;
 
         $form = $this->createForm(ResetPasswordType::class, null, [
             'csrf_token_id' => 'account_change_password',
@@ -268,20 +287,32 @@ class SecurityController extends AbstractController
                 return $this->redirectToRoute('app_reset_password', ['token' => $tokenValue]);
             }
 
-            // actualizar la contraseña y mandar mail aviso
-            $this->userService->changePassword($user, $plainNew);
-            
-            // Marcar el token como usado y guardar cambios
+            // Antes de changePassword(), que borra los tokens de reset sin usar:
+            // así este enlace queda como «ya usado» y no como «no válido»
             $token->markAsUsed();
             $em->flush();
 
-            $this->addFlash('success', 'Tu contraseña ha sido restablecida correctamente. Ahora puedes iniciar sesión.');
+            // Actualizar la contraseña y mandar email de aviso. Las demás sesiones
+            // se cierran solas (el hash ya no coincide con el guardado en ellas)
+            $this->userService->changePassword($user, $plainNew);
+
+            if ($isLoggedIn) {
+                // Misma cuenta: esta sesión sigue, porque Doctrine comparte la
+                // instancia de User con la sesión y esta se guarda con el hash nuevo
+                $rememberMeRenewer->renewIfPresent($user);
+
+                $this->addFlash('success', 'Contraseña restablecida. Se han cerrado las sesiones en otros dispositivos.');
+                return $this->redirectToRoute('app_profile_index');
+            }
+
+            $this->addFlash('success', 'Tu contraseña ha sido restablecida. Ya puedes iniciar sesión.');
             return $this->redirectToRoute('app_login');
         }
 
         return $this->render('security/reset_password.html.twig', [
-            'token' => $tokenValue,
-            'form' => $form->createView()
+            'form' => $form->createView(),
+            'email' => $user->getEmail(),
+            'isLoggedIn' => $isLoggedIn,
         ]);
     }
 }

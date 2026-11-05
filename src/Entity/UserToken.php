@@ -16,6 +16,12 @@ class UserToken
     public const TYPE_EMAIL_CHANGE_AUTHORIZE = 'email_change_authorize';
     public const TYPE_EMAIL_CHANGE_CONFIRM = 'email_change_confirm';
 
+    // Caducidad por tipo; los que no aparecen usan DEFAULT_LIFETIME
+    public const LIFETIMES = [
+        self::TYPE_PASSWORD_RESET => '+3 hours',
+    ];
+    public const DEFAULT_LIFETIME = '+24 hours';
+
     use TimestampableEntity;
 
     #[ORM\Id]
@@ -27,9 +33,13 @@ class UserToken
     #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
     private User $user;
 
+    // En BD solo se guarda el hash (sha256) del token que viaja en el enlace
     #[ORM\Column(type: "string", unique: true)]
     #[Assert\NotBlank]
     private string $token;
+
+    // Token en claro: solo vive en memoria al crearlo, para mandarlo por email
+    private ?string $plainToken = null;
 
     #[ORM\Column(type: "string")]
     #[Assert\Choice(choices: [self::TYPE_REGISTRATION, self::TYPE_PASSWORD_RESET, self::TYPE_EMAIL_CHANGE, self::TYPE_EMAIL_CHANGE_AUTHORIZE, self::TYPE_EMAIL_CHANGE_CONFIRM])]
@@ -46,8 +56,15 @@ class UserToken
     {
         $this->user = $user;
         $this->type = $type;
-        $this->token = bin2hex(random_bytes(32)); // Genera un token aleatorio
-        $this->expiresAt = (new \DateTime())->modify('+24 hours');
+        $this->plainToken = bin2hex(random_bytes(32));
+        $this->token = self::hash($this->plainToken);
+        $this->expiresAt = (new \DateTime())->modify(self::LIFETIMES[$type] ?? self::DEFAULT_LIFETIME);
+    }
+
+    /** Hash con el que se busca en BD el token que llega en un enlace. */
+    public static function hash(string $plainToken): string
+    {
+        return hash('sha256', $plainToken);
     }
 
     public function isExpired(): bool
@@ -76,15 +93,19 @@ class UserToken
         return $this;
     }
 
+    /** Hash guardado en BD. Para el enlace del email, getPlainToken(). */
     public function getToken(): string
     {
         return $this->token;
     }
 
-    public function setToken(string $token): self
+    public function getPlainToken(): string
     {
-        $this->token = $token;
-        return $this;
+        if ($this->plainToken === null) {
+            throw new \LogicException('El token en claro solo está disponible al crearlo.');
+        }
+
+        return $this->plainToken;
     }
 
     public function getType(): string

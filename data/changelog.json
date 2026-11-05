@@ -2,15 +2,27 @@
     {
         "version": "v1.5.7",
         "date": "2026-11-05",
-        "title": "Filtro de fechas en Movimientos",
+        "title": "Filtro de fechas en Movimientos y recuperación de contraseña",
         "changes": [
             {
-                "type": "improvement",
-                "text": "Movimientos se abre mostrando el mes en curso. «Limpiar» sigue enseñándolo todo."
+                "type": "feat",
+                "text": "Nuevo botón en «Cambiar contraseña» dentro del perfil/seguridad/cambio de contraseña para recibir un enlace por email si no recuerdas la actual."
+            },
+            {
+                "type": "fix",
+                "text": "El enlace para recuperar la contraseña ya funciona con la sesión iniciada."
             },
             {
                 "type": "improvement",
-                "text": "El calendario de fechas de los filtros trae atajos («Este mes», «Mes anterior», «Últimos 3 meses», «Año actual») y un botón para limpiar las fechas: en ordenador, en un panel a la izquierda; en móvil, debajo de los días."
+                "text": "Movimientos muestra el mes en curso por defecto."
+            },
+            {
+                "type": "improvement",
+                "text": "El calendario de los filtros trae atajos de fechas y botón de limpiar."
+            },
+            {
+                "type": "improvement",
+                "text": "Mayor seguridad interna en los enlaces enviados por email."
             }
         ]
     },
