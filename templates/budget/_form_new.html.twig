@@ -1,0 +1,74 @@
+{#
+  Partial AJAX: alta de un presupuesto en el modal (budget_modal_controller.js).
+  Devuelve el contenido entero del modal. Es el único sitio donde se pinta: no
+  hay vista de página completa.
+
+  Orden de los campos (claude/presupuestos.md §5.2): tipo e importe → ámbito (y
+  categoría) → frecuencia → empieza en / termina en.
+
+  Variables (BudgetController::new()):
+    - form:           BudgetType
+    - currentAccount: la cuenta
+#}
+{{ form_start(form, {attr: {
+    class: 'needs-validation',
+    novalidate: 'novalidate',
+    'data-action': 'submit->budget-modal#submit',
+}}) }}
+    <div class="modal-header px-4">
+        <h5 class="modal-title fs-6 fw-semibold" id="budgetModalLabel">Nuevo presupuesto</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+    </div>
+
+    <div class="modal-body px-4">
+        {# Errores del formulario entero: el solapamiento con otro presupuesto, o
+           el token CSRF caducado #}
+        {{ form_errors(form) }}
+
+        {# Tipo (segmentado «Límite de gasto» / «Meta de ingreso») e importe #}
+        {% include 'partials/_amount_type.html.twig' with {amount: form.amount, type: form.type} only %}
+
+        {# Ámbito: dos tarjetas con su radio. A mano y no con form_widget: el
+           tema de Bootstrap envolvería cada radio en su propio .form-check. #}
+        <fieldset class="mb-3">
+            <legend class="form-label small text-body-secondary mb-2">{{ form.scope.vars.label }}</legend>
+            <div class="row g-2">
+                {% for choice in form.scope %}
+                    <div class="col-6">
+                        <label class="budget-option h-100" for="{{ choice.vars.id }}">
+                            <input type="radio" class="form-check-input mt-1 flex-shrink-0"
+                                   id="{{ choice.vars.id }}" name="{{ choice.vars.full_name }}" value="{{ choice.vars.value }}"
+                                   {{ choice.vars.checked ? 'checked' }}
+                                   data-action="budget-modal#toggleScope">
+                            <span>
+                                <span class="d-block fw-semibold">{{ choice.vars.label }}</span>
+                                <span class="d-block small text-body-secondary">
+                                    {{ choice.vars.value == 'category' ? 'Solo los movimientos de esa categoría.' : 'Todos, también los que no tienen categoría.' }}
+                                </span>
+                            </span>
+                        </label>
+                        {% do choice.setRendered %}
+                    </div>
+                {% endfor %}
+            </div>
+            {{ form_errors(form.scope) }}
+        </fieldset>
+
+        <div data-budget-category-row {{ form.scope.vars.value == 'account' ? 'hidden' }}>
+            {{ form_row(form.category) }}
+        </div>
+
+        {{ form_row(form.frequency) }}
+
+        <div class="row gx-3">
+            <div class="col-md-6">{{ form_row(form.start) }}</div>
+            <div class="col-md-6">{{ form_row(form.end) }}</div>
+        </div>
+    </div>
+
+    <div class="modal-footer border-0 px-4 pb-4 pt-0">
+        <button type="submit" class="btn btn-primary w-100 m-0">
+            <i class="fa-solid fa-check me-1"></i>Crear presupuesto
+        </button>
+    </div>
+{{ form_end(form) }}

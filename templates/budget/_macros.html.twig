@@ -1,0 +1,66 @@
+{#
+    Piezas de los presupuestos que comparten la página (lista y modales) y el
+    panel del dashboard.
+
+    Uso:
+        {% import 'budget/_macros.html.twig' as bm %}
+        {{ bm.money(row.spent, currentAccount.currency) }}
+#}
+
+{# Importe en el formato de la app, con el símbolo de la moneda de la cuenta. #}
+{% macro money(value, currency) -%}
+    {{ value|number_format(2, ',', '.') }} {{ {EUR: '€', USD: '$', GBP: '£'}[currency] ?? currency }}
+{%- endmacro %}
+
+{# Punto de color: el de la categoría, o un anillo si es de toda la cuenta. #}
+{% macro dot(budget) -%}
+    {%- if budget.accountWide -%}
+        <span class="budget-dot budget-dot--account" aria-hidden="true"></span>
+    {%- else -%}
+        <span class="budget-dot" style="background-color: {{ budget.color ?: 'var(--bs-secondary-color)' }}" aria-hidden="true"></span>
+    {%- endif -%}
+{%- endmacro %}
+
+{# Barra de progreso con la marca de «hoy» (marker: % transcurrido del periodo,
+   solo si está abierto). label: texto accesible de la barra. Todo <span>: la
+   lista de móvil la mete dentro de un <button>. #}
+{% macro bar(percent, tone, marker = null, label = '') %}
+    <span class="budget-bar" role="img" aria-label="{{ label }}">
+        <span class="progress budget-bar__track">
+            <span class="progress-bar bg-{{ tone }}" style="width: {{ percent }}%"></span>
+        </span>
+        {% if marker is not null %}
+            <span class="budget-bar__marker" style="left: {{ marker }}%"></span>
+        {% endif %}
+    </span>
+{% endmacro %}
+
+{# «Categoría · desde ene 2026 hasta dic 2026», o «Toda la cuenta · …». #}
+{% macro scope_line(budget, today) -%}
+    {{ budget.accountWide ? 'Toda la cuenta' : 'Categoría' }} ·
+    {% if budget.isUpcoming(today) -%}
+        empieza en {{ budget.firstPeriod.shortLabel }}
+    {%- else -%}
+        desde {{ budget.firstPeriod.shortLabel }}
+    {%- endif -%}
+    {%- if budget.lastPeriod %} hasta {{ budget.lastPeriod.shortLabel }}{% endif -%}
+{%- endmacro %}
+
+{# Próximo cambio de importe, o aviso de que el periodo en curso es especial.
+   Vacío si no hay ninguno. #}
+{% macro next_change(budget, today) -%}
+    {%- set schedule = budget.schedule -%}
+    {%- set current = budget.periodAt(today) -%}
+    {%- set currency = budget.account.currency -%}
+    {%- set once = schedule.onceChangeAt(current) -%}
+    {%- if once -%}
+        Especial {{ budget.frequency.current }}: normalmente {{ _self.money(once.baseAmount, currency) }}
+    {%- else -%}
+        {%- set next = schedule.upcomingChange(current) -%}
+        {%- if next and next.once -%}
+            {{ _self.money(next.amount, currency) }} solo en {{ next.from.shortLabel }}
+        {%- elseif next -%}
+            {{ next.amount > schedule.amountAt(next.from.previous) ? 'Sube' : 'Baja' }} a {{ _self.money(next.amount, currency) }} en {{ next.from.shortLabel }}
+        {%- endif -%}
+    {%- endif -%}
+{%- endmacro %}

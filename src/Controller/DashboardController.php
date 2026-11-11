@@ -2,9 +2,11 @@
 
 namespace App\Controller;
 
+use App\Budget\BudgetEvaluator;
 use App\Entity\Transaction;
 use App\Form\TransactionType;
 use App\Pagination\PageSize;
+use App\Repository\BudgetRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\TransactionRepository;
 use App\Repository\RecurringTransactionRepository;
@@ -32,6 +34,8 @@ class DashboardController extends AbstractController
         PaginatorInterface $paginator,
         TransactionDraftFactory $draftFactory,
         CategoryRepository $categoryRepo,
+        BudgetRepository $budgetRepo,
+        BudgetEvaluator $budgetEvaluator,
     ): Response {
         $user = $this->getUser();
 
@@ -72,6 +76,14 @@ class DashboardController extends AbstractController
         $expensesByCategory = $transactionRepo->sumByCategory($account, $from, $to, $categoryType);
         $yearlyTotals        = $transactionRepo->monthlyTotals($account, $year);
         $activeRecurrings    = $recurringRepo->countActiveByAccount($account);
+        // Panel de presupuestos y su KPI: cómo va cada uno en el periodo mirado.
+        $budgetPanel         = $budgetEvaluator->panel(
+            $account,
+            $budgetRepo->findByAccount($account),
+            $year,
+            $month,
+            new \DateTimeImmutable('today'),
+        );
 
         $periodIncome  = '0';
         $periodExpense = '0';
@@ -131,6 +143,7 @@ class DashboardController extends AbstractController
             'incomeRatio'        => $incomeRatio,
             'savingsRatio'       => $savingsRatio,
             'activeRecurrings'   => $activeRecurrings,
+            'budgetPanel'        => $budgetPanel,
             'transactions'       => $pagination,
             // Para el desplegable de «Categorizar» de la barra de acciones en bloque
             'categories'         => $categoryRepo->findAllByAccount($account),

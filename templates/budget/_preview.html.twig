@@ -1,0 +1,84 @@
+{#
+  «Qué va a pasar»: el efecto de un cambio de importe antes de guardarlo. Lo pide
+  budget-modal al escribir (budget_preview) y se pinta dentro del modal de
+  edición. Ver claude/presupuestos.md §4.4.
+
+  Variables:
+    - preview: BudgetEditor::preview(), o null si aún no hay un importe válido
+    - budget:  el presupuesto
+#}
+{% import 'budget/_macros.html.twig' as bm %}
+{% set currency = budget.account.currency %}
+
+<div class="small text-uppercase text-body-secondary mb-1 budget-preview__title">Qué va a pasar</div>
+
+{% if preview is null %}
+    <div class="small text-body-secondary">Escribe el importe nuevo para ver qué cambia.</div>
+{% elseif preview.unchanged %}
+    <div class="small text-body-secondary">Con este importe no cambia nada.</div>
+{% else %}
+    {% set amount = bm.money(preview.amount, currency) %}
+    <ul class="list-unstyled small mb-0 d-flex flex-column gap-1">
+        {# Resultado #}
+        <li>
+            {% if preview.scope == 'once' %}
+                {{ preview.period.label|capitalize }}: {{ amount }}.
+                {% if preview.returnTo %}Después vuelve a {{ bm.money(preview.returnTo, currency) }}.{% else %}Es el último periodo del presupuesto.{% endif %}
+            {% elseif preview.scope == 'from' %}
+                Desde {{ preview.period.label }}: {{ amount }}.
+            {% else %}
+                Todos los periodos, desde {{ budget.firstPeriod.label }}, pasan a {{ amount }}.
+            {% endif %}
+        </li>
+
+        {# Cómo queda el periodo en curso #}
+        {% if preview.current %}
+            {% set c = preview.current %}
+            {% set head = 'Con ' ~ amount ~ ', ' ~ budget.frequency.current ~ ' ' %}
+            <li class="text-{{ c.outcome.tone }}-emphasis">
+                {% if c.outcome.value == 'over' %}
+                    {{ head }}pasaría a «Te has pasado»: llevas {{ bm.money(c.spent, currency) }}.
+                {% elseif c.outcome.value == 'near' %}
+                    {{ head }}quedaría cerca del límite: llevas {{ bm.money(c.spent, currency) }} ({{ c.percent }} %).
+                {% elseif c.outcome.value == 'on_track' %}
+                    {{ head }}irías bien: llevas {{ bm.money(c.spent, currency) }} ({{ c.percent }} %).
+                {% elseif c.outcome.value == 'goal_reached' %}
+                    {{ head }}la meta ya estaría alcanzada: llevas {{ bm.money(c.spent, currency) }}.
+                {% else %}
+                    {{ head }}te faltarían {{ bm.money(preview.amount - c.spent, currency) }}.
+                {% endif %}
+            </li>
+        {% endif %}
+
+        {# Cambios que se pierden #}
+        {% if preview.discarded is not empty %}
+            {% set gone = preview.discarded|map(ch => bm.money(ch.amount, currency) ~ (ch.once ? ' solo en ' : ' desde ') ~ ch.from.shortLabel) %}
+            <li class="text-warning-emphasis">
+                {{ preview.scope == 'once' ? 'Sustituye a ' : (gone|length > 1 ? 'Se descartan: ' : 'Se descarta: ') }}{{ gone|join(', ', ' y ') }}.
+            </li>
+        {% endif %}
+
+        {# Periodos cerrados #}
+        {% if preview.scope != 'all' %}
+            <li class="text-body-secondary">Los periodos cerrados conservan su límite.</li>
+        {% elseif preview.closedCount == 0 %}
+            <li class="text-body-secondary">Aún no tiene periodos cerrados.</li>
+        {% elseif preview.flips is empty %}
+            <li class="text-body-secondary">Ningún periodo cerrado cambia de resultado.</li>
+        {% else %}
+            {% set toOk = preview.flips|filter(f => f.success)|map(f => f.period.shortLabel) %}
+            {% set toBad = preview.flips|filter(f => not f.success)|map(f => f.period.shortLabel) %}
+            {% set n = preview.flips|length %}
+            <li class="text-warning-emphasis">
+                Cambia el resultado de {{ n }} {{ n == 1 ? 'periodo cerrado' : 'periodos cerrados' }}:
+                {% if toOk is not empty -%}
+                    {{ toOk|join(', ', ' y ') }} {{ toOk|length == 1 ? 'pasaría' : 'pasarían' }} a «{{ budget.expense ? 'cumplido' : 'alcanzada' }}»
+                {%- endif -%}
+                {%- if toOk is not empty and toBad is not empty %}; {% endif -%}
+                {%- if toBad is not empty -%}
+                    {{ toBad|join(', ', ' y ') }} {{ toBad|length == 1 ? 'pasaría' : 'pasarían' }} a «{{ budget.expense ? 'excedido' : 'no alcanzada' }}»
+                {%- endif -%}.
+            </li>
+        {% endif %}
+    </ul>
+{% endif %}

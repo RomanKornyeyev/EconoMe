@@ -413,6 +413,49 @@ class TransactionRepository extends ServiceEntityRepository
     }
 
     /**
+     * Totales por día, categoría y tipo en un rango: los datos de la evaluación
+     * de presupuestos (BudgetEvaluator), que los reparte en periodos en PHP.
+     *
+     * Una sola consulta para todos los presupuestos de la cuenta, en vez de una
+     * por presupuesto y periodo. Y agregar en PHP es más sencillo que pelear con
+     * funciones de fecha en DQL, que no trae YEAR() ni WEEK(): una cuenta personal
+     * tiene pocos miles de movimientos al año.
+     *
+     * @return list<array{categoryId: ?int, type: string, date: string, total: string, recurring: string}>
+     *         recurring: la parte que viene de recurrentes (recurringSource)
+     */
+    public function dailyTotalsByCategory(Account $account, \DateTimeInterface $from, \DateTimeInterface $to): array
+    {
+        $rows = $this->createQueryBuilder('t')
+            ->select(
+                'IDENTITY(t.category) AS categoryId',
+                't.type AS type',
+                't.date AS date',
+                'SUM(t.amount) AS total',
+                'SUM(CASE WHEN t.recurringSource IS NOT NULL THEN t.amount ELSE 0 END) AS recurring',
+            )
+            ->where('t.account = :account')
+            ->andWhere('t.date >= :from')
+            ->andWhere('t.date <= :to')
+            ->setParameter('account', $account)
+            ->setParameter('from', $from)
+            ->setParameter('to', $to)
+            ->groupBy('t.category')
+            ->addGroupBy('t.type')
+            ->addGroupBy('t.date')
+            ->getQuery()
+            ->getResult();
+
+        return array_map(fn (array $row) => [
+            'categoryId' => $row['categoryId'] !== null ? (int) $row['categoryId'] : null,
+            'type'       => $row['type'],
+            'date'       => $row['date'] instanceof \DateTimeInterface ? $row['date']->format('Y-m-d') : substr((string) $row['date'], 0, 10),
+            'total'      => (string) $row['total'],
+            'recurring'  => (string) $row['recurring'],
+        ], $rows);
+    }
+
+    /**
      * Totales mensuales (income y expense) para un año dado.
      * Para el gráfico de barras del dashboard.
      */

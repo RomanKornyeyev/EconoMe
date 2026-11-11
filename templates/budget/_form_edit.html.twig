@@ -1,0 +1,173 @@
+{#
+  Partial AJAX: cambiar el importe de un presupuesto (modal). Devuelve el
+  contenido entero del modal: cabecera, formulario, historial de importes y pie.
+
+  Los tres alcances (solo un periodo, desde un periodo, todo el historial) y su
+  resumen «Qué va a pasar», que budget-modal pide al servidor al escribir
+  (budget_preview). Ver claude/presupuestos.md §4.4.
+
+  Finalizar y eliminar se confirman dentro del propio modal, con los paneles
+  data-budget-pane: Bootstrap no apila modales.
+
+  Variables (BudgetController::editView()):
+    - form:      BudgetAmountType
+    - budget:    el presupuesto
+    - current:   periodo en curso
+    - editable:  primer periodo editable (el en curso, o el inicial si aún no ha empezado)
+    - amountNow: su importe
+    - changes:   AmountSchedule::changes()
+#}
+{% import 'budget/_macros.html.twig' as bm %}
+{% set currency = budget.account.currency %}
+{% set scope = form.scope.vars.value %}
+{% set canFinalize = budget.lastPeriod is null or budget.lastPeriod.compare(current) > 0 %}
+{% set scopeHints = {
+    once: (budget.frequency.value == 'weekly' ? 'Una ' : 'Un ') ~ budget.frequency.unit ~ ' especial: Navidad, vacaciones… Después vuelve al importe de antes.',
+    from: 'Subidas por inflación o un cambio de hábitos. Lo ya cerrado no cambia.',
+    all:  'Para corregir un error. Recalcula también los periodos cerrados.',
+} %}
+
+<div class="modal-header px-4">
+    <h5 class="modal-title fs-6 fw-semibold" id="budgetModalLabel">Cambiar importe</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+</div>
+
+{{ form_start(form, {attr: {
+    id: 'budgetEditForm',
+    class: 'needs-validation',
+    novalidate: 'novalidate',
+    'data-action': 'submit->budget-modal#submit input->budget-modal#preview change->budget-modal#preview',
+    'data-budget-preview-url': path('budget_preview', {id: budget.id}),
+}}) }}
+    <div class="modal-body px-4">
+        {{ form_errors(form) }}
+
+        {# Lo que no cambia: tipo, ámbito y frecuencia #}
+        <div class="d-flex gap-2 align-items-start rounded-3 bg-body-secondary px-3 py-2 mb-3">
+            <span class="pt-2">{{ bm.dot(budget) }}</span>
+            <div class="min-w-0">
+                <div class="fw-semibold">{{ budget.name }}</div>
+                <div class="small">{{ budget.kindLabel }} · {{ bm.scope_line(budget, current.start)|lower }}</div>
+                <div class="small text-body-secondary">El tipo, el ámbito y la frecuencia no se cambian: para eso, finaliza este presupuesto y crea otro.</div>
+            </div>
+        </div>
+
+        <p class="small text-body-secondary mb-2">
+            Ahora: <span class="text-body">{{ bm.money(amountNow, currency) }}</span> en {{ editable.label }}.
+        </p>
+        {{ form_row(form.amount) }}
+
+        <fieldset class="mb-3">
+            <legend class="form-label small text-body-secondary mb-2">{{ form.scope.vars.label }}</legend>
+            <div class="d-flex flex-column gap-2">
+                {% for choice in form.scope %}
+                    <label class="budget-option" for="{{ choice.vars.id }}">
+                        <input type="radio" class="form-check-input mt-1 flex-shrink-0"
+                               id="{{ choice.vars.id }}" name="{{ choice.vars.full_name }}" value="{{ choice.vars.value }}"
+                               {{ choice.vars.checked ? 'checked' }}
+                               data-action="budget-modal#toggleApply">
+                        <span>
+                            <span class="d-block fw-semibold">{{ choice.vars.label }}</span>
+                            <span class="d-block small text-body-secondary">{{ scopeHints[choice.vars.value] }}</span>
+                        </span>
+                    </label>
+                    {% do choice.setRendered %}
+                {% endfor %}
+            </div>
+            {{ form_errors(form.scope) }}
+        </fieldset>
+
+        <div data-budget-period-row {{ scope == 'all' ? 'hidden' }}>
+            {{ form_row(form.period, {
+                label: scope == 'once' ? 'Periodo' : 'A partir de',
+                help: 'Solo el periodo en curso y los siguientes: lo cerrado no se toca.',
+            }) }}
+        </div>
+
+        <div class="budget-preview" data-budget-preview role="status">
+            {% include 'budget/_preview.html.twig' with {preview: null, budget: budget} only %}
+        </div>
+    </div>
+{{ form_end(form) }}
+
+<div class="modal-body px-4 pt-0">
+    <div class="small fw-semibold mb-2">Historial de importes</div>
+    <ul class="list-unstyled d-flex flex-column gap-2 mb-2">
+        {% for change in changes %}
+            {% set status = change.status(current) %}
+            <li class="d-flex flex-wrap align-items-center gap-2 rounded-3 bg-body-secondary px-3 py-2">
+                <div class="flex-grow-1 min-w-0">
+                    <div class="small">{{ change.label }}</div>
+                    {% if change.once %}
+                        <div class="small text-body-secondary">Después vuelve a {{ bm.money(change.baseAmount, currency) }}</div>
+                    {% endif %}
+                </div>
+                <span class="small fw-semibold text-nowrap">{{ bm.money(change.amount, currency) }}</span>
+                <span class="badge rounded-pill fw-normal {{ {current: 'bg-success-subtle text-success-emphasis', upcoming: 'bg-primary-subtle text-primary-emphasis', past: 'bg-body-tertiary text-body-secondary'}[status] }}">
+                    {{ {current: 'Vigente', upcoming: 'Programado', past: 'Anterior'}[status] }}
+                </span>
+                {% if change.isRemovable(current) %}
+                    <button type="button" class="btn btn-sm btn-outline-secondary py-0"
+                            aria-label="Quitar el cambio: {{ change.label }}"
+                            data-action="budget-modal#removeChange"
+                            data-budget-modal-url-param="{{ path('budget_change_remove', {id: budget.id, key: change.from.key}) }}"
+                            data-budget-modal-token-param="{{ csrf_token('budget_change' ~ budget.id) }}">
+                        Quitar
+                    </button>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+    <p class="small text-body-secondary mb-0">Se puede quitar un cambio del periodo en curso o posterior. Los anteriores solo se corrigen con «Todo el historial».</p>
+</div>
+
+{# Pie: acciones, o la confirmación de finalizar o eliminar en su lugar. #}
+<div class="modal-footer border-0 px-4 pb-4 pt-2">
+    <div class="d-flex flex-wrap align-items-center gap-2 w-100" data-budget-pane="actions">
+        {% if canFinalize %}
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    data-action="budget-modal#showPane" data-budget-modal-pane-param="finalize">
+                <i class="fa-solid fa-flag-checkered me-1" aria-hidden="true"></i>Finalizar
+            </button>
+        {% endif %}
+        <button type="button" class="btn btn-sm btn-outline-danger"
+                data-action="budget-modal#showPane" data-budget-modal-pane-param="delete">
+            <i class="fa-solid fa-trash me-1" aria-hidden="true"></i>Eliminar
+        </button>
+        <button type="submit" form="budgetEditForm" class="btn btn-primary ms-auto">
+            <i class="fa-solid fa-check me-1"></i>Guardar cambios
+        </button>
+    </div>
+
+    {% if canFinalize %}
+        <form method="post" action="{{ path('budget_finalize', {id: budget.id}) }}"
+              class="w-100" data-budget-pane="finalize" hidden>
+            <input type="hidden" name="_token" value="{{ csrf_token('budget_finalize' ~ budget.id) }}">
+            <p class="small mb-2">
+                {% if budget.isUpcoming(current.start) %}
+                    Aún no ha empezado: al finalizarlo se elimina.
+                {% else %}
+                    Dejará de contar después de {{ current.labelWithArticle }}. Su historial se conserva y se sigue viendo en el dashboard.
+                {% endif %}
+            </p>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-secondary flex-grow-1"
+                        data-action="budget-modal#showPane" data-budget-modal-pane-param="actions">Cancelar</button>
+                <button type="submit" class="btn btn-primary flex-grow-1">Finalizar</button>
+            </div>
+        </form>
+    {% endif %}
+
+    <form method="post" action="{{ path('budget_delete', {id: budget.id}) }}"
+          class="w-100" data-budget-pane="delete" hidden>
+        <input type="hidden" name="_token" value="{{ csrf_token('budget_delete' ~ budget.id) }}">
+        <p class="small mb-2">
+            ¿Eliminar «{{ budget.name }}» con todo su historial? Si solo quieres dejar de usarlo, mejor finalízalo: así conservas su historial.
+        </p>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary flex-grow-1"
+                    data-action="budget-modal#showPane" data-budget-modal-pane-param="actions">Cancelar</button>
+            <button type="submit" class="btn btn-danger flex-grow-1">Eliminar</button>
+        </div>
+    </form>
+</div>

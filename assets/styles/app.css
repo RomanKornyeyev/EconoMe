@@ -103,10 +103,12 @@ body {
     gap: .5rem;
 }
 
-/* Modal de categorías en móvil: panel inferior, como el de filtros de
-   movimientos. Se cierra arrastrando el asa (category_modal_controller.js). */
+/* Modales de categorías y de presupuestos en móvil: panel inferior, como el de
+   filtros de movimientos. El de categorías se cierra además arrastrando el asa
+   (category_modal_controller.js); el de presupuestos, con su X. */
 @media (max-width: 767.98px) {
-    .category-modal .modal-dialog {
+    .category-modal .modal-dialog,
+    .budget-modal .modal-dialog {
         position: fixed;
         inset: auto 0 0 0;
         width: 100%;
@@ -116,16 +118,19 @@ body {
         display: block;
     }
 
-    .category-modal.fade .modal-dialog {
+    .category-modal.fade .modal-dialog,
+    .budget-modal.fade .modal-dialog {
         transform: translateY(100%);
         transition: transform .25s ease-out;
     }
 
-    .category-modal.show .modal-dialog {
+    .category-modal.show .modal-dialog,
+    .budget-modal.show .modal-dialog {
         transform: none;
     }
 
-    .category-modal .modal-content {
+    .category-modal .modal-content,
+    .budget-modal .modal-content {
         max-height: 90dvh;
         overflow-y: auto;
         border: 0;
@@ -592,4 +597,87 @@ span.flatpickr-weekday { color: var(--bs-secondary-color); }
 
 .help-toggle.collapsed .fa-caret-down {
     transform: rotate(-90deg);
+}
+
+/* ── Presupuestos ─────────────────────────────────────────────────────────── */
+/* Punto de color del presupuesto: el de su categoría, o un anillo si es de toda
+   la cuenta (budget/_macros.html.twig). */
+.budget-dot {
+    display: inline-block;
+    flex: none;
+    width: .625rem;
+    height: .625rem;
+    border-radius: 50%;
+}
+
+.budget-dot--account {
+    border: 2px solid var(--bs-secondary-color);
+}
+
+/* Barra de progreso con la marca de «hoy»: una línea que sobresale de la barra
+   en el punto del periodo en que se está. Va con el color de énfasis del tema
+   para verse en claro y en oscuro. */
+.budget-bar {
+    position: relative;
+    display: block;
+}
+
+.budget-bar__track {
+    height: .5rem;
+}
+
+.budget-bar__marker,
+.budget-bar__legend-marker {
+    width: 2px;
+    border-radius: 1px;
+    background-color: var(--bs-emphasis-color);
+}
+
+.budget-bar__marker {
+    position: absolute;
+    top: -.25rem;
+    bottom: -.25rem;
+    margin-left: -1px;
+}
+
+.budget-bar__legend-marker {
+    display: inline-block;
+    height: .875rem;
+}
+
+/* Opción de radio en forma de tarjeta (ámbito del alta, alcance del cambio de
+   importe). El borde marca la elegida sin JS. */
+.budget-option {
+    display: flex;
+    gap: .75rem;
+    align-items: flex-start;
+    padding: .5rem .75rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+    cursor: pointer;
+}
+
+.budget-option:has(input:checked) {
+    border-color: var(--bs-primary);
+    background-color: rgba(var(--bs-primary-rgb), .08);
+}
+
+/* «Qué va a pasar» del cambio de importe */
+.budget-preview {
+    padding: .625rem .75rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+}
+
+.budget-preview__title {
+    letter-spacing: .02em;
+}
+
+/* «Finalizados»: el chevron gira al desplegar (Bootstrap pone aria-expanded). */
+.budget-finished__toggle .fa-chevron-right {
+    transition: transform .15s ease;
+}
+
+.budget-finished__toggle[aria-expanded="true"] .fa-chevron-right {
+    transform: rotate(90deg);
 }

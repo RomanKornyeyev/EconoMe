@@ -4,18 +4,20 @@
     Mismo componente en los dos tamaños, con dos lecturas distintas:
 
     - En escritorio, cuatro tarjetas de igual peso (balance, ingresos, gastos y
-      recurrentes activos).
+      presupuestos).
     - Por debajo de lg, una sola tarjeta protagonista: el balance en grande y,
       dentro de ella, el reparto ingresos/gastos del período y el ahorro. Las
-      otras tres tarjetas no se pintan, sus datos ya están aquí.
+      otras tres tarjetas no se pintan: ingresos y gastos ya están aquí, y los
+      presupuestos tienen su panel debajo.
 
     incomeRatio y savingsRatio vienen calculados de DashboardController: son
-    datos del período, no presentación.
+    datos del período, no presentación. budgetPanel (BudgetEvaluator) alimenta
+    la tarjeta de presupuestos.
 #}
 <div class="row g-3 mb-3"
      data-tour-step="2"
      data-tour-title="Resumen del período"
-     data-tour-text="Balance total de la cuenta e ingresos, gastos y recurrentes activos del período seleccionado.">
+     data-tour-text="Balance total de la cuenta, ingresos y gastos del período seleccionado, y cómo van tus presupuestos.">
 
     {# ── Balance (tarjeta protagonista en móvil) ───────────────────────── #}
     <div class="col-12 col-lg-3 order-first">
@@ -28,10 +30,10 @@
                        title="Balance total de la cuenta seleccionada, independiente del período filtrado"></i>
                 </div>
 
-                {# En móvil los recurrentes activos son un acceso, no una cifra
-                   que merezca tarjeta propia. #}
+                {# Los recurrentes activos son un acceso, no una cifra que merezca
+                   tarjeta propia: desde la v1.6.0 su hueco es el de presupuestos. #}
                 <a href="{{ path('recurring_index', {account: currentAccount.id}) }}"
-                   class="btn btn-sm btn-outline-secondary rounded-pill d-lg-none flex-shrink-0 py-1">
+                   class="btn btn-sm btn-outline-secondary rounded-pill flex-shrink-0 py-1">
                     <i class="fa-solid fa-rotate me-1"></i>{{ activeRecurrings }} recurrente{{ activeRecurrings == 1 ? '' : 's' }}
                 </a>
             </div>
@@ -114,15 +116,53 @@
             </div>
         </div>
     </div>
+    {# Presupuestos: resumen del panel de abajo (components/_budget_panel). Sin
+       presupuestos, invita a crear el primero. #}
+    {% set panel = budgetPanel %}
     <div class="col-lg-3 d-none d-lg-block">
-        <div class="bg-body-secondary rounded-3 p-3 h-100">
-            <div class="text-muted small text-uppercase mb-1">
-                Recurrentes activos
-                <i class="fa-solid fa-circle-info ms-1"
-                   data-bs-toggle="tooltip"
-                   title="Movimientos recurrentes activos y aún vigentes hoy, independiente del período filtrado"></i>
-            </div>
-            <div class="fs-5 fw-semibold">{{ activeRecurrings }}</div>
-        </div>
+        <a href="{{ panel.empty ? path('budget_index', {account: currentAccount.id}) : '#presupuestos' }}"
+           class="d-block bg-body-secondary rounded-3 p-3 h-100 text-reset text-decoration-none">
+            <div class="text-muted small text-uppercase mb-1">Presupuestos</div>
+            {% if panel.budgetCount == 0 %}
+                <div class="fs-5 fw-semibold">Ninguno</div>
+                <div class="small text-primary-emphasis">Fija un límite de gasto o una meta →</div>
+            {% elseif panel.empty %}
+                <div class="fs-5 fw-semibold">—</div>
+                <div class="small text-body-secondary">Ninguno en este periodo</div>
+            {% elseif panel.yearView %}
+                <div class="d-flex align-items-baseline flex-wrap column-gap-2">
+                    <span class="fs-5 fw-semibold">{{ panel.periodsPercent is null ? '—' : panel.periodsPercent ~ ' %' }}</span>
+                    <span class="small text-body-secondary">de periodos cumplidos</span>
+                </div>
+                {% if panel.periodsClosed > 0 %}
+                    <div class="small text-body-secondary">{{ panel.periodsMet }} de {{ panel.periodsClosed }}</div>
+                {% endif %}
+            {% elseif panel.tense == 'current' %}
+                {% set atRisk = panel.atRisk %}
+                <div class="d-flex align-items-baseline flex-wrap column-gap-2">
+                    <span class="fs-5 fw-semibold">{{ panel.goodCount }} de {{ panel.rows|length }}</span>
+                    <span class="small text-body-secondary">van bien</span>
+                </div>
+                {% if atRisk is empty %}
+                    <div class="small text-success-emphasis">Todo en orden</div>
+                {% else %}
+                    <div class="small text-warning-emphasis text-truncate">En riesgo: {{ atRisk|map(r => r.budget.name)|join(', ') }}</div>
+                {% endif %}
+            {% elseif panel.tense == 'past' %}
+                <div class="d-flex align-items-baseline flex-wrap column-gap-2">
+                    <span class="fs-5 fw-semibold">{{ panel.successCount }} de {{ panel.evaluated|length }}</span>
+                    <span class="small text-body-secondary">cumplidos</span>
+                </div>
+                {% if panel.runningCount > 0 %}
+                    <div class="small text-body-secondary">{{ panel.runningCount }} aún en curso</div>
+                {% endif %}
+            {% else %}
+                <div class="d-flex align-items-baseline flex-wrap column-gap-2">
+                    <span class="fs-5 fw-semibold">{{ panel.rows|length }}</span>
+                    <span class="small text-body-secondary">{{ panel.rows|length == 1 ? 'activo' : 'activos' }}</span>
+                </div>
+                <div class="small text-body-secondary">Aún no ha empezado</div>
+            {% endif %}
+        </a>
     </div>
 </div>

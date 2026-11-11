@@ -6,6 +6,34 @@ Formato changelog: lo más reciente arriba.
 
 ---
 
+## v1.6.0 — Presupuestos
+
+Límites de gasto y metas de ingreso por cuenta. El diseño completo (reglas,
+decisiones y alternativas descartadas) está en `claude/presupuestos.md`; aquí,
+solo lo que hay que saber para tocar el código.
+
+- **`src/Budget/`**: `BudgetPeriod` (periodos de calendario: semana de lunes a
+  domingo, mes, trimestre natural…), `AmountSchedule` (tramos de importe con sus
+  invariantes: es el único sitio que las garantiza), `BudgetEvaluator` (lo llevado
+  por periodo y su estado, en una sola consulta por cuenta:
+  `TransactionRepository::dailyTotalsByCategory`) y `BudgetEditor` (crear,
+  unicidad, «Qué va a pasar» y finalizar). Tests en `tests/Budget/`.
+- **El importe no es un campo de `Budget`**: son las filas de `budget_amount`.
+  `Budget::applySchedule()` las sincroniza reutilizando las de la misma fecha,
+  porque Doctrine inserta antes de borrar y chocaría con el índice único.
+- **`category` va con `ON DELETE CASCADE`** (no `SET NULL`): borrar una categoría
+  borra sus presupuestos, y la confirmación de borrado lo avisa.
+- **Enum `App\Enum\Frequency`**: `RecurringTransaction::FREQ_*` apuntan a él. La
+  columna de recurrentes sigue siendo una cadena.
+- **«Qué va a pasar» se calcula en el servidor** (`budget_preview`): la lógica de
+  tramos no se duplica en JS.
+- En el dashboard, el KPI «Presupuestos» sustituye a «Recurrentes activos»; los
+  recurrentes pasan a la píldora de la tarjeta de balance en todos los tamaños.
+- **Despliegue**: migración `Version20261111151255` y `asset-map:compile` (hay
+  un controller nuevo y cambia `styles/app.css`).
+
+---
+
 ## v1.5.8 — Páginas más rápidas y sesión de 1 hora
 
 ### Caché del navegador: estáticos propios con hash

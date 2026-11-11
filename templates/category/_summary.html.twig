@@ -136,7 +136,7 @@
         <div class="d-flex align-items-center gap-3">
             {{ cat.avatar(item.name, item.color, '3.5rem') }}
             <div class="min-w-0">
-                <p class="mb-1 text-break">{{ cat.delete_message(item.name, totalCount, isTemplate) }}</p>
+                <p class="mb-1 text-break">{{ cat.delete_message(item.name, totalCount, isTemplate, budgetCount) }}</p>
                 <p class="small text-body-secondary mb-0">Esta acción no se puede deshacer.</p>
             </div>
         </div>

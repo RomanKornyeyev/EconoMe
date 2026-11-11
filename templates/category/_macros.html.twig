@@ -55,16 +55,19 @@
 {%- endmacro %}
 
 {# Texto de la confirmación de borrado. total: movimientos que se quedarán sin
-   categoría (las plantillas no tienen). #}
-{% macro delete_message(name, total, isTemplate) %}
+   categoría (las plantillas no tienen). budgets: presupuestos de la categoría,
+   que se borran con ella (ON DELETE CASCADE): hay que avisarlo. #}
+{% macro delete_message(name, total, isTemplate, budgets = 0) %}
     {%- if isTemplate -%}
         ¿Eliminar la plantilla «{{ name }}»?
-    {%- elseif total == 0 -%}
-        ¿Eliminar la categoría «{{ name }}»?
-    {%- elseif total == 1 -%}
-        ¿Eliminar la categoría «{{ name }}»? Su movimiento quedará sin categoría.
     {%- else -%}
-        ¿Eliminar la categoría «{{ name }}»? Sus {{ total|number_format(0, ',', '.') }} movimientos quedarán sin categoría.
+        ¿Eliminar la categoría «{{ name }}»?
+        {%- if total == 1 %} Su movimiento quedará sin categoría.
+        {%- elseif total > 1 %} Sus {{ total|number_format(0, ',', '.') }} movimientos quedarán sin categoría.
+        {%- endif -%}
+        {%- if budgets == 1 %} También se borrará su presupuesto, con todo su historial.
+        {%- elseif budgets > 1 %} También se borrarán sus {{ budgets }} presupuestos, con todo su historial.
+        {%- endif -%}
     {%- endif -%}
 {%- endmacro %}
 

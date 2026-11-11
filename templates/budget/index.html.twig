@@ -1,0 +1,228 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Presupuestos{% endblock %}
+
+{% block content %}
+{% if not hasAccounts %}
+    {% include 'partials/_no_account.html.twig' with {message: 'Crea tu primera cuenta para empezar a usar presupuestos.'} %}
+{% else %}
+{% import 'budget/_macros.html.twig' as bm %}
+
+{# Un lector solo consulta: sin altas, cambios ni finalizar. #}
+{% set canEdit  = is_granted('ACCOUNT_EDIT', currentAccount) %}
+{% set currency = currentAccount.currency %}
+{% set newUrl   = path('budget_new', {account: currentAccount.id}) %}
+
+{# Alta y edición abren #budgetModal (budget_modal_controller.js). No hay vista
+   de página completa: el formulario solo vive en el modal. pb-5 en móvil: el FAB
+   flota sobre el final de la página. #}
+<div class="pb-5 pb-md-0" data-controller="budget-modal">
+
+{# Cabecera: mismo reparto que en categorías (order-* y .tx-header__account). #}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+    <h1 class="mb-0 h2 me-1">Presupuestos</h1>
+
+    <div class="order-1 order-md-2 ms-auto d-flex align-items-center gap-2">
+        {% if canEdit %}
+            <button type="button" class="btn btn-primary btn-sm d-none d-md-inline-flex align-items-center"
+                    data-action="budget-modal#open" data-budget-modal-url-param="{{ newUrl }}">
+                <i class="fa-solid fa-plus me-1"></i>Nuevo presupuesto
+            </button>
+        {% endif %}
+    </div>
+
+    <div class="tx-header__account order-2 order-md-1">
+        {% include 'partials/_account_selector.html.twig' with {
+            accounts: accounts,
+            current: currentAccount,
+            route: 'budget_index',
+            withCreateItem: false,
+            labelPrefix: 'Cuenta ',
+            groupClass: 'w-100',
+        } only %}
+    </div>
+</div>
+
+<p class="small text-body-secondary mb-3">
+    Límites de gasto y metas de ingreso de esta cuenta. Los ven todos sus miembros; solo quien puede editar la cuenta puede cambiarlos.
+</p>
+
+{% if budgets is empty %}
+    <div class="text-center py-5">
+        <i class="fa-solid fa-bullseye fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">{{ finished is empty ? 'Esta cuenta aún no tiene presupuestos' : 'No hay presupuestos activos' }}</h5>
+        <p class="text-body-secondary small mb-0">Pon un límite a lo que gastas (500 € al mes en Alimentación) o una meta a lo que ingresas.</p>
+        {% if canEdit %}
+            <button type="button" class="btn btn-primary mt-3"
+                    data-action="budget-modal#open" data-budget-modal-url-param="{{ newUrl }}">
+                <i class="fa-solid fa-plus me-1"></i>Crear presupuesto
+            </button>
+        {% endif %}
+    </div>
+{% else %}
+
+    {# ── Móvil (< md): lista; tocar una fila abre el cambio de importe ──── #}
+    <div class="d-md-none list-group shadow-sm">
+        {% for budget in budgets %}
+            {% set row = progress[budget.id] %}
+            {% set next = bm.next_change(budget, today)|trim %}
+            {% set tag = canEdit ? 'button' : 'div' %}
+            <{{ tag }} {% if canEdit %}type="button" data-action="budget-modal#open" data-budget-modal-url-param="{{ path('budget_edit', {id: budget.id}) }}"{% endif %}
+                class="list-group-item {{ canEdit ? 'list-group-item-action' }} py-3">
+                <span class="d-flex align-items-center gap-2">
+                    {{ bm.dot(budget) }}
+                    <span class="fw-semibold text-truncate">{{ budget.name }}</span>
+                    <span class="ms-auto text-nowrap">{{ bm.money(row.limit, currency) }}</span>
+                </span>
+                <span class="d-block small text-body-secondary mb-2">
+                    {{ budget.kindLabel }} · {{ bm.scope_line(budget, today)|lower }}{% if next %} · {{ next }}{% endif %}
+                </span>
+                {{ _self.progress(row, budget, currency) }}
+            </{{ tag }}>
+        {% endfor %}
+    </div>
+
+    {# ── Escritorio (≥ md): tabla ─────────────────────────────────────────── #}
+    <div class="card shadow-sm border d-none d-md-block">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="small text-body-secondary fw-normal">Presupuesto</th>
+                        <th class="small text-body-secondary fw-normal">Tipo</th>
+                        <th class="small text-body-secondary fw-normal">Frecuencia</th>
+                        <th class="small text-body-secondary fw-normal text-end">Importe vigente</th>
+                        <th class="small text-body-secondary fw-normal" style="width: 22%">Este periodo</th>
+                        <th><span class="visually-hidden">Acciones</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for budget in budgets %}
+                        {% set row = progress[budget.id] %}
+                        {% set next = bm.next_change(budget, today)|trim %}
+                        {% set current = budget.periodAt(today) %}
+                        <tr>
+                            <td class="min-w-0">
+                                <div class="d-flex align-items-center gap-2 fw-semibold">{{ bm.dot(budget) }}<span class="text-break">{{ budget.name }}</span></div>
+                                <div class="small text-body-secondary">{{ bm.scope_line(budget, today) }}</div>
+                            </td>
+                            <td>{{ budget.expense ? 'Límite de gasto' : 'Meta de ingreso' }}</td>
+                            <td>{{ budget.frequency.label }}</td>
+                            <td class="text-end text-nowrap">
+                                {{ bm.money(row.limit, currency) }}
+                                {% if next %}
+                                    <div class="small text-info-emphasis"><i class="fa-regular fa-calendar me-1" aria-hidden="true"></i>{{ next }}</div>
+                                {% endif %}
+                            </td>
+                            <td>{{ _self.progress(row, budget, currency) }}</td>
+                            <td class="text-end">
+                                {% if canEdit %}
+                                    <div class="d-inline-flex gap-2">
+                                        <button type="button" class="btn btn-sm btn-outline-primary py-0 px-1"
+                                                data-bs-toggle="tooltip" data-bs-title="Cambiar importe" aria-label="Cambiar el importe de {{ budget.name }}"
+                                                data-action="budget-modal#open" data-budget-modal-url-param="{{ path('budget_edit', {id: budget.id}) }}">
+                                            <i class="fa-solid fa-pen fa-sm"></i>
+                                        </button>
+                                        {% if budget.lastPeriod is null or budget.lastPeriod.compare(current) > 0 %}
+                                            <form method="post" class="d-inline-flex" action="{{ path('budget_finalize', {id: budget.id}) }}"
+                                                  data-controller="confirm" data-action="submit->confirm#submit"
+                                                  data-confirm-message-value="{{ _self.finalize_message(budget, today) }}"
+                                                  data-confirm-text-value="{{ budget.isUpcoming(today) ? 'Eliminar' : 'Finalizar' }}">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('budget_finalize' ~ budget.id) }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary py-0 px-1"
+                                                        data-bs-toggle="tooltip" data-bs-title="Finalizar" aria-label="Finalizar {{ budget.name }}">
+                                                    <i class="fa-solid fa-flag-checkered fa-sm"></i>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endif %}
+
+{# ── Finalizados: plegado. Su historial se sigue viendo en el dashboard. ── #}
+{% if finished is not empty %}
+    <div class="mt-3">
+        <button type="button" class="btn btn-link text-body-secondary text-decoration-none px-0 budget-finished__toggle"
+                data-bs-toggle="collapse" data-bs-target="#budgetsFinished" aria-expanded="false" aria-controls="budgetsFinished">
+            <i class="fa-solid fa-chevron-right fa-xs me-1" aria-hidden="true"></i>Finalizados ({{ finished|length }})
+        </button>
+        <div class="collapse" id="budgetsFinished">
+            <div class="list-group shadow-sm mt-2">
+                {% for budget in finished %}
+                    {% set last = budget.schedule.amountAt(budget.lastPeriod) %}
+                    <div class="list-group-item d-flex flex-wrap align-items-center gap-2 column-gap-3">
+                        <span class="d-flex align-items-center gap-2 fw-semibold">{{ bm.dot(budget) }}{{ budget.name }}</span>
+                        <span class="small text-body-secondary">{{ budget.kindLabel }} de {{ bm.money(last, currency) }}</span>
+                        <span class="small text-body-secondary">De {{ budget.firstPeriod.shortLabel }} a {{ budget.lastPeriod.shortLabel }} · su historial se sigue viendo en el dashboard</span>
+                        {% if canEdit %}
+                            <button type="button" class="btn btn-sm btn-outline-secondary ms-md-auto"
+                                    data-action="budget-modal#open"
+                                    data-budget-modal-url-param="{{ path('budget_new', {account: currentAccount.id, from: budget.id}) }}">
+                                Crear uno igual
+                            </button>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+{% if canEdit %}
+    {# «Nuevo presupuesto» en móvil: sustituye al botón de la cabecera. #}
+    <button type="button" class="dash-fab btn btn-primary rounded-circle shadow position-fixed bottom-0 end-0 m-3 d-md-none"
+            aria-label="Nuevo presupuesto"
+            data-action="budget-modal#open" data-budget-modal-url-param="{{ newUrl }}">
+        <i class="fa-solid fa-plus"></i>
+    </button>
+{% endif %}
+
+{# Contenedor del alta y la edición. El contenido entero (cabecera incluida) lo
+   pinta el servidor: budget/_form_new.html.twig o budget/_form_edit.html.twig.
+   En móvil, .budget-modal lo convierte en panel inferior (app.css). #}
+<div class="modal fade budget-modal" id="budgetModal" tabindex="-1" aria-labelledby="budgetModalLabel" aria-hidden="true"
+     data-budget-modal-target="modal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-body-tertiary" data-budget-modal-target="content"></div>
+    </div>
+</div>
+
+</div> {# /budget-modal #}
+{% endif %}
+{% endblock %}
+
+{# Progreso del periodo en curso: barra y «91 % · cerca». row: BudgetRow de
+   BudgetEvaluator::current(). #}
+{% macro progress(row, budget, currency) %}
+    {% import 'budget/_macros.html.twig' as bm %}
+    {% set outcome = row.outcome.value %}
+    {% if outcome == 'pending' %}
+        {% set label = 'Empieza en ' ~ row.period.shortLabel %}
+    {% else %}
+        {% set label = row.percent ~ ' %'
+            ~ (outcome in ['over', 'exceeded'] ? ' · excedido'
+            : (outcome == 'near' ? ' · cerca'
+            : (outcome == 'goal_reached' ? ' · alcanzada' : ''))) %}
+    {% endif %}
+    <span class="d-flex align-items-center gap-2">
+        <span class="flex-grow-1">{{ bm.bar(row.barPercent, row.outcome.tone, row.marker, label) }}</span>
+        <span class="small text-nowrap text-{{ row.outcome.tone }}-emphasis">{{ label }}</span>
+    </span>
+{% endmacro %}
+
+{# Confirmación de «Finalizar». Si aún no ha empezado, no hay historial que
+   guardar y se elimina. #}
+{% macro finalize_message(budget, today) -%}
+    {%- if budget.isUpcoming(today) -%}
+        «{{ budget.name }}» aún no ha empezado: al finalizarlo se elimina.
+    {%- else -%}
+        ¿Finalizar «{{ budget.name }}»? Dejará de contar después de {{ budget.periodAt(today).labelWithArticle }}. Su historial se conserva.
+    {%- endif -%}
+{%- endmacro %}

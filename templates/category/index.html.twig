@@ -208,7 +208,7 @@
                                               action="{{ isTemplateView ? path('category_template_delete', {id: item.id}) : path('category_delete', {id: item.id}) }}"
                                               data-controller="confirm"
                                               data-action="submit->confirm#submit"
-                                              data-confirm-message-value="{{ cat.delete_message(item.name, total, isTemplateView) }}"
+                                              data-confirm-message-value="{{ cat.delete_message(item.name, total, isTemplateView, budgetCounts[item.id] ?? 0) }}"
                                               data-confirm-text-value="Eliminar">
                                             <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ item.id) }}">
                                             <button type="submit"

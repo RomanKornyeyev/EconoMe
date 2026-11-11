@@ -29,6 +29,11 @@
 {# Zona 3: KPIs #}
 {% include 'components/_stats_cards.html.twig' %}
 
+{# Zona 3b: presupuestos del periodo (solo si hay alguno vigente en él) #}
+{% if not budgetPanel.empty %}
+    {% include 'components/_budget_panel.html.twig' %}
+{% endif %}
+
 {# Zona 4: Gráficos #}
 {% include 'components/_charts.html.twig' %}
 

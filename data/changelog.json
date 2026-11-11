@@ -1,5 +1,28 @@
 [
     {
+        "version": "v1.6.0",
+        "date": "2026-11-11",
+        "title": "Presupuestos",
+        "changes": [
+            {
+                "type": "feat",
+                "text": "Nueva sección «Presupuestos»: pon un límite de gasto o una meta de ingreso, por categoría o para toda la cuenta, semanal, mensual, trimestral, semestral o anual."
+            },
+            {
+                "type": "feat",
+                "text": "El dashboard muestra cómo van tus presupuestos en el periodo que miras y, en los ya cerrados, si los cumpliste."
+            },
+            {
+                "type": "improvement",
+                "text": "El importe de un presupuesto puede cambiar solo para un periodo o a partir de una fecha, sin alterar lo ya cerrado."
+            },
+            {
+                "type": "improvement",
+                "text": "Al eliminar una categoría se avisa si también se borrará su presupuesto."
+            }
+        ]
+    },
+    {
         "version": "v1.5.8",
         "date": "2026-11-11",
         "title": "Optimización de la carga de páginas",

@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\Frequency;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use App\Entity\Traits\TimestampableEntity;
@@ -20,13 +21,17 @@ class RecurringTransaction
      * Diaria sigue soportada por el dominio (materializador, validación y
      * listados) aunque ya no se ofrezca en el formulario: las recurrentes
      * diarias creadas antes deben seguir generando movimientos.
+     *
+     * Los valores salen del enum Frequency, que comparten los presupuestos. La
+     * columna sigue siendo una cadena: las constantes se mantienen para no tocar
+     * formulario, plantillas ni el JS que leen esos valores.
      */
-    public const FREQ_DAILY = 'daily';
-    public const FREQ_WEEKLY = 'weekly';
-    public const FREQ_MONTHLY = 'monthly';
-    public const FREQ_QUARTERLY = 'quarterly';
-    public const FREQ_SEMIANNUAL = 'semiannual';
-    public const FREQ_YEARLY = 'yearly';
+    public const FREQ_DAILY = Frequency::Daily->value;
+    public const FREQ_WEEKLY = Frequency::Weekly->value;
+    public const FREQ_MONTHLY = Frequency::Monthly->value;
+    public const FREQ_QUARTERLY = Frequency::Quarterly->value;
+    public const FREQ_SEMIANNUAL = Frequency::Semiannual->value;
+    public const FREQ_YEARLY = Frequency::Yearly->value;
 
     #[ORM\Id]
     #[ORM\GeneratedValue]

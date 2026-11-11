@@ -7,6 +7,7 @@ use App\Entity\Category;
 use App\Entity\CategoryTemplate;
 use App\Form\CategoryTemplateType;
 use App\Form\CategoryType;
+use App\Repository\BudgetRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\CategoryTemplateRepository;
 use App\Repository\TransactionRepository;
@@ -40,6 +41,7 @@ class CategoryController extends AbstractController
         private CategoryTemplateRepository $templateRepo,
         private AccountService $accountService,
         private CategoryUsage $categoryUsage,
+        private BudgetRepository $budgetRepo,
         private EntityManagerInterface $em,
     ) {}
 
@@ -63,6 +65,7 @@ class CategoryController extends AbstractController
                 'currentAccount' => null,
                 'categories'     => [],
                 'usage'          => [],
+                'budgetCounts'   => [],
                 'templates'      => $templates,
                 'isTemplateView' => true,
             ]);
@@ -79,6 +82,8 @@ class CategoryController extends AbstractController
             'categories'     => $categories,
             // Nº de movimientos por tipo: columnas «Se usa en» y «Movimientos»
             'usage'          => $this->categoryUsage->countsByCategory($account),
+            // Presupuestos por categoría: se borran con ella, y la confirmación lo avisa
+            'budgetCounts'   => $this->budgetRepo->countByCategoryForAccount($account),
             'templates'      => [],
             'isTemplateView' => false,
         ]);
@@ -107,6 +112,7 @@ class CategoryController extends AbstractController
             'monthTotals' => $monthTotals,
             'monthCount'  => array_sum(array_column($monthTotals, 'count')),
             'latest'      => $transactionRepo->findLatestByCategory($category, self::SUMMARY_LATEST),
+            'budgetCount' => $this->budgetRepo->countByCategory($category),
             'canEdit'     => $this->isGranted('ACCOUNT_EDIT', $account),
         ]);
     }
@@ -131,6 +137,7 @@ class CategoryController extends AbstractController
             'monthTotals' => [],
             'monthCount'  => 0,
             'latest'      => [],
+            'budgetCount' => 0,
             'canEdit'     => true,
         ]);
     }

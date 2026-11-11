@@ -61,6 +61,11 @@
 									Categorías
 								</a>
 							</li>
+							<li class="nav-item col-6 col-lg-auto">
+								<a class="nav-link py-2 px-0 px-lg-2 {{ app.request.attributes.get('_route') starts with 'budget_' ? 'active' : '' }}" href="{{ path('budget_index') }}">
+									Presupuestos
+								</a>
+							</li>
 						{% endif %}
 						{# <li class="nav-item col-6 col-lg-auto">
 												              <a class="nav-link py-2 px-0 px-lg-2 active" aria-current="true" href="#">Docs</a>
