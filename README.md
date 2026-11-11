@@ -97,7 +97,7 @@ Genera `public/assets/` (importmap + JS/CSS versionados):
 php bin/console asset-map:compile
 ```
 
-*Cada vez que cambies un fichero de `assets/` hay que volver a ejecutar `asset-map:compile` (los nombres llevan hash de versión, así que la caché del navegador no da problemas).*
+*Cada vez que cambies un fichero de `assets/` hay que volver a ejecutar `asset-map:compile` (los nombres llevan hash de versión, así que la caché del navegador no da problemas). Ahí viven también `css/general.css` y los `js/` propios: sin compilar, la web sale sin estilos.*
 
 ### 3. Limpiar caché
 
@@ -105,7 +105,50 @@ php bin/console asset-map:compile
 php bin/console cache:clear
 ```
 
-### 4. Automatizar las transacciones recurrentes (cron)
+### 4. Caché del navegador para `/assets/` (Apache)
+
+Todo lo de `public/assets/` lleva el hash del contenido en el nombre: si cambia, cambia la URL. Así que se puede cachear un año sin volver a preguntar al servidor. Sin esta cabecera, el navegador revalida (petición + `304`) los ficheros tocados en el último despliegue en cada navegación, y cada revalidación es un viaje de ida y vuelta más antes de pintar.
+
+Va en un fichero propio de `conf-available`, no dentro del VirtualHost: así vale para HTTP y HTTPS, y certbot no lo toca al renovar.
+
+```bash
+sudo a2enmod headers
+
+sudo tee /etc/apache2/conf-available/econome-assets.conf > /dev/null <<'EOF'
+# AssetMapper pone el hash del contenido en cada nombre: si cambia, cambia la URL
+<Directory /var/www/EconoMe/public/assets>
+    Header set Cache-Control "public, max-age=31536000, immutable"
+</Directory>
+EOF
+
+sudo a2enconf econome-assets
+sudo apache2ctl configtest && sudo systemctl reload apache2
+
+# Comprobación: debe salir la cabecera de arriba
+curl -sI "https://econome.es$(curl -s https://econome.es/auth/login | grep -oE '/assets/css/general-[^"]+' | head -1)" | grep -i cache-control
+```
+
+*Solo `/assets/`: el HTML y `public/media/` (fotos de perfil, sin hash) se quedan como están. Para quitarla: `sudo a2disconf econome-assets && sudo systemctl reload apache2`.*
+
+### 5. Duración de la sesión (php.ini)
+
+Symfony fija `gc_maxlifetime: 3600` (1 h sin actividad sin «Recuérdame»), pero en Ubuntu no basta: PHP trae su recolector apagado (`session.gc_probability = 0`) y las sesiones las borra una tarea del sistema (`phpsessionclean.timer`, cada 30 min). Esa tarea lee el `php.ini`, no la configuración de Symfony, y con el valor por defecto (1440 s) borra la sesión a los 24 min de inactividad. Hay que subirlo también ahí:
+
+```bash
+V=8.4        # versión de PHP: ls /etc/php/
+SAPI=apache2 # «apache2» con mod_php; «fpm» con PHP-FPM (apache2ctl -M | grep -E 'php_module|proxy_fcgi')
+
+echo 'session.gc_maxlifetime = 3600' | sudo tee /etc/php/$V/$SAPI/conf.d/99-econome.ini
+
+# Comprobación: lo mismo que lee phpsessionclean. Debe imprimir 3600
+PHP_INI_SCAN_DIR=/etc/php/$V/$SAPI/conf.d php$V -c /etc/php/$V/$SAPI/php.ini -r 'echo ini_get("session.gc_maxlifetime"), PHP_EOL;'
+
+sudo systemctl restart apache2   # con PHP-FPM: sudo systemctl restart php$V-fpm
+```
+
+*Un fichero en `conf.d` y no editar `php.ini`: sobrevive a las actualizaciones del paquete. Las sesiones abiertas no se pierden al reiniciar (son ficheros en disco). Afecta a todas las webs del servidor que usen las sesiones por defecto de PHP: también sus sesiones pasan a durar hasta 1 h.*
+
+### 6. Automatizar las transacciones recurrentes (cron)
 
 `app:generate-recurring-transactions` materializa las transacciones pendientes de las recurrentes activas (nómina, alquiler, suscripciones…). En producción debe ejecutarse una vez al día.
 

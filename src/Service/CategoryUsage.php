@@ -55,6 +55,12 @@ final class CategoryUsage implements ResetInterface
      */
     public function usedAs(Account $account, ?int $categoryId): string
     {
+        // Sin id (categoría sin persistir) no hay historial. Y PHP 8.5 depreca
+        // usar null como clave de array.
+        if ($categoryId === null) {
+            return '';
+        }
+
         return implode(' ', $this->typesByCategory($account)[$categoryId] ?? []);
     }
 

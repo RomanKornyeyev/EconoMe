@@ -6,6 +6,61 @@ Formato changelog: lo más reciente arriba.
 
 ---
 
+## v1.5.8 — Páginas más rápidas y sesión de 1 hora
+
+### Caché del navegador: estáticos propios con hash
+
+Tras desplegar la v1.5.7, las páginas con caché pasaron de ~150 a ~220 ms. No
+era el PHP: medido en local en modo prod, antes y después de sus dos commits, el
+TTFB es el mismo (±4 ms). Era la caché HTTP.
+
+Apache sirve los estáticos **sin `Cache-Control` ni `Expires`**. Así, el
+navegador aplica la caché heurística: da por fresco un fichero durante el 10 %
+del tiempo que lleva sin cambiar (`Last-Modified`). Lo que no se toca en semanas
+sale de caché sin preguntar. Lo recién desplegado se revalida (petición + `304`)
+en cada navegación. La v1.5.7 tocó dos ficheros de todas las páginas:
+`css/general.css`, que bloquea el pintado, y `@symfony/stimulus-bundle/controllers.js`
+(cambia al añadir un controller y está en la cadena de módulos que retrasa
+`DOMContentLoaded`). En Movimientos, además, `date_range` y `tx_filters`. Con
+HTTP/1.1, cada revalidación es un viaje de ida y vuelta (~30 ms con conexión
+abierta, ~100 ms si hay que abrir otra). El efecto se va diluyendo con los días y
+vuelve con cada despliegue que toque esos ficheros.
+
+Arreglo en dos partes:
+
+- **Servidor**: `Cache-Control: public, max-age=31536000, immutable` para
+  `/assets/` (ver README.md, despliegue, paso 4). Es seguro porque AssetMapper
+  pone el hash del contenido en cada nombre.
+- **Código**: `general.css`, `form.css` y los cuatro `js/` propios pasan de
+  `public/` a `assets/css/` y `assets/js/`, para que también lleven hash y
+  entren en esa regla. La ruta lógica es la misma (`css/general.css`,
+  `js/color_mode.js`…), así que las plantillas no cambian: `asset()` resuelve
+  solo a `/assets/css/general-<hash>.css`. **Desde ahora, tocar `general.css`
+  exige `asset-map:compile`** al desplegar; sin él, la web sale sin estilos.
+
+Los JS siguen siendo scripts clásicos (`<script src>`, sin `type="module"`), y
+el orden de carga del `<head>` no cambia. `public/css/pagerfanta.css` se queda
+donde estaba: ninguna plantilla lo usa.
+
+### La sesión de 1 h (v1.5.6) necesita también el `php.ini` en Ubuntu
+
+La nota de la v1.5.6 da por hecho que las sesiones caducadas las borra el GC de
+PHP. En Ubuntu no es así: el paquete deja `session.gc_probability = 0` y las
+borra `phpsessionclean.timer` cada 30 min, leyendo `gc_maxlifetime` del
+`php.ini` (y su `conf.d`), no del `ini_set` que hace Symfony al arrancar la
+sesión. Con el valor por defecto (1440 s), la sesión sin «Recuérdame» moría a
+los 24–54 min de inactividad, no a los 60. Se arregla con un
+`conf.d/99-econome.ini` en el servidor (README.md, despliegue, paso 5). En el
+código no cambia nada: `framework.session.gc_maxlifetime` se queda para que dev
+y prod digan lo mismo.
+
+### `CategoryUsage::usedAs()` sin deprecación en PHP 8.5
+
+Con `$categoryId` null usaba null como clave de array, que PHP 8.5 depreca.
+Ahora devuelve `''` antes de mirar el array (sin id no hay historial).
+
+---
+
 ## v1.5.7 — Filtro de fechas en Movimientos y recuperación de contraseña
 
 ### Movimientos abre el mes en curso
@@ -391,4 +446,4 @@ En la home se pasó de descargar 12 controllers a 3.
 
 ## Notas permanentes
 
-**Turbo está desactivado a propósito** (`assets/controllers.json`). El refresco parcial se hace a mano con `fetch` + Stimulus; ver `friendship_controller.js` (patrón `{html, sections}`) y `tx_summary_controller.js`. Stimulus reconecta solo los `data-controller` del HTML inyectado, pero los scripts sueltos de `public/js/` no: corren una vez y no ven ese HTML nuevo.
+**Turbo está desactivado a propósito** (`assets/controllers.json`). El refresco parcial se hace a mano con `fetch` + Stimulus; ver `friendship_controller.js` (patrón `{html, sections}`) y `tx_summary_controller.js`. Stimulus reconecta solo los `data-controller` del HTML inyectado, pero los scripts sueltos de `assets/js/` (antes `public/js/`) no: corren una vez y no ven ese HTML nuevo.

@@ -1,5 +1,16 @@
 [
     {
+        "version": "v1.5.8",
+        "date": "2026-11-11",
+        "title": "Optimización de la carga de páginas",
+        "changes": [
+            {
+                "type": "improvement",
+                "text": "Mejora de velocidad de carga de páginas."
+            }
+        ]
+    },
+    {
         "version": "v1.5.7",
         "date": "2026-11-05",
         "title": "Filtro de fechas en Movimientos y recuperación de contraseña",
