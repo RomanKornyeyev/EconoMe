@@ -76,6 +76,12 @@ enum Frequency: string
         };
     }
 
+    /** «de la semana», «del mes»…: «el 37 % del mes». */
+    public function ofUnit(): string
+    {
+        return ($this === self::Weekly ? 'de la ' : 'del ') . $this->unit();
+    }
+
     /** «esta semana», «este mes»… */
     public function current(): string
     {

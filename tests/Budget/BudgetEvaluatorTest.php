@@ -119,6 +119,7 @@ class BudgetEvaluatorTest extends TestCase
         $this->assertSame(BudgetOutcome::Over, $ocio->outcome);
         $this->assertSame('46.50', $ocio->spent, 'solo la semana del 9 nov');
         $this->assertSame(5, $ocio->daysLeft);
+        $this->assertSame(86.0, $ocio->limitMark(), 'pasado: el límite (40) queda dentro de la barra de lo llevado (46,50)');
 
         $this->assertSame(BudgetOutcome::Near, $panel->rows[1]->outcome);
         $this->assertSame(91, $panel->rows[1]->percent());
@@ -129,18 +130,67 @@ class BudgetEvaluatorTest extends TestCase
         $this->assertSame('109.36', $alimentacion->spent, 'la devolución (ingreso) no cuenta');
         $this->assertSame(20, $alimentacion->daysLeft);
         $this->assertSame('15.53', $alimentacion->perDay());
-        $this->assertEqualsWithDelta(36.7, $alimentacion->marker, 0.05);
+        $this->assertSame(37, $alimentacion->elapsed);
+        $this->assertSame(100.0, $alimentacion->limitMark(), 'sin pasarse, la línea va al final de la barra');
 
         $total = self::byName($panel->rows, 'Gasto total');
         // 72,40 + 109,36 + 11,70 + 46,50 + 679: el domingo 8 es de la semana
         // anterior, pero sí del mes.
         $this->assertSame('918.96', $total->spent, 'toda la cuenta suma también lo que no tiene categoría');
         $this->assertSame('679.00', $total->recurring);
+        // 66 % con el 37 % del mes, pero 679 son la hipoteca: lo variable va al 33 %.
+        $this->assertSame(BudgetOutcome::OnTrack, $total->outcome, 'las recurrentes no hacen ir rápido');
 
-        $this->assertSame(BudgetOutcome::GoalReached, self::byName($panel->rows, 'Ingresos totales')->outcome);
+        $ingresos = self::byName($panel->rows, 'Ingresos totales');
+        $this->assertSame(BudgetOutcome::GoalReached, $ingresos->outcome);
+        $this->assertSame(96.0, $ingresos->limitMark(), 'meta superada: 1700 de 1770 (nómina y devolución)');
 
         $this->assertSame(3, $panel->goodCount());
         $this->assertCount(2, $panel->atRisk());
+    }
+
+    /** Día 11 de 30: ha pasado el 37 % del mes, así que «rápido» empieza en el 57 %. */
+    public function testVasRapidoPorDelanteDelRitmo(): void
+    {
+        $comida = $this->budget('expense', Frequency::Monthly, $this->category(self::ALIMENTACION, 'Alimentación'), '2026-01-01', ['2026-01-01' => '400']);
+
+        $this->assertSame(BudgetOutcome::Fast, BudgetEvaluator::liveOutcome($comida, '228.00', '0.00', '400.00', 37), '57 %');
+        $this->assertSame(BudgetOutcome::OnTrack, BudgetEvaluator::liveOutcome($comida, '224.00', '0.00', '400.00', 37), '56 %: aún dentro del margen');
+        $this->assertSame(BudgetOutcome::Near, BudgetEvaluator::liveOutcome($comida, '320.00', '0.00', '400.00', 37), 'desde el 80 % manda «cerca»');
+        $this->assertSame(BudgetOutcome::Fast, BudgetEvaluator::liveOutcome($comida, '20.00', '0.00', '100.00', 0), 'el primer día ya cuenta');
+
+        // Con 300 de recurrentes sobre 1000, el ritmo se mide sobre los 700 libres.
+        $total = $this->budget('expense', Frequency::Monthly, null, '2026-01-01', ['2026-01-01' => '1000']);
+        $this->assertSame(BudgetOutcome::OnTrack, BudgetEvaluator::liveOutcome($total, '600.00', '300.00', '1000.00', 37), '60 % del total, pero 43 % de lo libre');
+        $this->assertSame(BudgetOutcome::Fast, BudgetEvaluator::liveOutcome($total, '720.00', '300.00', '1000.00', 37), '60 % de lo libre');
+        $this->assertSame(BudgetOutcome::Near, BudgetEvaluator::liveOutcome($total, '900.00', '900.00', '1000.00', 37), 'recurrentes que llenan casi todo: cerca');
+
+        $ingresos = $this->budget('income', Frequency::Monthly, null, '2026-01-01', ['2026-01-01' => '1700']);
+        $this->assertSame(BudgetOutcome::GoalPending, BudgetEvaluator::liveOutcome($ingresos, '1600.00', '0.00', '1700.00', 3), 'las metas no van «rápido»');
+    }
+
+    public function testVasRapidoEnElPanelYEnCursoDesdeUnMesCerrado(): void
+    {
+        $budgets = [
+            $this->budget('expense', Frequency::Monthly, $this->category(self::ALIMENTACION, 'Alimentación'), '2026-01-01', ['2026-01-01' => '420']),
+            $this->budget('expense', Frequency::Quarterly, $this->category(self::SEGUROS, 'Seguros'), '2026-01-01', ['2026-01-01' => '350']),
+        ];
+        $evaluator = $this->evaluator([
+            [self::ALIMENTACION, 'expense', '2026-11-05', '250.00'], // 60 % el día 11
+            [self::SEGUROS, 'expense', '2026-10-01', '250.00'],      // 71 % con el 46 % del trimestre
+        ]);
+
+        $panel = $evaluator->panel($this->account, $budgets, 2026, 11, self::today());
+        $alimentacion = self::byName($panel->rows, 'Alimentación');
+        $this->assertSame(BudgetOutcome::Fast, $alimentacion->outcome);
+        $this->assertSame([60, 37], [$alimentacion->percent(), $alimentacion->elapsed]);
+        $this->assertSame(BudgetOutcome::Fast, self::byName($panel->rows, 'Seguros')->outcome);
+        $this->assertSame(0, $panel->goodCount());
+        $this->assertCount(2, $panel->atRisk(), 'ir rápido es un aviso, como «cerca»');
+
+        // Visto desde octubre (cerrado), el trimestre sigue abierto: solo «en curso».
+        $october = $evaluator->panel($this->account, $budgets, 2026, 10, self::today());
+        $this->assertSame(BudgetOutcome::Running, self::byName($october->rows, 'Seguros')->outcome);
     }
 
     public function testMesCerradoSemanasYTrimestreAunAbierto(): void

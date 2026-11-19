@@ -195,8 +195,10 @@ class BudgetController extends AbstractController
         $this->denyAccessUnlessGranted('ACCOUNT_EDIT', $budget->getAccount());
         $today = new \DateTimeImmutable('today');
 
-        // Solo lectura: sin CSRF, para no depender del token del envío.
-        $form = $this->amountForm($budget, $today, ['csrf_protection' => false]);
+        // Solo lectura: sin CSRF, para no depender del token del envío. Pero el
+        // navegador manda el formulario entero, _token incluido: sin
+        // allow_extra_fields sería un campo de más y el formulario, inválido.
+        $form = $this->amountForm($budget, $today, ['csrf_protection' => false, 'allow_extra_fields' => true]);
         $form->handleRequest($request);
 
         if (!$form->isSubmitted() || !$form->isValid()) {

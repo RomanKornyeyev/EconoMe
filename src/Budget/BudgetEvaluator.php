@@ -22,6 +22,13 @@ class BudgetEvaluator
     /** % a partir del cual un límite de gasto está «cerca». */
     public const NEAR_PERCENT = 80;
 
+    /**
+     * Puntos por delante del ritmo a partir de los que un límite de gasto «va
+     * rápido» (60 % gastado con el 37 % del mes pasado). Con menos margen, una
+     * compra grande al principio del periodo ya saltaría.
+     */
+    public const PACE_MARGIN = 20;
+
     public function __construct(
         private TransactionRepository $transactions,
     ) {}
@@ -144,6 +151,41 @@ class BudgetEvaluator
         return $this->sum($entries, $period);
     }
 
+    /**
+     * Cómo va un periodo abierto. Gasto: pasado, cerca (80 %), rápido o bien.
+     * Meta: alcanzada o en camino.
+     *
+     * «Rápido» es ir PACE_MARGIN puntos por delante del ritmo sin llegar aún al
+     * 80 %. Se mide sin las recurrentes: un cargo fijo el día 1 (la hipoteca) no
+     * es ir rápido, así que el ritmo se compara con lo que dejan libre.
+     *
+     * @param int $elapsed % transcurrido del periodo
+     */
+    public static function liveOutcome(Budget $budget, string $spent, string $recurring, string $limit, int $elapsed): BudgetOutcome
+    {
+        if (!$budget->isExpense()) {
+            return bccomp($spent, $limit, 2) >= 0 ? BudgetOutcome::GoalReached : BudgetOutcome::GoalPending;
+        }
+        if (bccomp($spent, $limit, 2) > 0) {
+            return BudgetOutcome::Over;
+        }
+        if (self::reaches($spent, $limit, self::NEAR_PERCENT)) {
+            return BudgetOutcome::Near;
+        }
+        if (self::reaches(bcsub($spent, $recurring, 2), bcsub($limit, $recurring, 2), $elapsed + self::PACE_MARGIN)) {
+            return BudgetOutcome::Fast;
+        }
+
+        return BudgetOutcome::OnTrack;
+    }
+
+    /** ¿part es al menos el percent % de whole? Exacto (bcmath): 228 de 400 es el 57 %, no el 56,99…. */
+    private static function reaches(string $part, string $whole, int $percent): bool
+    {
+        return bccomp($whole, '0', 2) > 0
+            && bccomp(bcmul($part, '100', 2), bcmul($whole, (string) $percent, 2), 2) >= 0;
+    }
+
     /** ¿Se cumple con ese límite? Gasto: no pasarse. Meta: llegar. */
     public static function isSuccess(Budget $budget, string $spent, string $limit): bool
     {
@@ -199,27 +241,19 @@ class BudgetEvaluator
             return new BudgetRow(...$common, outcome: $outcome, met: $success ? 1 : 0, closed: 1, failed: $success ? [] : [$period]);
         }
 
-        if ($budget->isExpense()) {
-            $percent = bccomp($limit, '0', 2) > 0 ? (float) $spent / (float) $limit * 100 : 0;
-            $outcome = match (true) {
-                bccomp($spent, $limit, 2) > 0   => BudgetOutcome::Over,
-                $percent >= self::NEAR_PERCENT  => BudgetOutcome::Near,
-                default                         => BudgetOutcome::OnTrack,
-            };
-        } else {
-            $outcome = bccomp($spent, $limit, 2) >= 0 ? BudgetOutcome::GoalReached : BudgetOutcome::GoalPending;
-        }
+        $elapsed = $period->elapsedPercent($today);
+        $outcome = self::liveOutcome($budget, $spent, $recurring, $limit, $elapsed);
 
         // Un trimestre aún abierto visto desde un mes cerrado: se avisa si ya se
         // ha pasado, pero si no, solo «en curso»; aún no se puede juzgar.
-        if ($closedView && \in_array($outcome, [BudgetOutcome::OnTrack, BudgetOutcome::Near, BudgetOutcome::GoalPending], true)) {
+        if ($closedView && \in_array($outcome, [BudgetOutcome::OnTrack, BudgetOutcome::Fast, BudgetOutcome::Near, BudgetOutcome::GoalPending], true)) {
             $outcome = BudgetOutcome::Running;
         }
 
         return new BudgetRow(
             ...$common,
             outcome: $outcome,
-            marker: round($period->elapsedFraction($today) * 100, 1),
+            elapsed: $elapsed,
             daysLeft: $period->daysLeft($today),
         );
     }

@@ -21,16 +21,22 @@
     {%- endif -%}
 {%- endmacro %}
 
-{# Barra de progreso con la marca de «hoy» (marker: % transcurrido del periodo,
-   solo si está abierto). label: texto accesible de la barra. Todo <span>: la
-   lista de móvil la mete dentro de un <button>. #}
-{% macro bar(percent, tone, marker = null, label = '') %}
+{# Barra de progreso. label: texto accesible de la barra. mark: dónde va la
+   línea del límite (BudgetRow::limitMark): al final si no se ha superado; si
+   se ha superado, la barra es lo llevado, la línea queda dentro y el exceso va
+   más intenso. Todo <span>: la lista de móvil la mete dentro de un <button>. #}
+{% macro bar(percent, tone, label = '', mark = null) %}
     <span class="budget-bar" role="img" aria-label="{{ label }}">
         <span class="progress budget-bar__track">
-            <span class="progress-bar bg-{{ tone }}" style="width: {{ percent }}%"></span>
+            {% if mark is null or mark >= 100 %}
+                <span class="progress-bar bg-{{ tone }}" style="width: {{ percent }}%"></span>
+            {% else %}
+                <span class="progress-bar bg-{{ tone }} bg-opacity-50" style="width: {{ mark }}%"></span>
+                <span class="progress-bar bg-{{ tone }}" style="width: {{ 100 - mark }}%"></span>
+            {% endif %}
         </span>
-        {% if marker is not null %}
-            <span class="budget-bar__marker" style="left: {{ marker }}%"></span>
+        {% if mark is not null %}
+            <span class="budget-bar__limit" style="left: {{ mark }}%"></span>
         {% endif %}
     </span>
 {% endmacro %}

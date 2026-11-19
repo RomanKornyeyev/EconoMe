@@ -40,6 +40,8 @@
                     {{ head }}pasaría a «Te has pasado»: llevas {{ bm.money(c.spent, currency) }}.
                 {% elseif c.outcome.value == 'near' %}
                     {{ head }}quedaría cerca del límite: llevas {{ bm.money(c.spent, currency) }} ({{ c.percent }} %).
+                {% elseif c.outcome.value == 'fast' %}
+                    {{ head }}irías rápido: llevas {{ bm.money(c.spent, currency) }} ({{ c.percent }} %) y solo ha pasado el {{ c.elapsed }} % {{ budget.frequency.ofUnit }}.
                 {% elseif c.outcome.value == 'on_track' %}
                     {{ head }}irías bien: llevas {{ bm.money(c.spent, currency) }} ({{ c.percent }} %).
                 {% elseif c.outcome.value == 'goal_reached' %}

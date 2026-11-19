@@ -209,10 +209,11 @@
         {% set label = row.percent ~ ' %'
             ~ (outcome in ['over', 'exceeded'] ? ' · excedido'
             : (outcome == 'near' ? ' · cerca'
-            : (outcome == 'goal_reached' ? ' · alcanzada' : ''))) %}
+            : (outcome == 'fast' ? ' · vas rápido'
+            : (outcome == 'goal_reached' ? ' · alcanzada' : '')))) %}
     {% endif %}
     <span class="d-flex align-items-center gap-2">
-        <span class="flex-grow-1">{{ bm.bar(row.barPercent, row.outcome.tone, row.marker, label) }}</span>
+        <span class="flex-grow-1">{{ bm.bar(row.barPercent, row.outcome.tone, label, row.limitMark) }}</span>
         <span class="small text-nowrap text-{{ row.outcome.tone }}-emphasis">{{ label }}</span>
     </span>
 {% endmacro %}

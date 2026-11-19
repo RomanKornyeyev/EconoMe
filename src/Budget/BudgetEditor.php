@@ -69,7 +69,7 @@ class BudgetEditor
      *     period: BudgetPeriod,
      *     amount: string,
      *     returnTo: ?string,
-     *     current: ?array{period: BudgetPeriod, spent: string, outcome: BudgetOutcome, percent: int},
+     *     current: ?array{period: BudgetPeriod, spent: string, outcome: BudgetOutcome, percent: int, elapsed: int},
      *     discarded: list<AmountChange>,
      *     flips: list<array{period: BudgetPeriod, success: bool}>,
      *     closedCount: int,
@@ -91,19 +91,15 @@ class BudgetEditor
         $currentEffect = null;
         $touchesCurrent = $scope === BudgetAmountType::SCOPE_ALL || $period->equals($current);
         if ($touchesCurrent && $old->covers($current)) {
-            [$spent] = $this->evaluator->spentIn($budget, $current);
+            [$spent, $recurring] = $this->evaluator->spentIn($budget, $current);
             $limit = $new->amountAt($current);
-            $percent = (int) round((float) $spent / (float) $limit * 100);
+            $elapsed = $current->elapsedPercent($today);
             $currentEffect = [
                 'period'  => $current,
                 'spent'   => $spent,
-                'percent' => $percent,
-                'outcome' => match (true) {
-                    !$budget->isExpense() => bccomp($spent, $limit, 2) >= 0 ? BudgetOutcome::GoalReached : BudgetOutcome::GoalPending,
-                    bccomp($spent, $limit, 2) > 0 => BudgetOutcome::Over,
-                    $percent >= BudgetEvaluator::NEAR_PERCENT => BudgetOutcome::Near,
-                    default => BudgetOutcome::OnTrack,
-                },
+                'percent' => (int) round((float) $spent / (float) $limit * 100),
+                'elapsed' => $elapsed,
+                'outcome' => BudgetEvaluator::liveOutcome($budget, $spent, $recurring, $limit, $elapsed),
             ];
         }
 

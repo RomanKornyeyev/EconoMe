@@ -26,7 +26,9 @@ solo lo que hay que saber para tocar el código.
 - **Enum `App\Enum\Frequency`**: `RecurringTransaction::FREQ_*` apuntan a él. La
   columna de recurrentes sigue siendo una cadena.
 - **«Qué va a pasar» se calcula en el servidor** (`budget_preview`): la lógica de
-  tramos no se duplica en JS.
+  tramos no se duplica en JS. Usa el formulario sin CSRF y con
+  `allow_extra_fields`: el navegador envía también `_token`, y sin esa opción
+  el formulario salía inválido y el resumen nunca se actualizaba.
 - En el dashboard, el KPI «Presupuestos» sustituye a «Recurrentes activos»; los
   recurrentes pasan a la píldora de la tarjeta de balance en todos los tamaños.
 - **Despliegue**: migración `Version20261111151255` y `asset-map:compile` (hay

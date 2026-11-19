@@ -10,7 +10,7 @@ use App\Entity\Budget;
  * plantilla (components/_budget_panel.html.twig).
  *
  * Dos formas:
- *  - **un periodo** (`summary` false): límite, llevado, marca de «hoy»…;
+ *  - **un periodo** (`summary` false): límite, llevado, % transcurrido…;
  *  - **resumen** de varios periodos (las semanas de un mes cerrado, o la vista
  *    de año): cuántos cerrados se cumplieron y cuáles no.
  *
@@ -33,8 +33,8 @@ final class BudgetRow
         public readonly string $spent = '0.00',
         /** Parte de lo llevado que viene de recurrentes. */
         public readonly string $recurring = '0.00',
-        /** % transcurrido del periodo (marca de «hoy»); null si no está abierto. */
-        public readonly ?float $marker = null,
+        /** % transcurrido del periodo; null si no está abierto. */
+        public readonly ?int $elapsed = null,
         /** Días que quedan, hoy incluido. */
         public readonly int $daysLeft = 0,
         /** Importe habitual si este periodo tiene un importe puntual. */
@@ -63,6 +63,23 @@ final class BudgetRow
         return min(100, $this->percent());
     }
 
+    /**
+     * Dónde cae la línea del límite (o la meta) en la barra, en %. Sin superarlo,
+     * al final (100). Superado, la barra pasa a ser lo llevado y el límite queda
+     * dentro (110 % → 90,9). Null en un resumen: no hay límite que marcar.
+     */
+    public function limitMark(): ?float
+    {
+        if ($this->summary || $this->limit === null || bccomp($this->limit, '0', 2) <= 0) {
+            return null;
+        }
+        if (bccomp($this->spent, $this->limit, 2) <= 0) {
+            return 100.0;
+        }
+
+        return round((float) $this->limit / (float) $this->spent * 100, 1);
+    }
+
     /** Límite menos llevado (negativo si se ha pasado). */
     public function remaining(): string
     {
@@ -81,7 +98,7 @@ final class BudgetRow
 
     public function isOpen(): bool
     {
-        return $this->marker !== null;
+        return $this->elapsed !== null;
     }
 
     /** Un solo periodo: el que se mira. */

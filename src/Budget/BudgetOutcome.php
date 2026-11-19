@@ -5,14 +5,15 @@ namespace App\Budget;
 /**
  * Cómo va (o cómo quedó) un presupuesto en lo que se está mirando.
  *
- * El estado va por umbral, no por ritmo (claude/presupuestos.md §4.6): con un
- * gasto fijo el día 1 (la hipoteca), ir por delante del ritmo no significa ir
- * mal. La marca de «hoy» de la barra es solo una referencia visual.
+ * El estado va sobre todo por umbral (claude/presupuestos.md §4.6): cerca a
+ * partir del 80 %. Por debajo, «vas rápido» si el gasto va muy por delante del
+ * ritmo sin contar las recurrentes (BudgetEvaluator::liveOutcome).
  */
 enum BudgetOutcome: string
 {
     // Periodo en curso
     case OnTrack = 'on_track';         // gasto por debajo del 80 %
+    case Fast = 'fast';                // por debajo del 80 %, pero muy por delante del ritmo
     case Near = 'near';                // gasto en el 80 % o más
     case Over = 'over';                // gasto por encima del límite
     case GoalPending = 'goal_pending'; // meta aún no alcanzada
@@ -38,7 +39,7 @@ enum BudgetOutcome: string
     {
         return match ($this) {
             self::Over, self::Exceeded, self::GoalMissed, self::RarelyMet => 0,
-            self::Near, self::PartlyMet                                   => 1,
+            self::Near, self::Fast, self::PartlyMet                       => 1,
             self::OnTrack, self::GoalPending, self::Running               => 2,
             self::Met, self::GoalReached, self::AllMet, self::MostlyMet   => 3,
             self::Pending                                                 => 4,
@@ -58,6 +59,10 @@ enum BudgetOutcome: string
 
     public function icon(): string
     {
+        if ($this === self::Fast) {
+            return 'fa-gauge-high';
+        }
+
         return match ($this->rank()) {
             0       => 'fa-circle-xmark',
             1       => 'fa-triangle-exclamation',
@@ -70,6 +75,7 @@ enum BudgetOutcome: string
     {
         return match ($this) {
             self::OnTrack     => 'Vas bien',
+            self::Fast        => 'Vas rápido',
             self::Near        => 'Cerca del límite',
             self::Over        => 'Te has pasado',
             self::GoalPending => 'En camino',

@@ -156,10 +156,16 @@ final class BudgetPeriod
         return $elapsed === 0 ? $this->days() : $this->days() - $elapsed + 1;
     }
 
-    /** Fracción transcurrida, de 0 a 1: la marca de «hoy» de la barra. */
+    /** Fracción transcurrida, de 0 a 1. */
     public function elapsedFraction(\DateTimeInterface $today): float
     {
         return $this->elapsedDays($today) / $this->days();
+    }
+
+    /** % transcurrido, redondeado (el día 11 de 30 da 37): el ritmo de «vas rápido». */
+    public function elapsedPercent(\DateTimeInterface $today): int
+    {
+        return (int) round($this->elapsedFraction($today) * 100);
     }
 
     /** «semana del 9 nov 2026», «noviembre 2026», «oct–dic 2026», «2026». */

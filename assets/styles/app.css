@@ -614,9 +614,9 @@ span.flatpickr-weekday { color: var(--bs-secondary-color); }
     border: 2px solid var(--bs-secondary-color);
 }
 
-/* Barra de progreso con la marca de «hoy»: una línea que sobresale de la barra
-   en el punto del periodo en que se está. Va con el color de énfasis del tema
-   para verse en claro y en oscuro. */
+/* Barra de progreso de un presupuesto: la de Bootstrap, más fina. Una línea que
+   sobresale marca el límite: al final de la barra o, si se ha superado, dentro.
+   Va con el color de énfasis del tema para verse en claro y en oscuro. */
 .budget-bar {
     position: relative;
     display: block;
@@ -626,23 +626,14 @@ span.flatpickr-weekday { color: var(--bs-secondary-color); }
     height: .5rem;
 }
 
-.budget-bar__marker,
-.budget-bar__legend-marker {
-    width: 2px;
-    border-radius: 1px;
-    background-color: var(--bs-emphasis-color);
-}
-
-.budget-bar__marker {
+.budget-bar__limit {
     position: absolute;
     top: -.25rem;
     bottom: -.25rem;
+    width: 2px;
     margin-left: -1px;
-}
-
-.budget-bar__legend-marker {
-    display: inline-block;
-    height: .875rem;
+    border-radius: 1px;
+    background-color: var(--bs-emphasis-color);
 }
 
 /* Opción de radio en forma de tarjeta (ámbito del alta, alcance del cambio de

@@ -88,6 +88,9 @@ class BudgetPeriodTest extends TestCase
         $this->assertSame(11, $november->elapsedDays($today));
         $this->assertSame(20, $november->daysLeft($today));
         $this->assertEqualsWithDelta(11 / 30, $november->elapsedFraction($today), 0.0001);
+        $this->assertSame(37, $november->elapsedPercent($today));
+        $this->assertSame('del mes', Frequency::Monthly->ofUnit());
+        $this->assertSame('de la semana', Frequency::Weekly->ofUnit());
 
         $this->assertFalse($november->isClosed($today));
         $this->assertFalse($november->isFuture($today));
